@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections;
 using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Domain.Interfaces;
+using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Persistence.Repositories;
 
 namespace MediAppointment.Infrastructure.Persistence

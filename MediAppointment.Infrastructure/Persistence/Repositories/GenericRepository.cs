@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using MediAppointment.Application.Exceptions;
-using MediAppointment.Domain.Entities.Abstractions;
+﻿using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Domain.Interfaces;
-using MediAppointment.Infrastructure.Persistence;
+using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediAppointment.Infrastructure.Persistence.Repositories
@@ -29,7 +25,7 @@ namespace MediAppointment.Infrastructure.Persistence.Repositories
         public Task UpdateAsync(T entity)
         {
             T exist = _dbContext.Set<T>().Find(entity.Id)
-                ?? throw new NotFoundException(nameof(T), entity.Id);
+                ?? throw new Exception($"Entity of type {nameof(T)} with ID {entity.Id} not found.");
             _dbContext.Entry(exist).CurrentValues.SetValues(entity);
             return Task.CompletedTask;
         }

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MediAppointment.Domain.Interfaces;
+﻿using MediAppointment.Domain.Interfaces;
+using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
