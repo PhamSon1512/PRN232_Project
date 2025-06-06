@@ -31,6 +31,15 @@ namespace MediAppointment.Infrastructure.Data
                 .Property(u => u.CCCD)
                 .HasMaxLength(12);
 
+            // Department
+            modelBuilder.Entity<Department>()
+                .HasKey(d => d.DepartmentID);
+
+            modelBuilder.Entity<Department>()
+                .HasOne<UserIdentity>()
+                .WithMany()
+                .HasForeignKey(d => d.UpdatedPersonId);
+
             // DoctorDepartment (junction table)
             modelBuilder.Entity<DoctorDepartment>()
                 .HasKey(dd => new { dd.DoctorID, dd.DepartmentID });
