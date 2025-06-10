@@ -1,11 +1,10 @@
-﻿namespace MediAppointment.Domain.Entities
+﻿using MediAppointment.Domain.Entities.Abstractions;
+
+namespace MediAppointment.Domain.Entities
 {
-    public class Department
+    public class Department : Entity
     {
-        public int DepartmentID { get; set; }
         public string? DepartmentName { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public DateTime UpdatedTime { get; set; }
-        public int? UpdatedPersonId { get; set; }
+        public ICollection<DoctorDepartment>? DoctorDepartments { get; set; }
     }
 }

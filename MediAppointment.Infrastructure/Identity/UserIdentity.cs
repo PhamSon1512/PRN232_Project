@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MediAppointment.Infrastructure.Identity
 {
-    public class UserIdentity : IdentityUser<int>
+    public class UserIdentity : IdentityUser<int> // Change the generic type parameter from Guid to int  
     {
         public string? FullName { get; set; }
         public int Gender { get; set; }
-        public DateTime DOB { get; set; }
+        public DateTime DateOfBirth { get; set; }
         public int Age { get; set; }
         public int Status { get; set; }
         public string? Address { get; set; }

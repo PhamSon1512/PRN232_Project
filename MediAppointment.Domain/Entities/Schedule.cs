@@ -1,16 +1,14 @@
-﻿namespace MediAppointment.Domain.Entities
+﻿using MediAppointment.Domain.Entities.Abstractions;
+using MediAppointment.Domain.Enums;
+
+namespace MediAppointment.Domain.Entities
 {
-    using MediAppointment.Domain.Enums;
-    public class Schedule
+    public class Schedule : Entity
     {
-        public int ScheduleID { get; set; }
-        public int DoctorID { get; set; }
-        public DayOfWeek DayOfWeek { get; set; }
+        public Guid DoctorId { get; set; }
+        public System.DayOfWeek DayOfWeek { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public Shift MorningShift { get; set; }
-        public Shift AfternoonShift { get; set; }
-        public Shift EveningShift { get; set; }
-        public Doctor? Doctor { get; set; }
+        public List<Shift>? Shifts { get; set; } 
     }
 }

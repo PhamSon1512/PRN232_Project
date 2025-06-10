@@ -1,13 +1,12 @@
-﻿namespace MediAppointment.Domain.Entities
+﻿using MediAppointment.Domain.Entities.Abstractions;
+
+namespace MediAppointment.Domain.Entities
 {
-    public class Notification
+    public class Notification : Entity
     {
-        public int UserID { get; set; }
-        public int DoctorID { get; set; }
-        public int NotifyID { get; set; }
-        public string? Content { get; set; }
-        public int Status { get; set; }
-        public DateTime CreatedTime { get; set; }
-        public Doctor? Doctor { get; set; }
+        public Guid ToUserId { get; set; }
+        public required string Content { get; set; }
+        public required string Status { get; set; }
+        public required DateTime CreatedAt { get; set; }
     }
 }

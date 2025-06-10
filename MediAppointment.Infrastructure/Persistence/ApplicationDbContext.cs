@@ -14,7 +14,6 @@ namespace MediAppointment.Infrastructure.Data
         {
         }
 
-        //public DbSet<UserIdentity> UserIdentities { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
