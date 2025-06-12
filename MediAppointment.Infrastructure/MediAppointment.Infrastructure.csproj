@@ -18,13 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MediAppointment.Application\MediAppointment.Application.csproj" />
     <ProjectReference Include="..\MediAppointment.Domain\MediAppointment.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-    <Folder Include="Seeder\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediAppointment.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250610180152_InitDb")]
-    partial class InitDb
+    [Migration("20250612064251_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,7 +57,13 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
+                    b.Property<Guid?>("UserIdentityId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UserIdentityId");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserIdentityId");
 
                     b.ToTable("User");
 
@@ -98,9 +104,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserIdentityId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
@@ -108,8 +111,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("UserIdentityId");
 
                     b.ToTable("Appointments");
                 });
@@ -183,9 +184,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("UserIdentityId")
-                        .HasColumnType("int");
-
                     b.Property<float>("Weight")
                         .HasColumnType("real");
 
@@ -194,8 +192,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("UserIdentityId");
 
                     b.ToTable("MedicalRecords");
                 });
@@ -223,14 +219,9 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<Guid>("ToUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("UserIdentityId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ToUserId");
-
-                    b.HasIndex("UserIdentityId");
 
                     b.ToTable("Notifications");
                 });
@@ -265,33 +256,16 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Infrastructure.Identity.UserIdentity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CCCD")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -302,9 +276,6 @@ namespace MediAppointment.Infrastructure.Migrations
 
                     b.Property<string>("FullName")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Gender")
-                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -332,9 +303,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -355,13 +323,11 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -385,7 +351,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -399,8 +365,8 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -409,7 +375,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -423,8 +389,8 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -433,7 +399,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -444,8 +410,8 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -454,13 +420,13 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -469,10 +435,10 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -492,11 +458,6 @@ namespace MediAppointment.Infrastructure.Migrations
                 {
                     b.HasBaseType("MediAppointment.Domain.Entities.Abstractions.User");
 
-                    b.Property<int?>("UserIdentityId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("UserIdentityId");
-
                     b.HasDiscriminator().HasValue("Doctor");
                 });
 
@@ -514,6 +475,15 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("Patient");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Abstractions.User", b =>
+                {
+                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
+                        .WithMany()
+                        .HasForeignKey("UserIdentityId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_Users_AspNetUsers_UserIdentityId");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Appointment", b =>
@@ -535,10 +505,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
-                        .WithMany("Appointments")
-                        .HasForeignKey("UserIdentityId");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.DoctorDepartment", b =>
@@ -573,10 +539,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
-                        .WithMany("MedicalRecords")
-                        .HasForeignKey("UserIdentityId");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Notification", b =>
@@ -598,10 +560,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasForeignKey("ToUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserIdentityId");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Schedule", b =>
@@ -613,16 +571,16 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
                         .WithMany()
@@ -631,7 +589,7 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
                         .WithMany()
@@ -640,9 +598,9 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -655,36 +613,18 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
                     b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MediAppointment.Domain.Entities.Doctor", b =>
-                {
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
-                        .WithMany("Doctors")
-                        .HasForeignKey("UserIdentityId");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Department", b =>
                 {
                     b.Navigation("DoctorDepartments");
-                });
-
-            modelBuilder.Entity("MediAppointment.Infrastructure.Identity.UserIdentity", b =>
-                {
-                    b.Navigation("Appointments");
-
-                    b.Navigation("Doctors");
-
-                    b.Navigation("MedicalRecords");
-
-                    b.Navigation("Notifications");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Doctor", b =>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MediAppointment.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,8 +15,7 @@ namespace MediAppointment.Infrastructure.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -30,25 +29,17 @@ namespace MediAppointment.Infrastructure.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Gender = table.Column<int>(type: "int", nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Age = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CCCD = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
@@ -78,7 +69,7 @@ namespace MediAppointment.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -99,7 +90,7 @@ namespace MediAppointment.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -121,7 +112,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -138,8 +129,8 @@ namespace MediAppointment.Infrastructure.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -162,7 +153,7 @@ namespace MediAppointment.Infrastructure.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -189,7 +180,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     Discriminator = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                    UserIdentityId = table.Column<int>(type: "int", nullable: true),
+                    UserIdentityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CCCD = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BHYT = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -198,7 +189,7 @@ namespace MediAppointment.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_User_AspNetUsers_UserIdentityId",
+                        name: "FK_Users_AspNetUsers_UserIdentityId",
                         column: x => x.UserIdentityId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
@@ -216,17 +207,11 @@ namespace MediAppointment.Infrastructure.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UserIdentityId = table.Column<int>(type: "int", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Appointments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Appointments_AspNetUsers_UserIdentityId",
-                        column: x => x.UserIdentityId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Appointments_Departments_DepartmentId",
                         column: x => x.DepartmentId,
@@ -284,17 +269,11 @@ namespace MediAppointment.Infrastructure.Migrations
                     Chronic = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
                     MedicalHistory = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MedicalResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastUpdated = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    UserIdentityId = table.Column<int>(type: "int", nullable: true)
+                    LastUpdated = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MedicalRecords", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MedicalRecords_AspNetUsers_UserIdentityId",
-                        column: x => x.UserIdentityId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_MedicalRecords_User_DoctorId",
                         column: x => x.DoctorId,
@@ -317,17 +296,11 @@ namespace MediAppointment.Infrastructure.Migrations
                     ToUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserIdentityId = table.Column<int>(type: "int", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Notifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Notifications_AspNetUsers_UserIdentityId",
-                        column: x => x.UserIdentityId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Notifications_User_ToUserId",
                         column: x => x.ToUserId,
@@ -372,11 +345,6 @@ namespace MediAppointment.Infrastructure.Migrations
                 name: "IX_Appointments_PatientId",
                 table: "Appointments",
                 column: "PatientId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Appointments_UserIdentityId",
-                table: "Appointments",
-                column: "UserIdentityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -433,19 +401,9 @@ namespace MediAppointment.Infrastructure.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MedicalRecords_UserIdentityId",
-                table: "MedicalRecords",
-                column: "UserIdentityId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Notifications_ToUserId",
                 table: "Notifications",
                 column: "ToUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserIdentityId",
-                table: "Notifications",
-                column: "UserIdentityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_DoctorId",

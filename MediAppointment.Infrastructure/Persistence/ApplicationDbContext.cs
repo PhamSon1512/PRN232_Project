@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MediAppointment.Infrastructure.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<UserIdentity, IdentityRole<int>, int>
+    public class ApplicationDbContext : IdentityDbContext<UserIdentity, IdentityRole<Guid>, Guid>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

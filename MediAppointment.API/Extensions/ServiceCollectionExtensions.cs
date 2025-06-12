@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.Extensions;
+using MediAppointment.Infrastructure.Extensions;
 using MediAppointment.Infrastructure.Persistence;
 
 namespace MediAppointment.API.Extensions
@@ -11,8 +12,8 @@ namespace MediAppointment.API.Extensions
             // Registering application services
             services.AddApplicationServices();
 
-            // Registering persistence services
-            services.AddPersistenceServices(configuration);
+            // Registering infrastructure services
+            services.AddInfrastructureServices(configuration);
 
             // Add API-specific services here, such as controllers, Swagger, etc.
             services.AddControllers();

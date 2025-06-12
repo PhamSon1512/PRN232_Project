@@ -9,6 +9,6 @@ namespace MediAppointment.Domain.Entities
         public System.DayOfWeek DayOfWeek { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public List<Shift>? Shifts { get; set; } 
+        public ICollection<Shift>? Shifts { get; set; } 
     }
 }
