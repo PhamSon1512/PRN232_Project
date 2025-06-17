@@ -16,11 +16,10 @@ namespace MediAppointment.Infrastructure.Extensions
 
             // Đăng ký các service hạ tầng khác
             services.AddScoped<IIdentityService, IdentityService>();
-
-            // Đăng ký cấu hình EmailConfig
+            services.AddTransient<IEmailService, EmailService>();
+            services.AddScoped<IVnPayService, VnPayService>();
+            services.AddScoped<IWalletService, WalletService>();
             services.Configure<EmailConfig>(configuration.GetSection("EmailConfig"));
-
-            // Đăng ký EmailService
             services.AddScoped<IEmailService, EmailService>();
 
             return services;

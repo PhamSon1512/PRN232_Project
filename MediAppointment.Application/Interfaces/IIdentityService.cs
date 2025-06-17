@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.Auth;
 
 namespace MediAppointment.Application.Interfaces
 {
@@ -18,5 +19,12 @@ namespace MediAppointment.Application.Interfaces
 
         // Login
         Task<LoginResultDto> LoginAsync(LoginDto dto);
+
+        // Register
+        Task<LoginResultDto> RegisterAsync(RegisterDto dto);
+        //Forgot Password
+        Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto);
+        //Logout
+        Task LogoutAsync();
     }
 }

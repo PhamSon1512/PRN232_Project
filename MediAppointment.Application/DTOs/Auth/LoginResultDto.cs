@@ -1,4 +1,4 @@
-namespace MediAppointment.Application.DTOs
+namespace MediAppointment.Application.DTOs.Auth
 {
     public class LoginResultDto
     {

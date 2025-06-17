@@ -1,4 +1,6 @@
-﻿using MediAppointment.Application.DTOs;
+﻿using MediAppointment.Application.Constants;
+using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Infrastructure.Data;
@@ -213,5 +215,83 @@ namespace MediAppointment.Infrastructure.Services
 
             return new LoginResultDto { Success = false, ErrorMessage = "Không tìm thấy thông tin người dùng." };
         }
+        public async Task<LoginResultDto> RegisterAsync(RegisterDto dto)
+        {
+            if (dto.Roles == null || !dto.Roles.Any())
+                return new LoginResultDto { Success = false, ErrorMessage = "At least one role is required." };
+
+            // Kiểm tra email đã tồn tại chưa
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return new LoginResultDto { Success = false, ErrorMessage = "Email already taken." };
+
+            // 1. Tạo UserIdentity
+            var userIdentity = new UserIdentity
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                FullName = dto.FullName,
+                PhoneNumber = dto.PhoneNumber
+            };
+            var result = await _userManager.CreateAsync(userIdentity, dto.Password);
+            if (!result.Succeeded)
+                return new LoginResultDto { Success = false, ErrorMessage = string.Join("; ", result.Errors.Select(e => e.Description)) };
+
+            // 2. Gán nhiều role cho user
+            var addRoleResult = await _userManager.AddToRolesAsync(userIdentity, dto.Roles);
+            if (!addRoleResult.Succeeded)
+                return new LoginResultDto { Success = false, ErrorMessage = string.Join("; ", addRoleResult.Errors.Select(e => e.Description)) };
+
+            Guid? doctorId = null;
+            Guid? patientId = null;
+
+            // 3. Tạo entity domain tương ứng và gán UserIdentityId
+            if (dto.Roles.Contains(UserRoles.Doctor, StringComparer.OrdinalIgnoreCase))
+            {
+                var doctor = new Doctor
+                {
+                    Id = Guid.NewGuid(),
+                    FullName = dto.FullName,
+                    Gender = dto.Gender,
+                    DateOfBirth = dto.DateOfBirth,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber
+                };
+                _dbContext.Doctors.Add(doctor);
+                _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+                doctorId = doctor.Id;
+            }
+            if (dto.Roles.Contains(UserRoles.Patient, StringComparer.OrdinalIgnoreCase))
+            {
+                var patient = new Patient
+                {
+                    Id = Guid.NewGuid(),
+                    FullName = dto.FullName,
+                    Gender = dto.Gender,
+                    DateOfBirth = dto.DateOfBirth,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber
+                };
+                _dbContext.Patients.Add(patient);
+                _dbContext.Entry(patient).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+                patientId = patient.Id;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            // 4. Trả về kết quả
+            return new LoginResultDto
+            {
+                Success = true,
+                UserId = doctorId ?? patientId, // Ưu tiên DoctorId nếu có, hoặc PatientId
+                Role = string.Join(",", dto.Roles)
+            };
+        }
+
+        public async Task LogoutAsync()
+        {
+            await _signInManager.SignOutAsync();
+        }
+
     }
 }

@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Auth\" />
     <Folder Include="DTOs\PatientDTOs\" />
+    <Folder Include="Constants\" />
     <Folder Include="Validators\" />
   </ItemGroup>
 

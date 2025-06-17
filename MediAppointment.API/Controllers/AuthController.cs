@@ -23,5 +23,17 @@ namespace MediAppointment.API.Controllers
                 return Unauthorized(result.ErrorMessage);
             return Ok(result);
         }
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            if (dto == null || dto.Roles == null || !dto.Roles.Any())
+                return BadRequest("Invalid registration data or roles are required.");
+
+            var result = await _identityService.RegisterAsync(dto);
+            if (!result.Success)
+                return BadRequest(result.ErrorMessage);
+
+            return Ok(result);
+        }
     }
 }
