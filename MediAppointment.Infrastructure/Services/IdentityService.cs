@@ -14,16 +14,19 @@ namespace MediAppointment.Infrastructure.Services
     {
         private readonly UserManager<UserIdentity> _userManager;
         private readonly SignInManager<UserIdentity> _signInManager;
+        private readonly IEmailService _emailService;
         private readonly ApplicationDbContext _dbContext;
 
         public IdentityService(
             UserManager<UserIdentity> userManager,
             SignInManager<UserIdentity> signInManager,
-            ApplicationDbContext dbContext)
+            ApplicationDbContext dbContext,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _dbContext = dbContext;
+            _emailService = emailService;
         }
 
         // Doctor CRUD
@@ -288,10 +291,37 @@ namespace MediAppointment.Infrastructure.Services
             };
         }
 
+        //Logout
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
 
+        //Forgot
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return false; // Không tiết lộ thông tin user tồn tại
+
+            // Sinh token đặt lại mật khẩu
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Tạo link đặt lại mật khẩu (ví dụ: Razor Page hoặc API endpoint)
+            var resetLink = $"https://localhost:7230/reset-password?email={Uri.EscapeDataString(dto.Email)}&token={Uri.EscapeDataString(token)}";
+
+            // Soạn nội dung email
+            var subject = "Đặt lại mật khẩu MediAppointment";
+            var body = $@"
+        <p>Xin chào,</p>
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản MediAppointment.</p>
+        <p>Vui lòng nhấn vào liên kết sau để đặt lại mật khẩu:</p>
+        <p><a href=""{resetLink}"">Đặt lại mật khẩu</a></p>
+        <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+    ";
+
+            await _emailService.SendAsync(dto.Email, subject, body);
+            return true;
+        }
     }
 }

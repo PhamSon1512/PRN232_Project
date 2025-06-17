@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
