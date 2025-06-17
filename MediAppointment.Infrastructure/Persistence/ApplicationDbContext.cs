@@ -22,7 +22,8 @@ namespace MediAppointment.Infrastructure.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

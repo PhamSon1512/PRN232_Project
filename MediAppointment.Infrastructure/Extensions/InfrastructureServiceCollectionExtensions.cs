@@ -15,9 +15,9 @@ namespace MediAppointment.Infrastructure.Extensions
 
             // Đăng ký các service hạ tầng khác
             services.AddScoped<IIdentityService, IdentityService>();
-
-            // Nếu có thêm service khác (email, file, ...), đăng ký tại đây
-            // services.AddScoped<IEmailSender, EmailSender>();
+            services.AddTransient<IEmailService, EmailService>();
+            services.AddScoped<IVnPayService, VnPayService>();
+            services.AddScoped<IWalletService, WalletService>();
 
             return services;
         }
