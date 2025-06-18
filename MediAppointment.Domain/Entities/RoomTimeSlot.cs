@@ -18,6 +18,7 @@ namespace MediAppointment.Domain.Entities
         public Room Room { get; set; }
         public Guid? DoctorId { get; set; }
         public Doctor? Doctor { get; set; }
+        public DateTime Date {  get; set; }
     }
 }
 

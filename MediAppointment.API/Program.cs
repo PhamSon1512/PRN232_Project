@@ -1,5 +1,7 @@
-﻿using MediAppointment.API.Extensions;
+﻿using Hangfire;
+using MediAppointment.API.Extensions;
 using MediAppointment.Application.Extensions;
+using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Persistence;
 using MediAppointment.Infrastructure.Persistence.Seeder; // Thêm dòng này
@@ -21,6 +23,12 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 
     await DbSeeder.SeedAsync(scope.ServiceProvider);
+    var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    jobManager.AddOrUpdate<IJobService>(
+        "JobCreateTimeSlot",
+        job => job.JobCreateRoomTimeSlot(),
+        "* * * * *"
+    );
 }
 
 
