@@ -6,7 +6,12 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
         {
             await RoleSeeder.SeedAsync(serviceProvider);
             await UserSeeder.SeedAsync(serviceProvider);
-            // Thêm các seeder khác n?u c?n
+            await DepartmentSeeder.SeedAsync(serviceProvider);
+            await DepartmentDoctorSeeder.SeedAsync(serviceProvider);
+            await RoleSeeder.SeedAsync(serviceProvider);
+            await TimeSlotSeeder.SeedAsync(serviceProvider);
+            await RoomSeeder.SeedAsync(serviceProvider);
+      
         }
     }
 }

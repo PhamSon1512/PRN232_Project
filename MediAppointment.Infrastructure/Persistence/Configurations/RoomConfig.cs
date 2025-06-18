@@ -18,14 +18,9 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
             builder.Property(r => r.Name)
                    .IsRequired()
                    .HasMaxLength(100);
-
-            builder.HasOne(r => r.Department)
-                   .WithMany() 
-                   .HasForeignKey("DepartmentId") 
-                   .OnDelete(DeleteBehavior.Restrict);
             builder.Property(r => r.DepartmentId)
                    .IsRequired(); 
-            builder.HasMany(r => r.Departments)
+            builder.HasMany(r => r.RoomTimeSlots)
                    .WithOne(rt => rt.Room)
                    .HasForeignKey(rt => rt.RoomId);
         }

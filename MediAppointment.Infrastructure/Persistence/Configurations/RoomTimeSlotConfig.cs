@@ -18,20 +18,6 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
             builder.Property(rts => rts.Status)
                    .IsRequired();
 
-            builder.HasOne(rts => rts.TimeSlot)
-                   .WithMany(ts => ts.RoomSlots)
-                   .HasForeignKey(rts => rts.TimeSlotId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(rts => rts.Room)
-                   .WithMany(r => r.Departments)
-                   .HasForeignKey(rts => rts.RoomId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(rts => rts.Doctor)
-                   .WithMany() 
-                   .HasForeignKey(rts => rts.DoctorId)
-                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

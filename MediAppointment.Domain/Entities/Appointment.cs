@@ -11,7 +11,7 @@ namespace MediAppointment.Domain.Entities
         public string? Note { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
-        public int RoomTimeSlotId { get; set; }
+        public Guid RoomTimeSlotId { get; set; }
         public RoomTimeSlot RoomTimeSlot { get; set; }
     }
 }

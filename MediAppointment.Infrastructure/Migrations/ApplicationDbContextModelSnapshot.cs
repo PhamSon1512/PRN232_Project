@@ -89,8 +89,8 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoomTimeSlotId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomTimeSlotId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -220,16 +220,11 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("DepartmentId1")
+                    b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -241,39 +236,30 @@ namespace MediAppointment.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("DepartmentId1");
-
                     b.ToTable("Room");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("DoctorId1")
+                    b.Property<Guid>("RoomId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("TimeSlotId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TimeSlotId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorId");
-
-                    b.HasIndex("DoctorId1");
 
                     b.HasIndex("RoomId");
 
@@ -312,11 +298,9 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.TimeSlot", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
@@ -687,14 +671,10 @@ namespace MediAppointment.Infrastructure.Migrations
             modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
                 {
                     b.HasOne("MediAppointment.Domain.Entities.Department", "Department")
-                        .WithMany()
+                        .WithMany("Rooms")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("MediAppointment.Domain.Entities.Department", null)
-                        .WithMany("Rooms")
-                        .HasForeignKey("DepartmentId1");
 
                     b.Navigation("Department");
                 });
@@ -702,24 +682,20 @@ namespace MediAppointment.Infrastructure.Migrations
             modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
                 {
                     b.HasOne("MediAppointment.Domain.Entities.Doctor", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("MediAppointment.Domain.Entities.Doctor", null)
                         .WithMany("RoomTimeSlots")
-                        .HasForeignKey("DoctorId1");
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("MediAppointment.Domain.Entities.Room", "Room")
-                        .WithMany("Departments")
+                        .WithMany("RoomTimeSlots")
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MediAppointment.Domain.Entities.TimeSlot", "TimeSlot")
                         .WithMany("RoomSlots")
                         .HasForeignKey("TimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Doctor");
@@ -807,7 +783,7 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
                 {
-                    b.Navigation("Departments");
+                    b.Navigation("RoomTimeSlots");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.TimeSlot", b =>
