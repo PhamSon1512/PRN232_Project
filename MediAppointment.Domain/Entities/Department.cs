@@ -6,5 +6,6 @@ namespace MediAppointment.Domain.Entities
     {
         public string? DepartmentName { get; set; }
         public ICollection<DoctorDepartment>? DoctorDepartments { get; set; }
+        public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
     }
 }
