@@ -210,7 +210,7 @@ namespace MediAppointment.Infrastructure.Services
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
             if (doctor != null)
-                return new LoginResultDto { Success = true, UserId = doctor.Id, Role = "Doctor" };
+                return new LoginResultDto { Success = true, UserId = user.Id, Role = "Doctor" };
 
             var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
             if (patient != null)

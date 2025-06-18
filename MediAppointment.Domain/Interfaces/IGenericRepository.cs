@@ -10,6 +10,7 @@ namespace MediAppointment.Domain.Interfaces
     {
         IQueryable<T> Entities { get; }
         Task<T?> GetByIdAsync(Guid id);
+        Task<T?> GetByUserIdentityIdAsync(Guid userIdentityId);
         Task<List<T>> GetAllAsync();
         Task<T> AddAsync(T entity);
         Task UpdateAsync(T entity);
