@@ -32,15 +32,6 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
                 .HasForeignKey(a => a.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne<Doctor>()
-                .WithMany(d => d.Appointments)
-                .HasForeignKey(a => a.DoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne<Department>()
-                .WithMany()
-                .HasForeignKey(a => a.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

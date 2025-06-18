@@ -19,6 +19,10 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
                 .WithOne(dd => dd.Department)
                 .HasForeignKey(dd => dd.DepartmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(d => d.Rooms)
+                   .WithOne(r => r.Department)
+                   .HasForeignKey(r => r.DepartmentId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

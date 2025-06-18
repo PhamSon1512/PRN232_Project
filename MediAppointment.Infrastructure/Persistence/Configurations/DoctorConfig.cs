@@ -15,10 +15,7 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
                 .HasForeignKey(dd => dd.DoctorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(d => d.Appointments)
-                .WithOne()
-                .HasForeignKey(a => a.DoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.HasMany(d => d.Schedules)
                 .WithOne()
@@ -29,6 +26,10 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
                 .WithOne()
                 .HasForeignKey(n => n.ToUserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(d => d.RoomTimeSlots)
+                   .WithOne(rts => rts.Doctor)
+                   .HasForeignKey(rts => rts.DoctorId)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

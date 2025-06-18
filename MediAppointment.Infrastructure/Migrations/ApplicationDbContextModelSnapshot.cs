@@ -81,18 +81,15 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("DoctorId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .IsUnicode(true)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoomTimeSlotId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
@@ -103,11 +100,9 @@ namespace MediAppointment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("DoctorId");
-
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("RoomTimeSlotId");
 
                     b.ToTable("Appointments");
                 });
@@ -223,6 +218,56 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("Room");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TimeSlotId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("RoomId");
+
+                    b.HasIndex("TimeSlotId");
+
+                    b.ToTable("RoomTimeSlot");
+                });
+
             modelBuilder.Entity("MediAppointment.Domain.Entities.Schedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -249,6 +294,74 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasIndex("DoctorId");
 
                     b.ToTable("Schedules");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.TimeSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("TimeStart")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TimeSlot");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Wallet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Wallets");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.WalletTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("WalletTransactions");
                 });
 
             modelBuilder.Entity("MediAppointment.Infrastructure.Identity.UserIdentity", b =>
@@ -485,23 +598,19 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("MediAppointment.Domain.Entities.Department", null)
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MediAppointment.Domain.Entities.Doctor", null)
-                        .WithMany("Appointments")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("MediAppointment.Domain.Entities.Patient", null)
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MediAppointment.Domain.Entities.RoomTimeSlot", "RoomTimeSlot")
+                        .WithMany()
+                        .HasForeignKey("RoomTimeSlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RoomTimeSlot");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.DoctorDepartment", b =>
@@ -559,11 +668,57 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
+                {
+                    b.HasOne("MediAppointment.Domain.Entities.Department", "Department")
+                        .WithMany("Rooms")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
+                {
+                    b.HasOne("MediAppointment.Domain.Entities.Doctor", "Doctor")
+                        .WithMany("RoomTimeSlots")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MediAppointment.Domain.Entities.Room", "Room")
+                        .WithMany("RoomTimeSlots")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MediAppointment.Domain.Entities.TimeSlot", "TimeSlot")
+                        .WithMany("RoomSlots")
+                        .HasForeignKey("TimeSlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Room");
+
+                    b.Navigation("TimeSlot");
+                });
+
             modelBuilder.Entity("MediAppointment.Domain.Entities.Schedule", b =>
                 {
                     b.HasOne("MediAppointment.Domain.Entities.Doctor", null)
                         .WithMany("Schedules")
                         .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.WalletTransaction", b =>
+                {
+                    b.HasOne("MediAppointment.Domain.Entities.Wallet", null)
+                        .WithMany("Transactions")
+                        .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -622,15 +777,32 @@ namespace MediAppointment.Infrastructure.Migrations
             modelBuilder.Entity("MediAppointment.Domain.Entities.Department", b =>
                 {
                     b.Navigation("DoctorDepartments");
+
+                    b.Navigation("Rooms");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
+                {
+                    b.Navigation("RoomTimeSlots");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.TimeSlot", b =>
+                {
+                    b.Navigation("RoomSlots");
+                });
+
+            modelBuilder.Entity("MediAppointment.Domain.Entities.Wallet", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.Doctor", b =>
                 {
-                    b.Navigation("Appointments");
-
                     b.Navigation("DoctorDepartments");
 
                     b.Navigation("Notifications");
+
+                    b.Navigation("RoomTimeSlots");
 
                     b.Navigation("Schedules");
                 });
