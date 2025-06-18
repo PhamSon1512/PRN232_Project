@@ -1,4 +1,5 @@
-﻿using MediAppointment.Application.Interfaces;
+﻿using Hangfire;
+using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Persistence;
 using MediAppointment.Infrastructure.Persistence.Configurations;
 using MediAppointment.Infrastructure.Services;
@@ -21,7 +22,10 @@ namespace MediAppointment.Infrastructure.Extensions
             services.AddScoped<IWalletService, WalletService>();
             services.Configure<EmailConfig>(configuration.GetSection("EmailConfig"));
             services.AddScoped<IEmailService, EmailService>();
-
+            services.AddScoped<IJobService, JobService>();
+            services.AddHangfire(config =>
+                config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
+            services.AddHangfireServer();
             return services;
         }
     }

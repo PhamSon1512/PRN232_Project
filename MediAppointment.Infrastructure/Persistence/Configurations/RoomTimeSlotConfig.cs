@@ -17,7 +17,9 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
 
             builder.Property(rts => rts.Status)
                    .IsRequired();
-
+            builder.Property(rts => rts.Date)
+                   .IsRequired()
+                   .HasColumnType("date");
         }
     }
 }
