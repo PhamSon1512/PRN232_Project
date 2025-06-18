@@ -18,7 +18,7 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
             builder.Property(ts => ts.TimeStart)
                    .IsRequired();
 
-            builder.Property(ts => ts.TimeEnd)
+            builder.Property(ts => ts.Duration)
                    .IsRequired();
 
             builder.HasMany(ts => ts.RoomSlots)
