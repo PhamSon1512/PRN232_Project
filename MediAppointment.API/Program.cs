@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using ExceptionHandleNH;
+using Hangfire;
 using MediAppointment.API.Extensions;
 using MediAppointment.Application.Extensions;
 using MediAppointment.Application.Interfaces;
@@ -11,11 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddApiServices(builder.Configuration);
-
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddExceptionHandler<GlobalExceptionNH>(); 
+builder.Services.AddProblemDetails();
 var app = builder.Build();
-
+app.UseExceptionHandler();
 // Tự động migrate database và seed dữ liệu trong cùng một scope
 using (var scope = app.Services.CreateScope())
 {
@@ -27,7 +28,7 @@ using (var scope = app.Services.CreateScope())
     jobManager.AddOrUpdate<IJobService>(
         "JobCreateTimeSlot",
         job => job.JobCreateRoomTimeSlot(),
-        "* * * * *"
+        "59 23 * * *"
     );
 }
 

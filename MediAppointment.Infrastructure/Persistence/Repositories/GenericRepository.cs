@@ -48,6 +48,13 @@ namespace MediAppointment.Infrastructure.Persistence.Repositories
             return await _dbContext.Set<T>().FindAsync(id);
         }
 
+        public async Task<T?> GetByUserIdentityIdAsync(Guid userIdentityId)
+        {
+            return await _dbContext.Set<T>()
+                .FirstOrDefaultAsync(e => EF.Property<Guid?>(e, "UserIdentityId") == userIdentityId
+                    && EF.Property<string>(e, "Discriminator") == typeof(T).Name);
+        }
+
         public async Task SaveChangeAsync()
         {
             await _dbContext.SaveChangesAsync();
