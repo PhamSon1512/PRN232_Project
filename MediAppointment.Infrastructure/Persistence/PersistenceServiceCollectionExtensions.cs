@@ -26,6 +26,7 @@ namespace MediAppointment.Infrastructure.Persistence
             .AddDefaultTokenProviders();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             return services;
         }
