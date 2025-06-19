@@ -24,6 +24,7 @@ namespace MediAppointment.Infrastructure.Extensions
             services.Configure<EmailConfig>(configuration.GetSection("EmailConfig"));
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJobService, JobService>();
+            services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
             services.AddHangfireServer();
