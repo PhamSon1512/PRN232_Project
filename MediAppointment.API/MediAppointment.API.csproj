@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	<PackageReference Include="Google.Apis" Version="1.69.0" />
     <ProjectReference Include="..\MediAppointment.Application\MediAppointment.Application.csproj" />
     <ProjectReference Include="..\MediAppointment.Infrastructure\MediAppointment.Infrastructure.csproj" />
   </ItemGroup>
