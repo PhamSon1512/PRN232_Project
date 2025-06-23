@@ -1,0 +1,173 @@
+@model MediAppointment.Client.Models.Appointment.CreateAppointmentViewModel
+@{
+    ViewData["Title"] = "Đặt lịch hẹn";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Đặt lịch hẹn mới
+                </h4>
+            </div>
+            <div class="card-body">                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    
+                    <input type="hidden" asp-for="RoomTimeSlotId" id="RoomTimeSlotId" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DoctorId" class="form-label">
+                                <i class="fas fa-user-md me-1"></i>Chọn bác sĩ *
+                            </label>
+                            <select asp-for="DoctorId" class="form-select" id="doctorSelect">
+                                <option value="">-- Chọn bác sĩ --</option>
+                                @foreach (var doctor in Model.AvailableDoctors)
+                                {
+                                    <option value="@doctor.Id">@doctor.Name - @doctor.Department</option>
+                                }
+                            </select>
+                            <span asp-validation-for="DoctorId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="AppointmentDate" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Ngày khám *
+                            </label>
+                            <input asp-for="AppointmentDate" class="form-control" type="date" 
+                                   min="@DateTime.Today.ToString("yyyy-MM-dd")" 
+                                   max="@DateTime.Today.AddMonths(3).ToString("yyyy-MM-dd")" 
+                                   id="appointmentDate" />
+                            <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="RoomTimeSlotId" class="form-label">
+                            <i class="fas fa-clock me-1"></i>Chọn khung giờ *
+                        </label>
+                        <div id="timeSlotContainer">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Vui lòng chọn bác sĩ và ngày khám để xem các khung giờ có sẵn
+                            </div>
+                        </div>
+                        <span asp-validation-for="RoomTimeSlotId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Note" class="form-label">
+                            <i class="fas fa-sticky-note me-1"></i>Ghi chú (không bắt buộc)
+                        </label>
+                        <textarea asp-for="Note" class="form-control" rows="3" 
+                                  placeholder="Mô tả triệu chứng hoặc lý do khám bệnh..."></textarea>
+                        <span asp-validation-for="Note" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            <i class="fas fa-check me-1"></i>Đặt lịch hẹn
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            let selectedTimeSlotId = null;
+
+            function loadTimeSlots() {
+                const doctorId = $('#doctorSelect').val();
+                const appointmentDate = $('#appointmentDate').val();
+                
+                if (!doctorId || !appointmentDate) {
+                    $('#timeSlotContainer').html(`
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Vui lòng chọn bác sĩ và ngày khám để xem các khung giờ có sẵn
+                        </div>
+                    `);
+                    $('#submitBtn').prop('disabled', true);
+                    return;
+                }
+
+                $('#timeSlotContainer').html(`
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin me-1"></i>Đang tải khung giờ...
+                    </div>
+                `);
+
+                $.get('@Url.Action("GetTimeSlots")', { doctorId: doctorId, date: appointmentDate })
+                    .done(function(data) {
+                        if (data && data.length > 0) {
+                            let html = '<div class="row">';
+                            data.forEach(function(slot) {
+                                const isAvailable = slot.isAvailable;
+                                const buttonClass = isAvailable ? 'btn-outline-primary' : 'btn-outline-secondary';
+                                const disabled = isAvailable ? '' : 'disabled';
+                                
+                                html += `
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <button type="button" class="btn ${buttonClass} w-100 time-slot-btn" 
+                                                data-slot-id="${slot.roomTimeSlotId}" 
+                                                data-available="${isAvailable}" ${disabled}>
+                                            <div class="fw-bold">${slot.timeRange}</div>
+                                            <small>${slot.roomName}</small>
+                                            ${!isAvailable ? '<br><small class="text-muted">Đã đầy</small>' : ''}
+                                        </button>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                            $('#timeSlotContainer').html(html);
+                            
+                            // Add click handlers for time slot buttons
+                            $('.time-slot-btn[data-available="true"]').click(function() {
+                                $('.time-slot-btn').removeClass('btn-primary').addClass('btn-outline-primary');
+                                $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+                                selectedTimeSlotId = $(this).data('slot-id');
+                                $('#RoomTimeSlotId').val(selectedTimeSlotId);
+                                $('#submitBtn').prop('disabled', false);
+                            });
+                        } else {
+                            $('#timeSlotContainer').html(`
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Không có khung giờ nào khả dụng cho ngày đã chọn
+                                </div>
+                            `);
+                        }
+                    })
+                    .fail(function() {
+                        $('#timeSlotContainer').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                Lỗi khi tải khung giờ. Vui lòng thử lại.
+                            </div>
+                        `);
+                    });
+            }
+
+            $('#doctorSelect, #appointmentDate').change(function() {
+                selectedTimeSlotId = null;
+                $('#RoomTimeSlotId').val('');
+                $('#submitBtn').prop('disabled', true);
+                loadTimeSlots();
+            });
+
+            // Initial load if values are already selected
+            if ($('#doctorSelect').val() && $('#appointmentDate').val()) {
+                loadTimeSlots();
+            }
+        });
+    </script>
+}
