@@ -1,0 +1,150 @@
+@model MediAppointment.Client.Models.Appointment.AppointmentViewModel
+@{
+    ViewData["Title"] = "Chi tiết lịch hẹn";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>Chi tiết lịch hẹn
+                </h4>
+                <span class="@Model.StatusClass">@Model.StatusDisplay</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-primary">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin lịch hẹn
+                        </h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-calendar me-1"></i>Ngày khám:</td>
+                                <td>@Model.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-clock me-1"></i>Giờ khám:</td>
+                                <td>@Model.AppointmentDate.ToString("HH:mm")</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-door-open me-1"></i>Phòng khám:</td>
+                                <td>@Model.RoomName</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-hourglass-half me-1"></i>Khung giờ:</td>
+                                <td>@Model.TimeSlot</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-calendar-plus me-1"></i>Ngày đặt:</td>
+                                <td>@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                            @if (Model.UpdatedDate.HasValue)
+                            {
+                                <tr>
+                                    <td class="fw-bold"><i class="fas fa-edit me-1"></i>Cập nhật:</td>
+                                    <td>@Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-primary">
+                            <i class="fas fa-user-md me-2"></i>Thông tin bác sĩ
+                        </h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-user me-1"></i>Bác sĩ:</td>
+                                <td>@Model.DoctorName</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-building me-1"></i>Khoa:</td>
+                                <td>@Model.Department</td>
+                            </tr>
+                        </table>
+
+                        <h5 class="text-primary mt-4">
+                            <i class="fas fa-user me-2"></i>Thông tin bệnh nhân
+                        </h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold"><i class="fas fa-user me-1"></i>Bệnh nhân:</td>
+                                <td>@Model.PatientName</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <div class="mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-sticky-note me-2"></i>Ghi chú
+                        </h5>
+                        <div class="alert alert-light">
+                            @Model.Note
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Status == "Scheduled" || Model.Status == "Pending")
+                {
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Vui lòng có mặt tại phòng khám trước giờ hẹn ít nhất 15 phút để làm thủ tục.
+                    </div>
+                }
+                else if (Model.Status == "Completed")
+                {
+                    <div class="alert alert-success mt-4">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Hoàn thành:</strong> Cuộc hẹn đã được thực hiện thành công.
+                    </div>
+                }
+                else if (Model.Status == "Cancelled")
+                {
+                    <div class="alert alert-danger mt-4">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Đã hủy:</strong> Cuộc hẹn này đã bị hủy.
+                    </div>
+                }
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+                    </a>
+                    <div>
+                        @if (Model.Status == "Scheduled" || Model.Status == "Pending")
+                        {
+                            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline" 
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times me-1"></i>Hủy lịch hẹn
+                                </button>
+                            </form>
+                        }
+                        <button onclick="window.print()" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-print me-1"></i>In
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Print styles
+        const printStyles = `
+            @@media print {
+                .btn, .card-footer, nav, footer, header { display: none !important; }
+                .card { border: none !important; box-shadow: none !important; }
+                .card-header { background: white !important; color: black !important; }
+            }
+        `;
+        
+        $('<style>').prop('type', 'text/css').html(printStyles).appendTo('head');
+    </script>
+}

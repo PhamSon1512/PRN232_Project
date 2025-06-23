@@ -1,0 +1,236 @@
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="text-primary">Liên hệ với chúng tôi</h1>
+                <p class="lead text-muted">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
+            </div>
+
+            <div class="row">
+                <!-- Contact Info -->
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="text-primary mb-4">Thông tin liên hệ</h5>
+                            
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                                    <strong>Địa chỉ</strong>
+                                </div>
+                                <p class="text-muted ms-4">
+                                    123 Đường ABC, Quận Ba Đình<br>
+                                    Hà Nội, Việt Nam
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-phone text-success me-3"></i>
+                                    <strong>Điện thoại</strong>
+                                </div>
+                                <p class="text-muted ms-4">
+                                    <a href="tel:+84241234567" class="text-decoration-none">(024) 123-4567</a><br>
+                                    <a href="tel:+84987654321" class="text-decoration-none">(098) 765-4321</a>
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-envelope text-warning me-3"></i>
+                                    <strong>Email</strong>
+                                </div>
+                                <p class="text-muted ms-4">
+                                    <a href="mailto:info@mediappointment.com" class="text-decoration-none">
+                                        info@mediappointment.com
+                                    </a><br>
+                                    <a href="mailto:support@mediappointment.com" class="text-decoration-none">
+                                        support@mediappointment.com
+                                    </a>
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-clock text-info me-3"></i>
+                                    <strong>Giờ làm việc</strong>
+                                </div>
+                                <p class="text-muted ms-4">
+                                    Thứ 2 - Thứ 6: 8:00 - 18:00<br>
+                                    Thứ 7: 8:00 - 12:00<br>
+                                    Chủ nhật: Nghỉ
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-headset text-danger me-3"></i>
+                                    <strong>Hỗ trợ khẩn cấp</strong>
+                                </div>
+                                <p class="text-muted ms-4">
+                                    Hotline 24/7: <a href="tel:+84911234567" class="text-decoration-none">(091) 123-4567</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="text-primary mb-4">Gửi tin nhắn cho chúng tôi</h5>
+                            
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="firstName" class="form-label">Họ và tên *</label>
+                                        <input type="text" class="form-control" id="firstName" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email *</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Số điện thoại</label>
+                                        <input type="tel" class="form-control" id="phone">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="subject" class="form-label">Chủ đề *</label>
+                                        <select class="form-select" id="subject" required>
+                                            <option value="">Chọn chủ đề</option>
+                                            <option value="support">Hỗ trợ kỹ thuật</option>
+                                            <option value="booking">Đặt lịch hẹn</option>
+                                            <option value="complaint">Khiếu nại</option>
+                                            <option value="suggestion">Góp ý</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Tin nhắn *</label>
+                                    <textarea class="form-control" id="message" rows="5" 
+                                              placeholder="Nhập nội dung tin nhắn của bạn..." required></textarea>
+                                </div>
+
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="agree" required>
+                                    <label class="form-check-label" for="agree">
+                                        Tôi đồng ý với <a href="#" class="text-decoration-none">điều khoản sử dụng</a> 
+                                        và <a href="#" class="text-decoration-none">chính sách bảo mật</a> *
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="mt-5">
+                <h3 class="text-primary text-center mb-4">Câu hỏi thường gặp</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="text-primary">Làm thế nào để đặt lịch hẹn?</h6>
+                                <p class="text-muted small">
+                                    Bạn cần đăng ký tài khoản, sau đó chọn bác sĩ, ngày và giờ khám phù hợp. 
+                                    Hệ thống sẽ xác nhận lịch hẹn của bạn.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="text-primary">Có thể hủy lịch hẹn không?</h6>
+                                <p class="text-muted small">
+                                    Có, bạn có thể hủy lịch hẹn trước 24 giờ. 
+                                    Vui lòng liên hệ hotline hoặc hủy trực tiếp trên hệ thống.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="text-primary">Chi phí khám bệnh như thế nào?</h6>
+                                <p class="text-muted small">
+                                    Chi phí khám bệnh phụ thuộc vào chuyên khoa và bác sĩ. 
+                                    Bạn có thể xem chi tiết khi đặt lịch.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="text-primary">Thông tin cá nhân có được bảo mật?</h6>
+                                <p class="text-muted small">
+                                    Chúng tôi cam kết bảo mật tuyệt đối thông tin cá nhân và y tế của bạn 
+                                    theo tiêu chuẩn quốc tế.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="mt-5">
+                <h3 class="text-primary text-center mb-4">Vị trí của chúng tôi</h3>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <!-- Google Maps Embed would go here -->
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-map-marked-alt mb-2" style="font-size: 3rem;"></i>
+                                <p>Bản đồ sẽ được hiển thị tại đây</p>
+                                <small>123 Đường ABC, Quận Ba Đình, Hà Nội</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Show success message
+                $('<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">' +
+                  '<i class="fas fa-check-circle me-2"></i>Tin nhắn của bạn đã được gửi thành công! ' +
+                  'Chúng tôi sẽ phản hồi trong vòng 24 giờ.' +
+                  '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                  '</div>').insertAfter(this);
+                
+                // Reset form
+                this.reset();
+                
+                // Scroll to success message
+                $('html, body').animate({
+                    scrollTop: $('.alert-success').offset().top - 100
+                }, 500);
+            });
+        });
+    </script>
+}
