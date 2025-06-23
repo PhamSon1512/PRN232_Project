@@ -1,4 +1,5 @@
-﻿using MediAppointment.Application.Interfaces;
+﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,20 @@ namespace MediAppointment.API.Controllers
             if (doctor == null) return NotFound();
 
             return Ok(doctor);
+        }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
+        {
+            try
+            {
+                var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
+                return Ok(updatedDoctor);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

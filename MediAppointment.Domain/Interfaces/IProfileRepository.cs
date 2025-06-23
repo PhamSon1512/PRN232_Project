@@ -12,7 +12,7 @@ namespace MediAppointment.Domain.Interfaces
         Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId);
 
         //Task<Doctor> CreateProfileAsync(DoctorCreateDto dto);
-        //Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto);
+        Task<Doctor> UpdateProfileAsync(Doctor doctor, CancellationToken cancellationToken = default);
         //Task DeleteProfileAsync(Guid userIdentityId);
     }
 }
