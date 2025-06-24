@@ -28,9 +28,11 @@ namespace MediAppointment.Infrastructure.Extensions
             services.AddHttpClient<IGeminiChatService, GeminiChatService>();
             services.AddScoped<IJobService, JobService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
+            services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
             services.AddHangfireServer();
+            
             return services;
         }
     }
