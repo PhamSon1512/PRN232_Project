@@ -3,10 +3,12 @@ using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
+using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MediAppointment.Infrastructure.Services
 {
@@ -60,34 +62,54 @@ namespace MediAppointment.Infrastructure.Services
             return doctor.Id;
         }
 
-        public async Task UpdateDoctorAsync(DoctorUpdateDto dto)
+        public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
         {
-            // 1. Lấy Doctor và UserIdentityId
-            var doctor = await _dbContext.Doctors.FindAsync(dto.Id)
+            // AspNetUsers  
+            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
+                ?? throw new Exception("UserIdentity not found");
+
+            // Retrieve Doctor directly using TPH  
+            var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == userIdentityId)
                 ?? throw new Exception("Doctor not found");
-            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
-            if (userIdentityId == null)
-                throw new Exception("UserIdentity not found");
 
-            // 2. Cập nhật Doctor
-            doctor.FullName = dto.FullName;
-            doctor.Gender = dto.Gender;
-            doctor.DateOfBirth = dto.DateOfBirth;
-            doctor.Email = dto.Email;
-            doctor.PhoneNumber = dto.PhoneNumber;
+            // Compare UserIdentityId (shadow property) with AspNetUser.Id  
+            var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
+            if (userIdentityIdShadow != userIdentityId)
+                throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
 
-            // 3. Cập nhật UserIdentity
-            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString()!);
-            if (userIdentity != null)
+            bool hasChanges = false;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
             {
-                userIdentity.FullName = dto.FullName;
-                userIdentity.Email = dto.Email;
-                userIdentity.UserName = dto.Email;
+                doctor.PhoneNumber = dto.PhoneNumber;
                 userIdentity.PhoneNumber = dto.PhoneNumber;
-                await _userManager.UpdateAsync(userIdentity);
+                hasChanges = true;
             }
 
-            await _dbContext.SaveChangesAsync();
+            if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+            {
+                if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+                    throw new Exception("Current password is required to change password.");
+                if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
+                    throw new Exception("Current password is incorrect.");
+                if (dto.NewPassword != dto.ConfirmNewPassword)
+                    throw new Exception("New password and confirmation do not match.");
+
+                var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
+                if (!passwordChangeResult.Succeeded)
+                    throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
+                // update AspNetUser  
+                var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
+                if (!updateIdentityResult.Succeeded)
+                    throw new Exception(string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description)));
+
+                //update Users  
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         public async Task DeleteDoctorAsync(Guid doctorId)
@@ -99,20 +121,20 @@ namespace MediAppointment.Infrastructure.Services
             // UserIdentity sẽ bị xóa cascade nếu cấu hình đúng
         }
 
-        public async Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId)
-        {
-            var doctor = await _dbContext.Doctors.FindAsync(doctorId);
-            if (doctor == null) return null;
-            return new DoctorUpdateDto
-            {
-                Id = doctor.Id,
-                FullName = doctor.FullName,
-                Gender = doctor.Gender,
-                DateOfBirth = doctor.DateOfBirth,
-                Email = doctor.Email,
-                PhoneNumber = doctor.PhoneNumber
-            };
-        }
+        //public async Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId)
+        //{
+        //    var doctor = await _dbContext.Doctors.FindAsync(doctorId);
+        //    if (doctor == null) return null;
+        //    return new DoctorUpdateDto
+        //    {
+        //        Id = doctor.Id,
+        //        FullName = doctor.FullName,
+        //        Gender = doctor.Gender,
+        //        DateOfBirth = doctor.DateOfBirth,
+        //        Email = doctor.Email,
+        //        PhoneNumber = doctor.PhoneNumber
+        //    };
+        //}
 
         // Patient CRUD
         public async Task<Guid> CreatePatientAsync(PatientCreateDto dto)
