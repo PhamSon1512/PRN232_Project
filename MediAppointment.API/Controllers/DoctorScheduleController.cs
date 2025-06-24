@@ -24,7 +24,7 @@ namespace MediAppointment.API.Controllers
             await _service.CreateDoctorSchedule(id, requests);
             return Ok();
         }
-        [HttpPost("DeleteRoomTimeSlot")]
+        [HttpGet("DeleteRoomTimeSlot")]
         public async Task<IActionResult> Get(Guid RoomTimeSlotId)
         {
             /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
