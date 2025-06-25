@@ -11,6 +11,6 @@ namespace MediAppointment.Application.Interfaces
     {
 
         public Task CreateDoctorSchedule(Guid DoctorId, List<DoctorScheduleRequest> request);
-        Task DeleteDoctorSchedule(Guid RoomTimeSlotId);
+        Task DeleteDoctorSchedule(Guid DoctorId,DeleteDoctorScheduleDTO request);
     }
 }

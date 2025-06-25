@@ -28,7 +28,7 @@ using (var scope = app.Services.CreateScope())
     jobManager.AddOrUpdate<IJobService>(
         "JobCreateTimeSlot",
         job => job.JobCreateRoomTimeSlot(),
-        "59 23 * * *"
+        "* * * * *"
     );
 }
 
