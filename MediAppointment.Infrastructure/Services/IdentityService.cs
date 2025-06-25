@@ -8,6 +8,7 @@ using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MediAppointment.Infrastructure.Services
 {
@@ -68,21 +69,24 @@ namespace MediAppointment.Infrastructure.Services
             return doctor.Id;
         }
 
-        public async Task UpdateDoctorAsync(DoctorUpdateDto dto)
+        public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
         {
             // 1. Lấy Doctor và UserIdentityId
             var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.Id)
                 ?? throw new Exception("Doctor not found");
-            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
-            if (userIdentityId == null)
-                throw new Exception("UserIdentity not found");
 
-            // 2. Cập nhật Doctor
-            doctor.FullName = dto.FullName;
-            doctor.Gender = dto.Gender;
-            doctor.DateOfBirth = dto.DateOfBirth;
-            doctor.Email = dto.Email;
-            doctor.PhoneNumber = dto.PhoneNumber;
+            // Compare UserIdentityId (shadow property) with AspNetUser.Id  
+            var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
+            if (userIdentityIdShadow != userIdentityId)
+                throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
+
+            bool hasChanges = false;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
+            {
+                doctor.PhoneNumber = dto.PhoneNumber;
+                userIdentity.PhoneNumber = dto.PhoneNumber;
+                hasChanges = true;
+            }
 
             // Nếu repository có UpdateAsync thì gọi:
             await _unitOfWork.Repository<Doctor>().UpdateAsync(doctor);
@@ -91,11 +95,17 @@ namespace MediAppointment.Infrastructure.Services
             var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString()!);
             if (userIdentity != null)
             {
-                userIdentity.FullName = dto.FullName;
-                userIdentity.Email = dto.Email;
-                userIdentity.UserName = dto.Email;
-                userIdentity.PhoneNumber = dto.PhoneNumber;
-                await _userManager.UpdateAsync(userIdentity);
+                if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+                    throw new Exception("Current password is required to change password.");
+                if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
+                    throw new Exception("Current password is incorrect.");
+                if (dto.NewPassword != dto.ConfirmNewPassword)
+                    throw new Exception("New password and confirmation do not match.");
+
+                var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
+                if (!passwordChangeResult.Succeeded)
+                    throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
+                hasChanges = true;
             }
 
             // Lưu thay đổi qua UnitOfWork
@@ -228,10 +238,13 @@ namespace MediAppointment.Infrastructure.Services
             if (!result.Succeeded)
                 return new LoginResultDto { Success = false, ErrorMessage = "Sai mật khẩu." };
 
+            // Thực hiện sign in để tạo cookie
+            await _signInManager.SignInAsync(user, isPersistent: false);
+
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
             if (doctor != null)
-                return new LoginResultDto { Success = true, UserId = user.Id, Role = "Doctor" };
+                return new LoginResultDto { Success = true, UserId = doctor.Id, Role = "Doctor" };
 
             var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
             if (patient != null)

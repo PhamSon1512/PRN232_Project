@@ -45,6 +45,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Use CORS before Authorization
+app.UseCors("AllowClient");
+
+// Add Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 

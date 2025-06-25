@@ -1,8 +1,189 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5 mb-5 rounded">
+    <div class="container text-center">
+        <div class="row align-items-center">
+            <div class="col-md-8 mx-auto">
+                <i class="fas fa-heartbeat mb-3" style="font-size: 4rem;"></i>
+                <h1 class="display-4 fw-bold mb-3">MediAppointment</h1>
+                <p class="lead mb-4">Hệ thống đặt lịch khám bệnh trực tuyến - Tiện lợi, nhanh chóng, đáng tin cậy</p>
+                @if (ViewBag.IsAuthenticated == true)
+                {
+                    <div class="d-flex justify-content-center gap-3">
+                        <a asp-controller="Appointment" asp-action="Create" class="btn btn-light btn-lg">
+                            <i class="fas fa-calendar-plus me-2"></i>Đặt lịch hẹn
+                        </a>
+                        <a asp-controller="Appointment" asp-action="Index" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-calendar-alt me-2"></i>Lịch hẹn của tôi
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex justify-content-center gap-3">
+                        <a asp-controller="Auth" asp-action="Register" class="btn btn-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Đăng ký ngay
+                        </a>
+                        <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="text-primary mb-3">Tại sao chọn MediAppointment?</h2>
+            <p class="text-muted">Chúng tôi cung cấp giải pháp đặt lịch khám bệnh hiện đại và tiện lợi</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-clock text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-primary">Tiết kiệm thời gian</h5>
+                    <p class="text-muted">Đặt lịch hẹn 24/7 mà không cần gọi điện hay xếp hàng chờ đợi</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-user-md text-success" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-success">Bác sĩ chuyên nghiệp</h5>
+                    <p class="text-muted">Đội ngũ bác sĩ giàu kinh nghiệm, được đào tạo bài bản</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-shield-alt text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-warning">Bảo mật thông tin</h5>
+                    <p class="text-muted">Thông tin cá nhân và y tế được bảo mật tuyệt đối</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Services Section -->
+<div class="bg-light py-5 mb-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-primary mb-3">Dịch vụ của chúng tôi</h2>
+                <p class="text-muted">Cung cấp đa dạng dịch vụ y tế chất lượng cao</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h6>Tim mạch</h6>
+                    <p class="small text-muted">Khám và điều trị các bệnh về tim mạch</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h6>Nội khoa</h6>
+                    <p class="small text-muted">Chẩn đoán và điều trị bệnh nội khoa</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-cut"></i>
+                    </div>
+                    <h6>Ngoại khoa</h6>
+                    <p class="small text-muted">Phẫu thuật và điều trị ngoại khoa</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-baby"></i>
+                    </div>
+                    <h6>Nhi khoa</h6>
+                    <p class="small text-muted">Chăm sóc sức khỏe trẻ em</p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a asp-controller="Doctor" asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-user-md me-2"></i>Xem tất cả bác sĩ
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="container mb-5">
+    <div class="row text-center">
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="h-100">
+                <h3 class="text-primary fw-bold">1000+</h3>
+                <p class="text-muted">Bệnh nhân tin tưởng</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="h-100">
+                <h3 class="text-success fw-bold">50+</h3>
+                <p class="text-muted">Bác sĩ chuyên nghiệp</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="h-100">
+                <h3 class="text-warning fw-bold">15+</h3>
+                <p class="text-muted">Chuyên khoa</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="h-100">
+                <h3 class="text-info fw-bold">24/7</h3>
+                <p class="text-muted">Hỗ trợ khách hàng</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+@if (ViewBag.IsAuthenticated != true)
+{
+    <div class="bg-primary text-white py-5 mb-5 rounded">
+        <div class="container text-center">
+            <h3 class="mb-3">Bắt đầu hành trình chăm sóc sức khỏe của bạn</h3>
+            <p class="mb-4">Đăng ký ngay để trải nghiệm dịch vụ đặt lịch khám bệnh tiện lợi</p>
+            <a asp-controller="Auth" asp-action="Register" class="btn btn-light btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Đăng ký miễn phí
+            </a>
+        </div>
+    </div>
+}

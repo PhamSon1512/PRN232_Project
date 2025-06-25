@@ -18,6 +18,26 @@ namespace MediAppointment.Infrastructure.Persistence
                 options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
 
+            // Configure cookie options for CORS
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+                options.SlidingExpiration = true;
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+            });
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

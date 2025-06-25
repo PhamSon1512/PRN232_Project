@@ -7,9 +7,9 @@ namespace MediAppointment.Application.Interfaces
     {
         // Doctor
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
-        Task UpdateDoctorAsync(DoctorUpdateDto dto);
+        Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto);
         Task DeleteDoctorAsync(Guid doctorId);
-        Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
+        //Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
 
         // Patient
         Task<Guid> CreatePatientAsync(PatientCreateDto dto);

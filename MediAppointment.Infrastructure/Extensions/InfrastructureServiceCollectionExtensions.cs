@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using MediAppointment.Application.DTOs.GeminiDTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
@@ -59,13 +60,19 @@ namespace MediAppointment.Infrastructure.Extensions
             services.Configure<EmailConfig>(configuration.GetSection("EmailConfig"));
             // InfrastructureServiceCollectionExtensions.cs
             services.AddScoped<IEmailService, EmailService>();
+            services.Configure<GeminiSettings>(configuration.GetSection("GeminiSettings"));
+            services.AddHttpClient<IGeminiChatService, GeminiChatService>();
             services.AddSingleton<IEmailSender<UserIdentity>, EmailSender>();
 
             services.AddScoped<IJobService, JobService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
+            services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
+            services.AddScoped<IRoomTimeSlotService, RoomTimeSlotService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
             services.AddHangfireServer();
+            
+
             return services;
         }
     }
