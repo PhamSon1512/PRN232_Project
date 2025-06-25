@@ -20,19 +20,19 @@ namespace MediAppointment.API.Controllers
                 if (Guid.TryParse(userIdClaim, out Guid id))
                 {
                 }*/
-            Guid id = Guid.Parse("497DD1AE-1135-4169-B8EA-ED3485C6C2CB");
+            Guid id = Guid.Parse("FD09F480-BD97-4CDA-9402-52E343ED6090");
             await _service.CreateDoctorSchedule(id, requests);
             return Ok();
         }
-        [HttpGet("DeleteRoomTimeSlot/{RoomTimeSlotId:guid}")]
-        public async Task<IActionResult> Get(Guid RoomTimeSlotId)
+        [HttpDelete]
+        public async Task<IActionResult> Get(DeleteDoctorScheduleDTO request)
         {
             /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (Guid.TryParse(userIdClaim, out Guid id))
                 {
                 }*/
-            Guid id = Guid.Parse("497DD1AE-1135-4169-B8EA-ED3485C6C2CB");
-            await _service.DeleteDoctorSchedule(RoomTimeSlotId);
+            Guid id = Guid.Parse("FD09F480-BD97-4CDA-9402-52E343ED6090");
+            await _service.DeleteDoctorSchedule(id,request);
             return Ok();
         }
     }

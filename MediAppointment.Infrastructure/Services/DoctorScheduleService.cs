@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Application.DTOs.DoctorScheduleDTOs;
 using MediAppointment.Application.Interfaces;
+using MediAppointment.Domain.Entities;
 using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,24 +21,39 @@ namespace MediAppointment.Infrastructure.Services
         
         public async Task CreateDoctorSchedule(Guid DoctorId,List<DoctorScheduleRequest> requests) {
             foreach (var request in requests) {
-                var RoomTimeSlot = await _context.RoomTimeSlot.Where(x => x.RoomId == request.RoomId && x.TimeSlotId == request.TimeSlotId && x.Date == request.DateSchedule && x.Status == Domain.Enums.RoomTimeSlotStatus.Available).FirstOrDefaultAsync();
-                if (RoomTimeSlot != null) {
-                    RoomTimeSlot.DoctorId = DoctorId;
-                }
-                else
-                {
-                    throw new Exception("SomeThing is Wrong");
+                var ListTimeSlot = _context.TimeSlot.Where(x => x.Shift == request.Shift).ToList();
+                foreach (var xtimeslot in ListTimeSlot) {
+                    var RoomTimeSlot = await _context.RoomTimeSlot.Where(x => x.RoomId == request.RoomId&&x.TimeSlotId==xtimeslot.Id && x.Date == request.DateSchedule && x.Status == Domain.Enums.RoomTimeSlotStatus.Available).FirstOrDefaultAsync();
+                    if (RoomTimeSlot != null)
+                    {
+                        RoomTimeSlot.DoctorId = DoctorId;
+                    }
+                    else
+                    {
+                        throw new Exception("SomeThing is Wrong");
+                    }
                 }
                 
             }
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteDoctorSchedule(Guid RoomTimeSlotId)
+        public async Task DeleteDoctorSchedule(Guid DoctorId,DeleteDoctorScheduleDTO request)
         {
-            var RoomTimeSlot = await _context.RoomTimeSlot.FirstOrDefaultAsync(x=>x.Id == RoomTimeSlotId);
-            RoomTimeSlot.DoctorId = null;
-            _context.RoomTimeSlot.Update(RoomTimeSlot);
+            var ListTimeSlot=await _context.TimeSlot.Where(x=>x.Shift== request.Shift).ToListAsync(); 
+            foreach(var xtimeslot in ListTimeSlot)
+            {
+                var RoomTimeSlot = await _context.RoomTimeSlot.Where(x => x.TimeSlotId == xtimeslot.Id &&x.Date==request.date&&x.DoctorId==DoctorId&&x.RoomId==request.RoomId).FirstOrDefaultAsync();
+                if (RoomTimeSlot != null)
+                {
+                    RoomTimeSlot.DoctorId = null;
+                }
+                else
+                {
+                    throw new Exception("Something is wrong");
+                }
+
+            }
             await _context.SaveChangesAsync();
         }
     }
