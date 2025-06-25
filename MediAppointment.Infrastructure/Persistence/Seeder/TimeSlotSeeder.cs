@@ -17,26 +17,48 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
 
             if (!dbContext.TimeSlot.Any())
             {
-                var baseTimes = new List<TimeSpan>
+                var baseTimes1 = new List<TimeSpan>
                 {
                     new TimeSpan(7, 0, 0),
+                    new TimeSpan(7, 30, 0),
                     new TimeSpan(8, 0, 0),
+                    new TimeSpan(8, 30, 0),
                     new TimeSpan(9, 0, 0),
+                    new TimeSpan(9, 30, 0),
                     new TimeSpan(10, 0, 0),
-                    new TimeSpan(13, 0, 0),
-                    new TimeSpan(14, 0, 0),
-                    new TimeSpan(15, 0, 0),
-                    new TimeSpan(16, 0, 0),
+                    new TimeSpan(10, 30, 0)
                 };
 
-                var timeSlots = baseTimes.Select(time => new TimeSlot
+                var timeSlots1 = baseTimes1.Select(time => new TimeSlot
                 {
                     Id = Guid.NewGuid(),
                     TimeStart = time,
-                    Duration = new TimeSpan(1, 0, 0) 
+                    Duration = new TimeSpan(0, 30, 0) ,
+                    Shift = false
                 }).ToList();
 
-                dbContext.TimeSlot.AddRange(timeSlots);
+                var baseTimes2 = new List<TimeSpan>
+                {
+                    new TimeSpan(13, 0, 0),
+                    new TimeSpan(13, 30, 0),
+                    new TimeSpan(14, 0, 0),
+                    new TimeSpan(14, 30, 0),
+                    new TimeSpan(15, 0, 0),
+                    new TimeSpan(15, 30, 0),
+                    new TimeSpan(16, 0, 0),
+                    new TimeSpan(16, 30, 0),
+                };
+
+                var timeSlots2 = baseTimes2.Select(time => new TimeSlot
+                {
+                    Id = Guid.NewGuid(),
+                    TimeStart = time,
+                    Duration = new TimeSpan(0, 30, 0),
+                    Shift = true
+                }).ToList();
+
+                dbContext.TimeSlot.AddRange(timeSlots1);
+                dbContext.TimeSlot.AddRange(timeSlots2);
                 await dbContext.SaveChangesAsync();
 
                 Console.WriteLine("TimeSlots seeded successfully.");

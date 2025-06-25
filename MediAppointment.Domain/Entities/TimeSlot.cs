@@ -14,6 +14,7 @@ namespace MediAppointment.Domain.Entities
         public TimeSpan TimeStart { get; set; }
         public TimeSpan Duration { get; set; }
         public TimeSpan TimeEnd => TimeStart + Duration;
+        public bool Shift { get; set; }
         public virtual ICollection<RoomTimeSlot> RoomSlots { get; set; } = new List<RoomTimeSlot>();
     }
 }

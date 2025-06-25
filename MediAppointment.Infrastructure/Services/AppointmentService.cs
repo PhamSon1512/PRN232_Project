@@ -95,6 +95,7 @@ namespace MediAppointment.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
+        // lấy các lịch hẹn của bác sĩ
         public async Task<IEnumerable<AppointmentResponse>> ListAppointmentsAssignedToDoctor(Guid doctorId, DateTime? date = null, DateTime? startDate = null, DateTime? endDate = null)
         {
             var query = _appointmentRepository.Entities
