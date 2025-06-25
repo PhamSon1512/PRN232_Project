@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
+using MediAppointment.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,14 +8,17 @@ namespace MediAppointment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DoctorController : ControllerBase
+    public class DoctorAppoinmentController : ControllerBase
     {
         private readonly IProfileService _profileService;
         private readonly IAppointmentService _appointmentService;
+        private readonly IRoomTimeSlotService _roomTimeSlotService;
 
-        public DoctorController(IProfileService profileService)
+        public DoctorAppoinmentController(IProfileService profileService, IAppointmentService appointmentService, IRoomTimeSlotService roomTimeSlotService)
         {
             _profileService = profileService;
+            _appointmentService = appointmentService;
+            _roomTimeSlotService = roomTimeSlotService;
         }
 
         [HttpGet("profile/{userIdentityId:guid}")]
@@ -58,6 +62,22 @@ namespace MediAppointment.API.Controllers
                 .ListAppointmentsAssignedToDoctor(doctorId, date, startDate, endDate);
 
             return Ok(appointments);
+        }
+
+
+        [HttpGet("assigned-slots/{doctorId}")]
+        public async Task<IActionResult> GetAssignedSlots(Guid doctorId, [FromQuery] int? year, [FromQuery] int? week)
+        {
+            var slots = await _roomTimeSlotService.GetAssignedSlotsByDoctor(doctorId, year, week);
+            return Ok(slots);
+        }
+
+        [HttpGet("appointments-by-slot/{roomTimeSlotId:guid}")]
+        public async Task<IActionResult> GetSlotDetailWithAppointments(Guid roomTimeSlotId)
+        {
+            var result = await _roomTimeSlotService.GetDetailWithAppointmentsAsync(roomTimeSlotId);
+            if (result == null) return NotFound("Không tìm thấy slot.");
+            return Ok(result);
         }
 
     }

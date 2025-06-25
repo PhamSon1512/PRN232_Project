@@ -29,10 +29,12 @@ namespace MediAppointment.Infrastructure.Extensions
             services.AddScoped<IJobService, JobService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
+            services.AddScoped<IRoomTimeSlotService, RoomTimeSlotService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
             services.AddHangfireServer();
             
+
             return services;
         }
     }

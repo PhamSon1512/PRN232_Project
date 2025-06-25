@@ -19,6 +19,9 @@ namespace MediAppointment.Domain.Entities
         public Guid? DoctorId { get; set; }
         public Doctor? Doctor { get; set; }
         public DateTime Date {  get; set; }
+
+        // THÊM DÒNG NÀY để EF hiểu mối quan hệ
+        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }
 

@@ -4,6 +4,7 @@ using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Domain.Enums;
+using MediAppointment.Domain.Interfaces;
 using MediAppointment.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,12 @@ namespace MediAppointment.Infrastructure.Services
     {
         protected readonly ApplicationDbContext _context;
         protected readonly IMapper _mapper;
-        public AppointmentService(ApplicationDbContext context,IMapper mapper) {
-        _context = context;
-        _mapper = mapper;
+        private readonly IGenericRepository<Appointment> _appointmentRepository;
+
+        public AppointmentService(ApplicationDbContext context,IMapper mapper, IGenericRepository<Appointment> appointmentRepository) {
+            _context = context;
+            _mapper = mapper;
+            _appointmentRepository = appointmentRepository;
         }
 
         public async Task<IEnumerable<AppointmentResponse>> ListAppointmentByUser(Guid UserId)
@@ -90,5 +94,28 @@ namespace MediAppointment.Infrastructure.Services
             }
             await _context.SaveChangesAsync();
         }
+
+        // lấy các lịch hẹn của bác sĩ
+        public async Task<IEnumerable<AppointmentResponse>> ListAppointmentsAssignedToDoctor(Guid doctorId, DateTime? date = null, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            var query = _appointmentRepository.Entities
+                .Include(a => a.RoomTimeSlot)
+                    .ThenInclude(rts => rts.Room)
+                .Include(a => a.RoomTimeSlot)
+                    .ThenInclude(rts => rts.TimeSlot)
+                .Where(a => a.RoomTimeSlot.DoctorId == doctorId);
+
+            if (date.HasValue)
+                query = query.Where(a => a.AppointmentDate.Date == date.Value.Date);
+            else if (startDate.HasValue && endDate.HasValue)
+                query = query.Where(a =>
+                    a.AppointmentDate.Date >= startDate.Value.Date &&
+                    a.AppointmentDate.Date <= endDate.Value.Date);
+
+            var appointments = await query.ToListAsync();
+            return _mapper.Map<List<AppointmentResponse>>(appointments);
+        }
+
+
     }
 }
