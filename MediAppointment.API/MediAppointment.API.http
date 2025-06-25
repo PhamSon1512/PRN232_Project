@@ -1,6 +1,9 @@
 @MediAppointment.API_HostAddress = http://localhost:5168
 
-GET {{MediAppointment.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
+POST {{MediAppointment.API_HostAddress}}/api/identity/login
+Content-Type: application/json
+{
+    "email": "caovanquan.973@gmail.com",
+    "password": "Quan@2003"
+}
 ###

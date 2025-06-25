@@ -17,13 +17,6 @@ namespace MediAppointment.Infrastructure.Persistence
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
-            // Đăng ký Identity cho UserIdentity và IdentityRole<Guid>
-            services.AddIdentity<UserIdentity, IdentityRole<Guid>>(options =>
-            {
-                // Cấu hình password, lockout, v.v. nếu muốn
-            })
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IProfileRepository, ProfileRepository>();
