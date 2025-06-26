@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace MediAppointment.Application.DTOs.DoctorScheduleDTOs
 {
-    public class DoctorScheduleRequest
+    public class DeleteDoctorScheduleDTO
     {
-        public Guid RoomId { get; set; }
+        public DateTime date {  get; set; }
         public bool Shift { get; set; }
-        public DateTime DateSchedule { get; set; }
+        public Guid RoomId { get; set; }
     }
 }
