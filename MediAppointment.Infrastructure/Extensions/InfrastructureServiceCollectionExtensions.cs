@@ -27,6 +27,7 @@ namespace MediAppointment.Infrastructure.Extensions
             services.Configure<GeminiSettings>(configuration.GetSection("GeminiSettings"));
             services.AddHttpClient<IGeminiChatService, GeminiChatService>();
             services.AddScoped<IJobService, JobService>();
+            services.AddScoped<IManagerService, ManagerService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));

@@ -1,4 +1,6 @@
-﻿namespace MediAppointment.Domain.Entities.Abstractions
+﻿using MediAppointment.Domain.Enums;
+
+namespace MediAppointment.Domain.Entities.Abstractions
 {
     public abstract class User : Entity
     {
@@ -7,6 +9,7 @@
         public DateTime DateOfBirth { get; set; }
         public string Email { get; set; } = default!;
         public string PhoneNumber { get; set; } = default!;
+        public Status Status { get; set; } = Status.Active;
     }
 }
 

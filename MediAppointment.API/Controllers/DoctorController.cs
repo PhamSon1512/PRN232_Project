@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
+using MediAppointment.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
