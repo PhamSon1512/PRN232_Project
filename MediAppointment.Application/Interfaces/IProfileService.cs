@@ -5,7 +5,7 @@ namespace MediAppointment.Application.Interfaces
 {
     public interface IProfileService
     {
-        Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId);
-        Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto);
+        //Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId);
+        //Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto);
     }
 }

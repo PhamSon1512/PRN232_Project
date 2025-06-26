@@ -8,26 +8,25 @@ namespace MediAppointment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DoctorController : ControllerBase
+    public class DoctorAppoinmentController : ControllerBase
     {
         private readonly IProfileService _profileService;
         private readonly IAppointmentService _appointmentService;
+        private readonly IRoomTimeSlotService _roomTimeSlotService;
         private readonly IIdentityService _identityService;
 
-        public DoctorController(IProfileService profileService, IIdentityService identityService)
+        public DoctorAppoinmentController(IProfileService profileService, 
+            IAppointmentService appointmentService, 
+            IRoomTimeSlotService roomTimeSlotService,
+            IIdentityService identityService)
         {
             _profileService = profileService;
+            _appointmentService = appointmentService;
+            _roomTimeSlotService = roomTimeSlotService;
             _identityService = identityService;
         }
 
         [HttpGet("profile/{userIdentityId:guid}")]
-        //public async Task<IActionResult> Profile(Guid userIdentityId)
-        //{
-        //    var doctor = await _profileService.GetProfileByIdAsync(userIdentityId);
-        //    if (doctor == null) return NotFound();
-
-        //    return Ok(doctor);
-        //}
         public async Task<IActionResult> Profile(Guid userIdentityId)
         {
             var doctor = await _identityService.GetDoctorByIdAsync(userIdentityId);
@@ -37,23 +36,11 @@ namespace MediAppointment.API.Controllers
         }
 
         [HttpPut("profile")]
-        //public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
-        //{
-        //    try
-        //    {
-        //        var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
-        //        return Ok(updatedDoctor);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
         public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
         {
             try
             {
-                var updatedDoctor = _identityService.UpdateDoctorAsync(dto); ;
+                var updatedDoctor = _identityService.UpdateDoctorAsync(dto);
                 return Ok(updatedDoctor);
             }
             catch (Exception ex)
@@ -80,6 +67,22 @@ namespace MediAppointment.API.Controllers
                 .ListAppointmentsAssignedToDoctor(doctorId, date, startDate, endDate);
 
             return Ok(appointments);
+        }
+
+
+        [HttpGet("assigned-slots/{doctorId}")]
+        public async Task<IActionResult> GetAssignedSlots(Guid doctorId, [FromQuery] int? year, [FromQuery] int? week)
+        {
+            var slots = await _roomTimeSlotService.GetAssignedSlotsByDoctor(doctorId, year, week);
+            return Ok(slots);
+        }
+
+        [HttpGet("appointments-by-slot/{roomTimeSlotId:guid}")]
+        public async Task<IActionResult> GetSlotDetailWithAppointments(Guid roomTimeSlotId)
+        {
+            var result = await _roomTimeSlotService.GetDetailWithAppointmentsAsync(roomTimeSlotId);
+            if (result == null) return NotFound("Không tìm thấy slot.");
+            return Ok(result);
         }
 
     }

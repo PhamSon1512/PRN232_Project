@@ -4,7 +4,7 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
     {
         public static async Task SeedAsync(IServiceProvider serviceProvider)
         {
-            await RoleSeeder.SeedAsync(serviceProvider);
+            //await RoleSeeder.SeedAsync(serviceProvider);
             await UserSeeder.SeedAsync(serviceProvider);
             await DepartmentSeeder.SeedAsync(serviceProvider);
             await DepartmentDoctorSeeder.SeedAsync(serviceProvider);
