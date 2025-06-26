@@ -1,0 +1,16 @@
+﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.DoctorDTOs;
+using MediAppointment.Application.DTOs.Pages;
+using MediAppointment.Domain.Entities;
+
+namespace MediAppointment.Application.Interfaces
+{
+    public interface IManagerService
+    {
+        Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5);
+        Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
+        Task DeleteDoctorAsync(Guid doctorId);
+        Task<DoctorDto> GetDoctorByIdAsync(Guid userId);
+        Task<Doctor> ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto);
+    }
+}

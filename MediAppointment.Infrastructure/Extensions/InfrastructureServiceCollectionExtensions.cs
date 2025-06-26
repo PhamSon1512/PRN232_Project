@@ -65,6 +65,7 @@ namespace MediAppointment.Infrastructure.Extensions
             services.AddSingleton<IEmailSender<UserIdentity>, EmailSender>();
 
             services.AddScoped<IJobService, JobService>();
+            services.AddScoped<IManagerService, ManagerService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
             services.AddScoped<IRoomTimeSlotService, RoomTimeSlotService>();

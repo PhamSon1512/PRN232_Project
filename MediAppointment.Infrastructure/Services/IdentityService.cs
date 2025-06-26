@@ -2,9 +2,13 @@
 using MediAppointment.Application.Constants;
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
+using MediAppointment.Application.DTOs.DoctorDTOs;
+using MediAppointment.Application.DTOs.Pages;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Interfaces;
+using MediAppointment.Domain.Entities.Abstractions;
+using MediAppointment.Domain.Enums;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +21,7 @@ namespace MediAppointment.Infrastructure.Services
 {
     public class IdentityService : IIdentityService
     {
+        #region Constructor and Dependency Injection
         private readonly UserManager<UserIdentity> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly SignInManager<UserIdentity> _signInManager;
@@ -44,8 +49,59 @@ namespace MediAppointment.Infrastructure.Services
             _unitOfWork = unitOfWork;
             _configuration = configuration;
         }
+        #endregion
 
-        // Doctor CRUD
+        #region ManagerDoctor
+        // GET ALL
+        public async Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 5;
+
+            var listDoctor = _dbContext.Set<User>().OfType<Doctor>().AsQueryable();
+            listDoctor = listDoctor.Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department);
+
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                text = text.Trim().ToLower();
+                listDoctor = listDoctor.Where(d => d.FullName.ToLower().Contains(text) || d.Email.ToLower().Contains(text));
+            }
+
+            if (!string.IsNullOrWhiteSpace(department))
+            {
+                department = department.Trim().ToLower();
+                listDoctor = listDoctor.Where(d => d.DoctorDepartments.Any(dd => dd.Department.DepartmentName.ToLower().Contains(department)));
+            }
+
+            var totalCount = await listDoctor.CountAsync();
+
+            // phân trang và thông tin all bác sĩ
+            var doctors = await listDoctor
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(d => new DoctorDto
+                {
+                    Id = d.Id,
+                    FullName = d.FullName,
+                    Gender = d.Gender,
+                    DateOfBirth = d.DateOfBirth,
+                    Email = d.Email,
+                    PhoneNumber = d.PhoneNumber,
+                    Departments = d.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+                    Status = (int)d.Status
+                })
+                .ToListAsync();
+
+            return new PagedResult<DoctorDto>
+            {
+                Items = doctors,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        // CREATE
         public async Task<Guid> CreateDoctorAsync(DoctorCreateDto dto)
 {
     if (string.IsNullOrWhiteSpace(dto.Email))
@@ -123,6 +179,78 @@ namespace MediAppointment.Infrastructure.Services
     return doctor.Id;
 }
 
+        // UPDATE
+        public async Task ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto)
+        {
+            var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == dto.UserIdentityId)
+                ?? throw new ArgumentException($"Doctor with UserIdentityId {dto.UserIdentityId} not found.");
+
+            doctor.Status = dto.Status;
+
+            var currentDepartmentIds = doctor.DoctorDepartments.Select(dd => dd.DepartmentId).ToList();
+            var newDepartmentIds = dto.Departments ?? new List<Guid>();
+
+            if (newDepartmentIds.Any())
+            {
+                var validDepartmentIds = await _dbContext.Departments
+                    .Where(d => newDepartmentIds.Contains(d.Id))
+                    .Select(d => d.Id)
+                    .ToListAsync();
+
+                if (validDepartmentIds.Count != newDepartmentIds.Count)
+                {
+                    var invalidIds = newDepartmentIds.Except(validDepartmentIds).ToList();
+                    throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
+                }
+            }
+
+            var departmentsToRemove = doctor.DoctorDepartments.Where(dd => !newDepartmentIds.Contains(dd.DepartmentId)).ToList();
+            foreach (var dept in departmentsToRemove)
+            {
+                _dbContext.Set<DoctorDepartment>().Remove(dept);
+            }
+
+            var departmentsToAdd = newDepartmentIds.Where(id => !currentDepartmentIds.Contains(id))
+                .Select(id => new DoctorDepartment
+                {
+                    DoctorId = doctor.Id,
+                    DepartmentId = id
+                }).ToList();
+            _dbContext.Set<DoctorDepartment>().AddRange(departmentsToAdd);
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        // DELETE
+        public async Task DeleteDoctorAsync(Guid doctorId)
+        {
+            var doctor = await _dbContext.Set<User>().OfType<Doctor>().FirstOrDefaultAsync(d => d.Id == doctorId)
+                ?? throw new ArgumentException($"Doctor with UserId {doctorId} not found.");
+
+            doctor.Status = Domain.Enums.Status.Deleted;
+            await _dbContext.SaveChangesAsync();
+        }
+        #endregion
+
+        #region DoctorUpdateProfile
+        public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)
+        {
+            var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department).FirstOrDefaultAsync(d => d.Id == doctorId)
+                ?? throw new ArgumentException($"Doctor with UserId {doctorId} not found.");
+
+            return new DoctorDto
+            {
+                Id = doctor.Id,
+                FullName = doctor.FullName,
+                Gender = doctor.Gender,
+                DateOfBirth = doctor.DateOfBirth,
+                Email = doctor.Email,
+                PhoneNumber = doctor.PhoneNumber,
+                Departments = doctor.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+                Status = (int)doctor.Status
+            };
+        }
+
         public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
 {
     // AspNetUsers  
@@ -192,8 +320,16 @@ namespace MediAppointment.Infrastructure.Services
     };
 }
 
+        //        Email = doctor.Email,
+        //        PhoneNumber = doctor.PhoneNumber
+        //    };
+        //}
+        //        Email = doctor.Email,
+        //        PhoneNumber = doctor.PhoneNumber
+        //    };
+        //}
 
-        // Patient CRUD
+        #region Patient_CRUD
         public async Task<Guid> CreatePatientAsync(PatientCreateDto dto)
         {
             // 1. Tạo UserIdentity
@@ -274,8 +410,9 @@ namespace MediAppointment.Infrastructure.Services
                 PhoneNumber = patient.PhoneNumber
             };
         }
+        #endregion
 
-        // Login
+        #region Login
         public async Task<LoginResultDto> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -320,6 +457,9 @@ namespace MediAppointment.Infrastructure.Services
                 UserId = user.Id,
             };
         }
+        #endregion
+
+        #region Register
         public async Task<LoginResultDto> RegisterAsync(RegisterDto dto)
         {
             // Kiểm tra email đã tồn tại chưa
@@ -365,8 +505,8 @@ namespace MediAppointment.Infrastructure.Services
             var encodedToken = Uri.EscapeDataString(token);
             var confirmLink = $"https://localhost:7230/api/auth/confirm-email?email={Uri.EscapeDataString(dto.Email)}&token={encodedToken}";
 
-            // Gửi mail
-            await _emailSender.SendConfirmationLinkAsync(userIdentity, dto.Email, confirmLink);
+                UserId = doctorId ?? patientId, // Ưu tiên DoctorId nếu có, hoặc PatientId
+                Role = string.Join(",", dto.Roles)
             await _dbContext.SaveChangesAsync();
 
             // 4. Trả về kết quả
@@ -377,6 +517,7 @@ namespace MediAppointment.Infrastructure.Services
                 ErrorMessage = "Đăng ký thành công. Vui lòng xác minh email"
             };
         }
+        #endregion
 
         public async Task<LoginResultDto> RefreshTokenAsync(RefreshTokenDto dto)
         {
@@ -397,6 +538,7 @@ namespace MediAppointment.Infrastructure.Services
 
             return new LoginResultDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
         }
+
         //Confirm Email
         public async Task<LoginResultDto> ConfirmEmailAsync(string email, string token)
         {
@@ -430,13 +572,14 @@ namespace MediAppointment.Infrastructure.Services
             };
         }
 
-
         //Logout
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
+        #endregion
 
+        #region ForgotPassword
         //Forgot
         public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto)
         {

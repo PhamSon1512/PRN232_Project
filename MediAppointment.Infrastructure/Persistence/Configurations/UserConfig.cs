@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Entities.Abstractions;
+using MediAppointment.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,6 +33,11 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
             builder.Property(u => u.PhoneNumber).IsRequired().HasMaxLength(15);
             builder.Property(u => u.DateOfBirth).IsRequired();
             builder.Property(u => u.Gender).IsRequired();
+            builder.Property(u => u.Status)
+                .IsRequired()
+                .HasColumnType("int")
+                .HasConversion<int>()
+                .HasDefaultValue(Status.Active);
         }
     }
 }

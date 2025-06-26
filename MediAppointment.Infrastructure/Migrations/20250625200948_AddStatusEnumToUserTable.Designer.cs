@@ -4,6 +4,7 @@ using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediAppointment.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625200948_AddStatusEnumToUserTable")]
+    partial class AddStatusEnumToUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -313,9 +316,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
 
-                    b.Property<bool>("Shift")
-                        .HasColumnType("bit");
-
                     b.Property<TimeSpan>("TimeStart")
                         .HasColumnType("time");
 
@@ -420,13 +420,6 @@ namespace MediAppointment.Infrastructure.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -623,7 +616,7 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("MediAppointment.Domain.Entities.RoomTimeSlot", "RoomTimeSlot")
-                        .WithMany("Appointments")
+                        .WithMany()
                         .HasForeignKey("RoomTimeSlotId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -802,11 +795,6 @@ namespace MediAppointment.Infrastructure.Migrations
             modelBuilder.Entity("MediAppointment.Domain.Entities.Room", b =>
                 {
                     b.Navigation("RoomTimeSlots");
-                });
-
-            modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
-                {
-                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.TimeSlot", b =>
