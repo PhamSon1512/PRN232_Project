@@ -11,27 +11,48 @@ namespace MediAppointment.API.Controllers
     {
         private readonly IProfileService _profileService;
         private readonly IAppointmentService _appointmentService;
+        private readonly IIdentityService _identityService;
 
-        public DoctorController(IProfileService profileService)
+        public DoctorController(IProfileService profileService, IIdentityService identityService)
         {
             _profileService = profileService;
+            _identityService = identityService;
         }
 
         [HttpGet("profile/{userIdentityId:guid}")]
+        //public async Task<IActionResult> Profile(Guid userIdentityId)
+        //{
+        //    var doctor = await _profileService.GetProfileByIdAsync(userIdentityId);
+        //    if (doctor == null) return NotFound();
+
+        //    return Ok(doctor);
+        //}
         public async Task<IActionResult> Profile(Guid userIdentityId)
         {
-            var doctor = await _profileService.GetProfileByIdAsync(userIdentityId);
+            var doctor = await _identityService.GetDoctorByIdAsync(userIdentityId);
             if (doctor == null) return NotFound();
 
             return Ok(doctor);
         }
 
         [HttpPut("profile")]
+        //public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
+        //{
+        //    try
+        //    {
+        //        var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
+        //        return Ok(updatedDoctor);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
         public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
         {
             try
             {
-                var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
+                var updatedDoctor = _identityService.UpdateDoctorAsync(dto); ;
                 return Ok(updatedDoctor);
             }
             catch (Exception ex)

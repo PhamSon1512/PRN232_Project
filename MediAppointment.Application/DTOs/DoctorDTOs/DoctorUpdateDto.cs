@@ -8,11 +8,6 @@ namespace MediAppointment.Application.DTOs
         public DateTime DateOfBirth { get; set; }
         public string Email { get; set; } = default!;
         public string PhoneNumber { get; set; } = default!;
-        public string? CurrentPassword { get; set; }
-        public string? NewPassword { get; set; }
-        public string? ConfirmNewPassword { get; set; }
-
-        // Không nên update Password ? ?ây
-        // Thêm các tr??ng ??c thù cho Doctor n?u có
+        
     }
 }

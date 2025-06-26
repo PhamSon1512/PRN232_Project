@@ -7,9 +7,9 @@ namespace MediAppointment.Application.Interfaces
     {
         // Doctor
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
-        Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto);
+        Task UpdateDoctorAsync(DoctorUpdateDto dto);
         Task DeleteDoctorAsync(Guid doctorId);
-        //Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
+        Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
 
         // Patient
         Task<Guid> CreatePatientAsync(PatientCreateDto dto);
@@ -22,9 +22,29 @@ namespace MediAppointment.Application.Interfaces
 
         // Register
         Task<LoginResultDto> RegisterAsync(RegisterDto dto);
+        Task<LoginResultDto> RefreshTokenAsync(RefreshTokenDto dto);
+        Task<LoginResultDto> ConfirmEmailAsync(string email, string token);
+
         //Forgot Password
         Task<bool> ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task<LoginResultDto> ResetPasswordAsync(ResetPasswordDto dto);
+
         //Logout
         Task LogoutAsync();
+
+
+        //Task<bool> CreateRoleAsync(string roleName);
+        //Task<bool> DeleteRoleAsync(string roleId);
+        //Task<List<(Guid id, string roleName)>> GetRolesAsync();
+        //Task<(Guid id, string roleName)> GetRoleByIdAsync(string id);
+        //Task<bool> UpdateRole(Guid id, string roleName);
+
+        //Task<bool> IsInRoleAsync(string userId, string role);
+        //Task<List<string>> GetUserRolesAsync(string userId);
+        //Task<bool> AssignUserToRole(string userName, IList<string> roles);
+
+        //Task<bool> UpdateUsersRole(string userName, IList<string> usersRole);
+        //Task<(bool isUserExists, bool isConfirmed)> CheckUserExistsWithEmailConfirmedAsync(string email);
+        //Task<string> GenerateEmailConfirmationTokenAsync(string email);
     }
 }
