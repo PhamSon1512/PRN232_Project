@@ -47,99 +47,150 @@ namespace MediAppointment.Infrastructure.Services
 
         // Doctor CRUD
         public async Task<Guid> CreateDoctorAsync(DoctorCreateDto dto)
+{
+    if (string.IsNullOrWhiteSpace(dto.Email))
+        throw new ArgumentException("Email is required.");
+    if (await _userManager.FindByEmailAsync(dto.Email) != null)
+        throw new ArgumentException("Email is already taken.");
+
+    string password = GenerateRandomPassword(8);
+
+    var userIdentity = new UserIdentity
+    {
+        UserName = dto.Email,
+        Email = dto.Email,
+        FullName = dto.FullName,
+        PhoneNumber = dto.PhoneNumber
+    };
+    var result = await _userManager.CreateAsync(userIdentity, password);
+    if (!result.Succeeded)
+        throw new Exception($"Failed to create UserIdentity: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+
+    var roleResult = await _userManager.AddToRoleAsync(userIdentity, UserRoles.Doctor);
+    if (!roleResult.Succeeded)
+        throw new Exception($"Failed to assign Doctor role: {string.Join("; ", roleResult.Errors.Select(e => e.Description))}");
+
+    var doctor = new Doctor
+    {
+        Id = Guid.NewGuid(),
+        FullName = dto.FullName,
+        Gender = dto.Gender ?? true,
+        DateOfBirth = dto.DateOfBirth?.Date ?? DateTime.UtcNow.Date,
+        Email = dto.Email,
+        PhoneNumber = dto.PhoneNumber,
+        Status = Status.Active
+    };
+    await _unitOfWork.Repository<Doctor>().AddAsync(doctor);
+    _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+
+    if (dto.Departments != null && dto.Departments.Any())
+{
+    var validDepartmentIds = await _dbContext.Departments
+        .Where(d => dto.Departments.Contains(d.Id))
+        .Select(d => d.Id)
+        .ToListAsync();
+
+    if (validDepartmentIds.Count != dto.Departments.Count)
+    {
+        var invalidIds = dto.Departments.Except(validDepartmentIds).ToList();
+        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
+    }
+
+    foreach (var deptId in validDepartmentIds)
+    {
+        var doctorDepartment = new DoctorDepartment
         {
-            // 1. Tạo UserIdentity
-            var userIdentity = new UserIdentity
-            {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName,
-                PhoneNumber = dto.PhoneNumber
-            };
-            var result = await _userManager.CreateAsync(userIdentity, dto.Password);
-            if (!result.Succeeded)
-                throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            DoctorId = doctor.Id,
+            DepartmentId = deptId
+        };
+        _dbContext.Set<DoctorDepartment>().Add(doctorDepartment);
+    }
+}
 
-            // 2. Tạo Doctor, gán UserIdentityId (shadow property)
-            var doctor = new Doctor
-            {
-                Id = Guid.NewGuid(),
-                FullName = dto.FullName,
-                Gender = dto.Gender,
-                DateOfBirth = dto.DateOfBirth,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber
-            };
-            await _unitOfWork.Repository<Doctor>().AddAsync(doctor);
-            _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
-            return doctor.Id;
-        }
+    // 6. Send email with generated password (if applicable)
+//var subject = "Your MediAppointment Account Credentials";
+//var body = $@"
+//        <p>Hello {dto.FullName},</p>
+//        <p>Your MediAppointment doctor account has been created.</p>
+//        <p><strong>Email:</strong> {dto.Email}</p>
+//        <p><strong>Password:</strong> {password}</p>
+//        <p>Please log in and change your password immediately.</p>
+//        <p><a href=""https://your-app-url/login"">Log in here</a></p>
+//    ";
+//await _emailService.SendAsync(dto.Email, subject, body);
+    
+    await _unitOfWork.SaveChangesAsync();
+    return doctor.Id;
+}
 
-        public async Task UpdateDoctorAsync(DoctorUpdateDto dto)
-        {
-            // 1. Lấy Doctor và UserIdentityId
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.Id)
-                ?? throw new Exception("Doctor not found");
-            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
-            if (userIdentityId == null)
-                throw new Exception("UserIdentity not found");
+        public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
+{
+    // AspNetUsers  
+    var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
+        ?? throw new Exception("UserIdentity not found");
 
-            // 2. Cập nhật Doctor
-            doctor.FullName = dto.FullName;
-            doctor.Gender = dto.Gender;
-            doctor.DateOfBirth = dto.DateOfBirth;
-            doctor.Email = dto.Email;
-            doctor.PhoneNumber = dto.PhoneNumber;
+    // Retrieve Doctor directly using TPH  
+    var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == userIdentityId)
+        ?? throw new Exception("Doctor not found");
 
-            // Nếu repository có UpdateAsync thì gọi:
-            await _unitOfWork.Repository<Doctor>().UpdateAsync(doctor);
+    // Compare UserIdentityId (shadow property) with AspNetUser.Id  
+    var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
+    if (userIdentityIdShadow != userIdentityId)
+        throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
 
-            // 3. Cập nhật UserIdentity
-            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString()!);
-            if (userIdentity != null)
-            {
-                userIdentity.FullName = dto.FullName;
-                userIdentity.Email = dto.Email;
-                userIdentity.UserName = dto.Email;
-                userIdentity.PhoneNumber = dto.PhoneNumber;
-                await _userManager.UpdateAsync(userIdentity);
-            }
+    bool hasChanges = false;
+    if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
+    {
+        doctor.PhoneNumber = dto.PhoneNumber;
+        userIdentity.PhoneNumber = dto.PhoneNumber;
+        hasChanges = true;
+    }
 
-            // Lưu thay đổi qua UnitOfWork
-            await _unitOfWork.Save(CancellationToken.None);
-        }
+//    if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+//    {
+//        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+//            throw new Exception("Current password is required to change password.");
+//        if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
+//            throw new Exception("Current password is incorrect.");
+//        if (dto.NewPassword != dto.ConfirmNewPassword)
+//            throw new Exception("New password and confirmation do not match.");
+//
+//        var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
+//        if (!passwordChangeResult.Succeeded)
+//           throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
+//        hasChanges = true;
+//    }
 
+    if (hasChanges)
+    {
+        // update AspNetUser  
+        var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
+        if (!updateIdentityResult.Succeeded)
+            throw new Exception(string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description)));
 
-        public async Task DeleteDoctorAsync(Guid doctorId)
-        {
-            // 1. Lấy doctor qua repository
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(doctorId)
-                ?? throw new Exception("Doctor not found");
-
-            // 2. Xóa doctor qua repository
-            await _unitOfWork.Repository<Doctor>().DeleteAsync(doctor);
-
-            // 3. Lưu thay đổi qua UnitOfWork
-            await _unitOfWork.Save(CancellationToken.None);
-        }
+        //update Users  
+        await _dbContext.SaveChangesAsync();
+    }
+}
 
 
-        public async Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId)
-        {
-            // Lấy doctor qua repository
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(doctorId);
-            if (doctor == null) return null;
+        public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)
+{
+    var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department).FirstOrDefaultAsync(d => d.Id == doctorId)
+        ?? throw new ArgumentException($"Doctor with UserId {doctorId} not found.");
 
-            return new DoctorUpdateDto
-            {
-                Id = doctor.Id,
-                FullName = doctor.FullName,
-                Gender = doctor.Gender,
-                DateOfBirth = doctor.DateOfBirth,
-                Email = doctor.Email,
-                PhoneNumber = doctor.PhoneNumber
-            };
-        }
+    return new DoctorDto
+    {
+        Id = doctor.Id,
+        FullName = doctor.FullName,
+        Gender = doctor.Gender,
+        DateOfBirth = doctor.DateOfBirth,
+        Email = doctor.Email,
+        PhoneNumber = doctor.PhoneNumber,
+        Departments = doctor.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+        Status = (int)doctor.Status
+    };
+}
 
 
         // Patient CRUD
