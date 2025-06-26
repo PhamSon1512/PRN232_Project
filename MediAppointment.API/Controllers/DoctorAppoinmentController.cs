@@ -13,18 +13,23 @@ namespace MediAppointment.API.Controllers
         private readonly IProfileService _profileService;
         private readonly IAppointmentService _appointmentService;
         private readonly IRoomTimeSlotService _roomTimeSlotService;
+        private readonly IIdentityService _identityService;
 
-        public DoctorAppoinmentController(IProfileService profileService, IAppointmentService appointmentService, IRoomTimeSlotService roomTimeSlotService)
+        public DoctorAppoinmentController(IProfileService profileService, 
+            IAppointmentService appointmentService, 
+            IRoomTimeSlotService roomTimeSlotService,
+            IIdentityService identityService)
         {
             _profileService = profileService;
             _appointmentService = appointmentService;
             _roomTimeSlotService = roomTimeSlotService;
+            _identityService = identityService;
         }
 
         [HttpGet("profile/{userIdentityId:guid}")]
         public async Task<IActionResult> Profile(Guid userIdentityId)
         {
-            var doctor = await _profileService.GetProfileByIdAsync(userIdentityId);
+            var doctor = await _identityService.GetDoctorByIdAsync(userIdentityId);
             if (doctor == null) return NotFound();
 
             return Ok(doctor);
@@ -35,7 +40,7 @@ namespace MediAppointment.API.Controllers
         {
             try
             {
-                var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
+                var updatedDoctor = _identityService.UpdateDoctorAsync(dto);
                 return Ok(updatedDoctor);
             }
             catch (Exception ex)

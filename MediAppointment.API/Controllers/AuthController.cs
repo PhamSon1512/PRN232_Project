@@ -27,19 +27,6 @@ namespace MediAppointment.API.Controllers
             if (!result.Success)
                 return Unauthorized(result.ErrorMessage);
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, result.UserId.ToString()!),
-                new Claim(ClaimTypes.Email, dto.Email),
-            };
-            if (!string.IsNullOrEmpty(result.Role))
-            {
-                claims.Add(new Claim(ClaimTypes.Role, result.Role));
-            }
-
-            var accessToken = _tokenService.GenerateAccessToken(claims);
-
-            result.AccessToken = accessToken;
             return Ok(result);
         }
 
@@ -50,6 +37,13 @@ namespace MediAppointment.API.Controllers
             if (!result.Success)
                 return BadRequest(result.ErrorMessage);
 
+            return Ok(result);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> Refresh(RefreshTokenDto dto)
+        {
+            var result = await _identityService.RefreshTokenAsync(dto);
             return Ok(result);
         }
 
@@ -85,7 +79,7 @@ namespace MediAppointment.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
                 return BadRequest("Thông tin không hợp lệ.");

@@ -7,9 +7,9 @@ namespace MediAppointment.Application.Interfaces
     {
         // Doctor
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
-        Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto);
+        Task UpdateDoctorAsync(DoctorUpdateDto dto);
         Task DeleteDoctorAsync(Guid doctorId);
-        //Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
+        Task<DoctorUpdateDto?> GetDoctorByIdAsync(Guid doctorId);
 
         // Patient
         Task<Guid> CreatePatientAsync(PatientCreateDto dto);
@@ -22,7 +22,7 @@ namespace MediAppointment.Application.Interfaces
 
         // Register
         Task<LoginResultDto> RegisterAsync(RegisterDto dto);
-
+        Task<LoginResultDto> RefreshTokenAsync(RefreshTokenDto dto);
         Task<LoginResultDto> ConfirmEmailAsync(string email, string token);
 
         //Forgot Password

@@ -11,5 +11,6 @@ namespace MediAppointment.Application.Interfaces
     {
         string GenerateRefreshToken();
         string GenerateAccessToken(List<Claim> claims);
+        ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     }
 }

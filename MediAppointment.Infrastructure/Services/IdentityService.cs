@@ -1,4 +1,5 @@
-﻿using MediAppointment.Application.Constants;
+﻿using System.Security.Claims;
+using MediAppointment.Application.Constants;
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.Interfaces;
@@ -7,7 +8,9 @@ using MediAppointment.Domain.Interfaces;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace MediAppointment.Infrastructure.Services
@@ -17,26 +20,29 @@ namespace MediAppointment.Infrastructure.Services
         private readonly UserManager<UserIdentity> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly SignInManager<UserIdentity> _signInManager;
-        private readonly IEmailService _emailService;
         private readonly ApplicationDbContext _dbContext;
         private readonly IEmailSender<UserIdentity> _emailSender;
+        private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IConfiguration _configuration;
         public IdentityService(
             UserManager<UserIdentity> userManager,
             RoleManager<IdentityRole<Guid>> roleManager,
             SignInManager<UserIdentity> signInManager,
             ApplicationDbContext dbContext,
-            IEmailService emailService,
             IEmailSender<UserIdentity> emailSender,
-            IUnitOfWork unitOfWork)
+            ITokenService tokenService,
+            IUnitOfWork unitOfWork,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
             _dbContext = dbContext;
-            _emailService = emailService;
             _emailSender = emailSender;
+            _tokenService = tokenService;
             _unitOfWork = unitOfWork;
+            _configuration = configuration;
         }
 
         // Doctor CRUD
@@ -69,24 +75,21 @@ namespace MediAppointment.Infrastructure.Services
             return doctor.Id;
         }
 
-        public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
+        public async Task UpdateDoctorAsync(DoctorUpdateDto dto)
         {
             // 1. Lấy Doctor và UserIdentityId
             var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.Id)
                 ?? throw new Exception("Doctor not found");
+            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
+            if (userIdentityId == null)
+                throw new Exception("UserIdentity not found");
 
-            // Compare UserIdentityId (shadow property) with AspNetUser.Id  
-            var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
-            if (userIdentityIdShadow != userIdentityId)
-                throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
-
-            bool hasChanges = false;
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
-            {
-                doctor.PhoneNumber = dto.PhoneNumber;
-                userIdentity.PhoneNumber = dto.PhoneNumber;
-                hasChanges = true;
-            }
+            // 2. Cập nhật Doctor
+            doctor.FullName = dto.FullName;
+            doctor.Gender = dto.Gender;
+            doctor.DateOfBirth = dto.DateOfBirth;
+            doctor.Email = dto.Email;
+            doctor.PhoneNumber = dto.PhoneNumber;
 
             // Nếu repository có UpdateAsync thì gọi:
             await _unitOfWork.Repository<Doctor>().UpdateAsync(doctor);
@@ -95,17 +98,11 @@ namespace MediAppointment.Infrastructure.Services
             var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString()!);
             if (userIdentity != null)
             {
-                if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
-                    throw new Exception("Current password is required to change password.");
-                if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
-                    throw new Exception("Current password is incorrect.");
-                if (dto.NewPassword != dto.ConfirmNewPassword)
-                    throw new Exception("New password and confirmation do not match.");
-
-                var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
-                if (!passwordChangeResult.Succeeded)
-                    throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
-                hasChanges = true;
+                userIdentity.FullName = dto.FullName;
+                userIdentity.Email = dto.Email;
+                userIdentity.UserName = dto.Email;
+                userIdentity.PhoneNumber = dto.PhoneNumber;
+                await _userManager.UpdateAsync(userIdentity);
             }
 
             // Lưu thay đổi qua UnitOfWork
@@ -238,19 +235,39 @@ namespace MediAppointment.Infrastructure.Services
             if (!result.Succeeded)
                 return new LoginResultDto { Success = false, ErrorMessage = "Sai mật khẩu." };
 
-            // Thực hiện sign in để tạo cookie
-            await _signInManager.SignInAsync(user, isPersistent: false);
-
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
-            var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
-            if (doctor != null)
-                return new LoginResultDto { Success = true, UserId = doctor.Id, Role = "Doctor" };
+            //var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
+            //if (doctor != null)
+            //    return new LoginResultDto { Success = true, UserId = user.Id, Role = "Doctor" };
 
-            var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
-            if (patient != null)
-                return new LoginResultDto { Success = true, UserId = patient.Id, Role = "Patient" };
+            //var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
+            //if (patient != null)
+            //    return new LoginResultDto { Success = true, UserId = patient.Id, Role = "Patient" };
 
-            return new LoginResultDto { Success = false, ErrorMessage = "Không tìm thấy thông tin người dùng." };
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()!),
+                new Claim(ClaimTypes.Email, dto.Email),
+                new Claim(ClaimTypes.Name, dto.Email),
+            };
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            var accessToken = _tokenService.GenerateAccessToken(claims);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(Convert.ToInt32(_configuration["Jwt:RefreshTokenExpirationDays"]));
+            await _userManager.UpdateAsync(user);
+            return new LoginResultDto
+            {
+                Success = true,
+                ErrorMessage = "Đăng nhập thành công",
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                UserId = user.Id,
+            };
         }
         public async Task<LoginResultDto> RegisterAsync(RegisterDto dto)
         {
@@ -275,21 +292,21 @@ namespace MediAppointment.Infrastructure.Services
             var addRoleResult = await _userManager.AddToRolesAsync(userIdentity, ["Patient"]);
             if (!addRoleResult.Succeeded)
                 return new LoginResultDto { Success = false, ErrorMessage = string.Join("; ", addRoleResult.Errors.Select(e => e.Description)) };
-            
+
             Guid? patientId = null;
 
-                var patient = new Patient
-                {
-                    Id = Guid.NewGuid(),
-                    FullName = dto.FullName,
-                    Gender = dto.Gender,
-                    DateOfBirth = dto.DateOfBirth,
-                    Email = dto.Email,
-                    PhoneNumber = dto.PhoneNumber
-                };
-                _dbContext.Patients.Add(patient);
-                _dbContext.Entry(patient).Property("UserIdentityId").CurrentValue = userIdentity.Id;
-                patientId = patient.Id;
+            var patient = new Patient
+            {
+                Id = Guid.NewGuid(),
+                FullName = dto.FullName,
+                Gender = dto.Gender,
+                DateOfBirth = dto.DateOfBirth,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber
+            };
+            _dbContext.Patients.Add(patient);
+            _dbContext.Entry(patient).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+            patientId = patient.Id;
 
 
             // 4. Gửi email xác minh
@@ -308,6 +325,26 @@ namespace MediAppointment.Infrastructure.Services
                 UserId = patientId,
                 ErrorMessage = "Đăng ký thành công. Vui lòng xác minh email"
             };
+        }
+
+        public async Task<LoginResultDto> RefreshTokenAsync(RefreshTokenDto dto)
+        {
+            var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
+            var userEmail = principal.Identity.Name;
+            var user = await _userManager.FindByNameAsync(userEmail);
+
+            if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new SecurityTokenException("Invalid refresh token");
+
+            var claims = principal.Claims.ToList();
+            var newAccessToken = _tokenService.GenerateAccessToken(claims);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
+            return new LoginResultDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
         }
         //Confirm Email
         public async Task<LoginResultDto> ConfirmEmailAsync(string email, string token)
@@ -354,14 +391,16 @@ namespace MediAppointment.Infrastructure.Services
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return false; 
+                return false;
 
             // Sinh token đặt lại mật khẩu
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
             // Tạo link đặt lại mật khẩu 
-            //var resetLink = $"https://localhost:7230/reset-password?email={Uri.EscapeDataString(dto.Email)}&token={Uri.EscapeDataString(token)}";
-            var resetLink = $"{(token)}";
+            var encodedToken = Uri.EscapeDataString(token);
+
+            var resetLink = $"https://localhost:7230/api/auth/reset-password?email={Uri.EscapeDataString(dto.Email)}&token={encodedToken}";
+            //var resetLink = $"{(token)}";
 
             await _emailSender.SendPasswordResetLinkAsync(user, dto.Email, resetLink);
 
