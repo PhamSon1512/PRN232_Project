@@ -406,13 +406,14 @@ namespace MediAppointment.Infrastructure.Services
                 return new LoginResultDto { Success = false, ErrorMessage = "Sai mật khẩu." };
 
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
-            //var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
-            //if (doctor != null)
-            //    return new LoginResultDto { Success = true, UserId = user.Id, Role = "Doctor" };
+            var userId = Guid.Empty;
+            var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
+            if(doctor != null)
+                userId = doctor.Id;
 
-            //var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
-            //if (patient != null)
-            //    return new LoginResultDto { Success = true, UserId = patient.Id, Role = "Patient" };
+            var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
+            if (patient != null)
+                userId = patient.Id;
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
@@ -420,6 +421,7 @@ namespace MediAppointment.Infrastructure.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()!),
                 new Claim(ClaimTypes.Email, dto.Email),
                 new Claim(ClaimTypes.Name, dto.Email),
+                new Claim("UserId", userId.ToString()!)
             };
             foreach (var role in roles)
             {

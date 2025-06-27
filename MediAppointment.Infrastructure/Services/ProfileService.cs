@@ -1,9 +1,11 @@
-﻿using MediAppointment.Application.DTOs;
+﻿using System.Security.Claims;
+using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Interfaces;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+
 
 namespace MediAppointment.Infrastructure.Services
 {
@@ -20,16 +22,12 @@ namespace MediAppointment.Infrastructure.Services
             _userManager = userManager;
             _emailService = emailService;
             _identityService = identityService;
-        }
+        } 
 
         public async Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId)
         {
             return await _profileRepository.GetProfileByIdAsync(userIdentityId);
         }
-        //public async Task<DoctorUpdateDto?> GetProfileByIdAsync(Guid userIdentityId)
-        //{
-        //    return await _identityService.GetDoctorByIdAsync(userIdentityId);
-        //}
 
         public async Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto)
         {

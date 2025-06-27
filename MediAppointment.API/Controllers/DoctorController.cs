@@ -1,4 +1,5 @@
-﻿using MediAppointment.Application.DTOs;
+﻿using System.Security.Claims;
+using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
@@ -14,25 +15,22 @@ namespace MediAppointment.API.Controllers
         private readonly IAppointmentService _appointmentService;
         private readonly IIdentityService _identityService;
 
-        public DoctorController(IProfileService profileService, IIdentityService identityService)
+        public DoctorController(IProfileService profileService, IIdentityService identityService, IAppointmentService appointmentService)
         {
             _profileService = profileService;
             _identityService = identityService;
+            _appointmentService = appointmentService;
         }
 
-        [HttpGet("profile/{userIdentityId:guid}")]
-        //public async Task<IActionResult> Profile(Guid userIdentityId)
-        //{
-        //    var doctor = await _profileService.GetProfileByIdAsync(userIdentityId);
-        //    if (doctor == null) return NotFound();
-
-        //    return Ok(doctor);
-        //}
-        public async Task<IActionResult> Profile(Guid userIdentityId)
+        [HttpGet("profile")]
+        public async Task<IActionResult> Profile()
         {
-            var doctor = await _identityService.GetDoctorByIdAsync(userIdentityId);
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (Guid.TryParse(userIdClaim, out Guid id)){}
+            //var user = Guid.Parse("B6B013AD-B2B2-481C-88B1-87E3B692A367");
+            var doctor = await _identityService.GetDoctorByIdAsync(id);
             if (doctor == null) return NotFound();
-
+                
             return Ok(doctor);
         }
 
