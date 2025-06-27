@@ -6,13 +6,12 @@ using MediAppointment.Application.DTOs.DoctorDTOs;
 using MediAppointment.Application.DTOs.Pages;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
-using MediAppointment.Domain.Interfaces;
 using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Domain.Enums;
+using MediAppointment.Domain.Interfaces;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -103,81 +102,81 @@ namespace MediAppointment.Infrastructure.Services
 
         // CREATE
         public async Task<Guid> CreateDoctorAsync(DoctorCreateDto dto)
-{
-    if (string.IsNullOrWhiteSpace(dto.Email))
-        throw new ArgumentException("Email is required.");
-    if (await _userManager.FindByEmailAsync(dto.Email) != null)
-        throw new ArgumentException("Email is already taken.");
-
-    string password = GenerateRandomPassword(8);
-
-    var userIdentity = new UserIdentity
-    {
-        UserName = dto.Email,
-        Email = dto.Email,
-        FullName = dto.FullName,
-        PhoneNumber = dto.PhoneNumber
-    };
-    var result = await _userManager.CreateAsync(userIdentity, password);
-    if (!result.Succeeded)
-        throw new Exception($"Failed to create UserIdentity: {string.Join("; ", result.Errors.Select(e => e.Description))}");
-
-    var roleResult = await _userManager.AddToRoleAsync(userIdentity, UserRoles.Doctor);
-    if (!roleResult.Succeeded)
-        throw new Exception($"Failed to assign Doctor role: {string.Join("; ", roleResult.Errors.Select(e => e.Description))}");
-
-    var doctor = new Doctor
-    {
-        Id = Guid.NewGuid(),
-        FullName = dto.FullName,
-        Gender = dto.Gender ?? true,
-        DateOfBirth = dto.DateOfBirth?.Date ?? DateTime.UtcNow.Date,
-        Email = dto.Email,
-        PhoneNumber = dto.PhoneNumber,
-        Status = Status.Active
-    };
-    await _unitOfWork.Repository<Doctor>().AddAsync(doctor);
-    _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
-
-    if (dto.Departments != null && dto.Departments.Any())
-{
-    var validDepartmentIds = await _dbContext.Departments
-        .Where(d => dto.Departments.Contains(d.Id))
-        .Select(d => d.Id)
-        .ToListAsync();
-
-    if (validDepartmentIds.Count != dto.Departments.Count)
-    {
-        var invalidIds = dto.Departments.Except(validDepartmentIds).ToList();
-        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
-    }
-
-    foreach (var deptId in validDepartmentIds)
-    {
-        var doctorDepartment = new DoctorDepartment
         {
-            DoctorId = doctor.Id,
-            DepartmentId = deptId
-        };
-        _dbContext.Set<DoctorDepartment>().Add(doctorDepartment);
-    }
-}
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                throw new ArgumentException("Email is required.");
+            if (await _userManager.FindByEmailAsync(dto.Email) != null)
+                throw new ArgumentException("Email is already taken.");
 
-    // 6. Send email with generated password (if applicable)
-//var subject = "Your MediAppointment Account Credentials";
-//var body = $@"
-//        <p>Hello {dto.FullName},</p>
-//        <p>Your MediAppointment doctor account has been created.</p>
-//        <p><strong>Email:</strong> {dto.Email}</p>
-//        <p><strong>Password:</strong> {password}</p>
-//        <p>Please log in and change your password immediately.</p>
-//        <p><a href=""https://your-app-url/login"">Log in here</a></p>
-//    ";
-//await _emailService.SendAsync(dto.Email, subject, body);
-    
-    await _unitOfWork.SaveChangesAsync();
-    return doctor.Id;
-}
+            string password = GenerateRandomPassword(8);
+
+            var userIdentity = new UserIdentity
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                FullName = dto.FullName,
+                PhoneNumber = dto.PhoneNumber
+            };
+            var result = await _userManager.CreateAsync(userIdentity, password);
+            if (!result.Succeeded)
+                throw new Exception($"Failed to create UserIdentity: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+
+            var roleResult = await _userManager.AddToRoleAsync(userIdentity, UserRoles.Doctor);
+            if (!roleResult.Succeeded)
+                throw new Exception($"Failed to assign Doctor role: {string.Join("; ", roleResult.Errors.Select(e => e.Description))}");
+
+            var doctor = new Doctor
+            {
+                Id = Guid.NewGuid(),
+                FullName = dto.FullName,
+                Gender = dto.Gender ?? true,
+                DateOfBirth = dto.DateOfBirth?.Date ?? DateTime.UtcNow.Date,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                Status = Status.Active
+            };
+            await _unitOfWork.Repository<Doctor>().AddAsync(doctor);
+            _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+
+            if (dto.Departments != null && dto.Departments.Any())
+            {
+                var validDepartmentIds = await _dbContext.Departments
+                    .Where(d => dto.Departments.Contains(d.Id))
+                    .Select(d => d.Id)
+                    .ToListAsync();
+
+                if (validDepartmentIds.Count != dto.Departments.Count)
+                {
+                    var invalidIds = dto.Departments.Except(validDepartmentIds).ToList();
+                    throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
+                }
+
+                foreach (var deptId in validDepartmentIds)
+                {
+                    var doctorDepartment = new DoctorDepartment
+                    {
+                        DoctorId = doctor.Id,
+                        DepartmentId = deptId
+                    };
+                    _dbContext.Set<DoctorDepartment>().Add(doctorDepartment);
+                }
+            }
+
+            // 6. Send email with generated password (if applicable)
+            //var subject = "Your MediAppointment Account Credentials";
+            //var body = $@"
+            //        <p>Hello {dto.FullName},</p>
+            //        <p>Your MediAppointment doctor account has been created.</p>
+            //        <p><strong>Email:</strong> {dto.Email}</p>
+            //        <p><strong>Password:</strong> {password}</p>
+            //        <p>Please log in and change your password immediately.</p>
+            //        <p><a href=""https://your-app-url/login"">Log in here</a></p>
+            //    ";
+            //await _emailService.SendAsync(dto.Email, subject, body);
+
+            await _dbContext.SaveChangesAsync();
+            return doctor.Id;
+        }
 
         // UPDATE
         public async Task ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto)
@@ -232,6 +231,16 @@ namespace MediAppointment.Infrastructure.Services
         }
         #endregion
 
+        #region Helper_method
+        private string GenerateRandomPassword(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+        #endregion
+
         #region DoctorUpdateProfile
         public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)
         {
@@ -252,82 +261,55 @@ namespace MediAppointment.Infrastructure.Services
         }
 
         public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
-{
-    // AspNetUsers  
-    var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
-        ?? throw new Exception("UserIdentity not found");
+        {
+            // AspNetUsers  
+            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
+                ?? throw new Exception("UserIdentity not found");
 
-    // Retrieve Doctor directly using TPH  
-    var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == userIdentityId)
-        ?? throw new Exception("Doctor not found");
+            // Retrieve Doctor directly using TPH  
+            var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == userIdentityId)
+                ?? throw new Exception("Doctor not found");
 
-    // Compare UserIdentityId (shadow property) with AspNetUser.Id  
-    var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
-    if (userIdentityIdShadow != userIdentityId)
-        throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
+            // Compare UserIdentityId (shadow property) with AspNetUser.Id  
+            var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
+            if (userIdentityIdShadow != userIdentityId)
+                throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
 
-    bool hasChanges = false;
-    if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
-    {
-        doctor.PhoneNumber = dto.PhoneNumber;
-        userIdentity.PhoneNumber = dto.PhoneNumber;
-        hasChanges = true;
-    }
+            bool hasChanges = false;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
+            {
+                doctor.PhoneNumber = dto.PhoneNumber;
+                userIdentity.PhoneNumber = dto.PhoneNumber;
+                hasChanges = true;
+            }
 
-//    if (!string.IsNullOrWhiteSpace(dto.NewPassword))
-//    {
-//        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
-//            throw new Exception("Current password is required to change password.");
-//        if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
-//            throw new Exception("Current password is incorrect.");
-//        if (dto.NewPassword != dto.ConfirmNewPassword)
-//            throw new Exception("New password and confirmation do not match.");
-//
-//        var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
-//        if (!passwordChangeResult.Succeeded)
-//           throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
-//        hasChanges = true;
-//    }
+            //    if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+            //    {
+            //        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+            //            throw new Exception("Current password is required to change password.");
+            //        if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
+            //            throw new Exception("Current password is incorrect.");
+            //        if (dto.NewPassword != dto.ConfirmNewPassword)
+            //            throw new Exception("New password and confirmation do not match.");
+            //
+            //        var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
+            //        if (!passwordChangeResult.Succeeded)
+            //           throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
+            //        hasChanges = true;
+            //    }
 
-    if (hasChanges)
-    {
-        // update AspNetUser  
-        var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
-        if (!updateIdentityResult.Succeeded)
-            throw new Exception(string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description)));
+            if (hasChanges)
+            {
+                // update AspNetUser  
+                var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
+                if (!updateIdentityResult.Succeeded)
+                    throw new Exception(string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description)));
 
-        //update Users  
-        await _dbContext.SaveChangesAsync();
-    }
-}
-
-
-        public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)
-{
-    var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department).FirstOrDefaultAsync(d => d.Id == doctorId)
-        ?? throw new ArgumentException($"Doctor with UserId {doctorId} not found.");
-
-    return new DoctorDto
-    {
-        Id = doctor.Id,
-        FullName = doctor.FullName,
-        Gender = doctor.Gender,
-        DateOfBirth = doctor.DateOfBirth,
-        Email = doctor.Email,
-        PhoneNumber = doctor.PhoneNumber,
-        Departments = doctor.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
-        Status = (int)doctor.Status
-    };
-}
-
-        //        Email = doctor.Email,
-        //        PhoneNumber = doctor.PhoneNumber
-        //    };
-        //}
-        //        Email = doctor.Email,
-        //        PhoneNumber = doctor.PhoneNumber
-        //    };
-        //}
+                //update Users  
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        #endregion
 
         #region Patient_CRUD
         public async Task<Guid> CreatePatientAsync(PatientCreateDto dto)
@@ -505,8 +487,7 @@ namespace MediAppointment.Infrastructure.Services
             var encodedToken = Uri.EscapeDataString(token);
             var confirmLink = $"https://localhost:7230/api/auth/confirm-email?email={Uri.EscapeDataString(dto.Email)}&token={encodedToken}";
 
-                UserId = doctorId ?? patientId, // Ưu tiên DoctorId nếu có, hoặc PatientId
-                Role = string.Join(",", dto.Roles)
+            await _emailSender.SendConfirmationLinkAsync(userIdentity, dto.Email, confirmLink);
             await _dbContext.SaveChangesAsync();
 
             // 4. Trả về kết quả
@@ -572,7 +553,7 @@ namespace MediAppointment.Infrastructure.Services
             };
         }
 
-        //Logout
+        #region Logout
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
@@ -633,6 +614,7 @@ namespace MediAppointment.Infrastructure.Services
                 AccessToken = null
             };
         }
+        #endregion
 
         //// Tạo role mới
         //public async Task<bool> CreateRoleAsync(string roleName)

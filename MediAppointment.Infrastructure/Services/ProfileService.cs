@@ -22,28 +22,28 @@ namespace MediAppointment.Infrastructure.Services
             _identityService = identityService;
         }
 
-        //public async Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId)
-        //{
-        //    return await _profileRepository.GetProfileByIdAsync(userIdentityId);
-        //}
-        public async Task<DoctorUpdateDto?> GetProfileByIdAsync(Guid userIdentityId)
+        public async Task<Doctor?> GetProfileByIdAsync(Guid userIdentityId)
         {
-            return await _identityService.GetDoctorByIdAsync(userIdentityId);
+            return await _profileRepository.GetProfileByIdAsync(userIdentityId);
         }
-
-        //public async Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto)
+        //public async Task<DoctorUpdateDto?> GetProfileByIdAsync(Guid userIdentityId)
         //{
-        //    await _identityService.UpdateDoctorAsync(dto.UserIdentityId, dto);
-        //    var doctor = await _profileRepository.GetProfileByIdAsync(dto.UserIdentityId);
-        //    if (doctor == null) throw new Exception("Doctor not found after update");
-        //    return doctor;
+        //    return await _identityService.GetDoctorByIdAsync(userIdentityId);
         //}
-        public async Task<DoctorUpdateDto> UpdateProfileAsync(DoctorUpdateDto dto)
+
+        public async Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto)
         {
-            await _identityService.UpdateDoctorAsync(dto);
-            var doctor = await _identityService.GetDoctorByIdAsync(dto.Id);
+            await _identityService.UpdateDoctorAsync(dto.UserIdentityId, dto);
+            var doctor = await _profileRepository.GetProfileByIdAsync(dto.UserIdentityId);
             if (doctor == null) throw new Exception("Doctor not found after update");
             return doctor;
         }
+        //public async Task<DoctorUpdateDto> UpdateProfileAsync(DoctorUpdateDto dto)
+        //{
+        //    await _identityService.UpdateDoctorAsync(dto);
+        //    var doctor = await _identityService.GetDoctorByIdAsync(dto.Id);
+        //    if (doctor == null) throw new Exception("Doctor not found after update");
+        //    return doctor;
+        //}
     }
 }
