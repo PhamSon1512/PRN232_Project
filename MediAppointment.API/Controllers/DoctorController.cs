@@ -53,7 +53,7 @@ namespace MediAppointment.API.Controllers
         {
             try
             {
-                var updatedDoctor = _identityService.UpdateDoctorAsync(dto); ;
+                var updatedDoctor = await _profileService.UpdateProfileAsync(dto); ;
                 return Ok(updatedDoctor);
             }
             catch (Exception ex)
