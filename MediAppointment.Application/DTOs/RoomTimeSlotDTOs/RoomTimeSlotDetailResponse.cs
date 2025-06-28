@@ -13,12 +13,12 @@ namespace MediAppointment.Application.DTOs.RoomTimeSlotDTOs
         public Guid Id { get; set; }
         public DateTime Date { get; set; }
         public RoomTimeSlotStatus Status { get; set; }
-
+        public string DoctorName { get; set; } = string.Empty;
         public string RoomName { get; set; } = string.Empty;
         public string TimeStart { get; set; } = string.Empty;
         public string TimeEnd { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
-
+        public string Shift {  get; set; } = string.Empty;
         public List<AppointmentResponse> Appointments { get; set; } = new();
     }
 }

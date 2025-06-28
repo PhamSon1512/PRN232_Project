@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.MedicalRecordDtos;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
@@ -10,66 +11,21 @@ namespace MediAppointment.API.Controllers
     [ApiController]
     public class DoctorAppoinmentController : ControllerBase
     {
-        private readonly IProfileService _profileService;
-        private readonly IAppointmentService _appointmentService;
         private readonly IRoomTimeSlotService _roomTimeSlotService;
-        private readonly IIdentityService _identityService;
+        private readonly IMedicalRecordService _medicalRecordService;
+        private readonly IPatientService _patientService;
 
-        public DoctorAppoinmentController(IProfileService profileService, 
-            IAppointmentService appointmentService, 
+        public DoctorAppoinmentController(
             IRoomTimeSlotService roomTimeSlotService,
-            IIdentityService identityService)
+            IPatientService patientService,
+            IMedicalRecordService medicalRecordService)
         {
-            _profileService = profileService;
-            _appointmentService = appointmentService;
             _roomTimeSlotService = roomTimeSlotService;
-            _identityService = identityService;
+            _patientService = patientService;
+            _medicalRecordService = medicalRecordService;
         }
 
-        [HttpGet("profile/{userIdentityId:guid}")]
-        public async Task<IActionResult> Profile(Guid userIdentityId)
-        {
-            var doctor = await _identityService.GetDoctorByIdAsync(userIdentityId);
-            if (doctor == null) return NotFound();
-
-            return Ok(doctor);
-        }
-
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
-        {
-            try
-            {
-                var updatedDoctor = _profileService.UpdateProfileAsync(dto);
-                return Ok(updatedDoctor);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet("appointments/{doctorId:guid}")]
-        public async Task<IActionResult> GetAppointmentsAssignedToDoctor(
-            Guid doctorId,
-            [FromQuery] DateTime? date,
-            [FromQuery] DateTime? startDate,
-            [FromQuery] DateTime? endDate)  
-        {
-            // Nếu không truyền gì → mặc định: 00:00 hôm nay đến 7 ngày sau
-            if (!date.HasValue && (!startDate.HasValue || !endDate.HasValue))
-            {
-                startDate = DateTime.Today; // 00:00 hôm nay
-                endDate = startDate.Value.AddDays(7); // 7 ngày sau
-            }
-
-            var appointments = await _appointmentService
-                .ListAppointmentsAssignedToDoctor(doctorId, date, startDate, endDate);
-
-            return Ok(appointments);
-        }
-
-
+  
         [HttpGet("assigned-slots/{doctorId}")]
         public async Task<IActionResult> GetAssignedSlots(Guid doctorId, [FromQuery] int? year, [FromQuery] int? week)
         {
@@ -78,12 +34,43 @@ namespace MediAppointment.API.Controllers
         }
 
         [HttpGet("appointments-by-slot/{roomTimeSlotId:guid}")]
-        public async Task<IActionResult> GetSlotDetailWithAppointments(Guid roomTimeSlotId)
+        public async Task<IActionResult> GetRoomTimeSlotDetailWithAppointments(Guid roomTimeSlotId)
         {
             var result = await _roomTimeSlotService.GetDetailWithAppointmentsAsync(roomTimeSlotId);
             if (result == null) return NotFound("Không tìm thấy slot.");
             return Ok(result);
         }
 
+        [HttpGet("patient-detail/{patientId:guid}")]
+        public async Task<IActionResult> GetPatientWithRecords(Guid patientId)
+        {
+            var result = await _patientService.GetPatientWithRecordsAsync(patientId);
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("create")]
+        public async Task<IActionResult> Create([FromBody] CreateMedicalRecordDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var id = await _medicalRecordService.CreateMedicalRecordAsync(dto);
+                return Ok(new { Message = "Medical record created successfully", MedicalRecordId = id });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal Server Error", Details = ex.Message });
+            }
+        }
     }
 }

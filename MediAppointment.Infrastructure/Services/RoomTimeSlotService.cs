@@ -128,6 +128,7 @@ namespace MediAppointment.Infrastructure.Services
                 TimeStart = start.ToString(@"hh\:mm"),
                 TimeEnd = end.ToString(@"hh\:mm"),
                 Duration = duration.ToString(@"hh\:mm"),
+                Shift = slot.TimeSlot.Shift ? "Afternoon" : "Morning",
                 Appointments = slot.Appointments?
                     .OrderBy(a => a.AppointmentDate)
                     .Select(a => _mapper.Map<AppointmentResponse>(a))
