@@ -188,10 +188,12 @@ namespace MediAppointment.Infrastructure.Services
         }
 
         // UPDATE
-        public async Task ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto)
+        public async Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
         {
-            var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == dto.UserIdentityId)
-                ?? throw new ArgumentException($"Doctor with UserIdentityId {dto.UserIdentityId} not found.");
+            var doctor = await _dbContext.Set<User>().OfType<Doctor>()
+                .Include(d => d.DoctorDepartments)
+                .FirstOrDefaultAsync(d => d.Id == doctorId)
+                ?? throw new ArgumentException($"Doctor with ID {doctorId} not found.");
 
             doctor.Status = dto.Status;
 
@@ -227,6 +229,7 @@ namespace MediAppointment.Infrastructure.Services
             _dbContext.Set<DoctorDepartment>().AddRange(departmentsToAdd);
 
             await _dbContext.SaveChangesAsync();
+            return doctor;
         }
 
         // DELETE
@@ -302,17 +305,17 @@ namespace MediAppointment.Infrastructure.Services
             };
         }
 
-        public async Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
+        public async Task<Doctor> UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto)
         {
-            // AspNetUsers  
+            // AspNetUsers
             var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
                 ?? throw new Exception("UserIdentity not found");
 
-            // Retrieve Doctor directly using TPH  
+            // User
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == userIdentityId)
                 ?? throw new Exception("Doctor not found");
 
-            // Compare UserIdentityId (shadow property) with AspNetUser.Id  
+            // Compare UserIdentityId (shadow property) with AspNetUser.Id
             var userIdentityIdShadow = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue;
             if (userIdentityIdShadow != userIdentityId)
                 throw new Exception("Mismatch between User.UserIdentityId and AspNetUser.Id");
@@ -320,36 +323,50 @@ namespace MediAppointment.Infrastructure.Services
             bool hasChanges = false;
             if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
             {
+                var existingUserWithPhone = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == dto.PhoneNumber && u.Id != userIdentityId);
+                if (existingUserWithPhone != null)
+                    throw new Exception($"Phone number {dto.PhoneNumber} is already in use by another user.");
+
                 doctor.PhoneNumber = dto.PhoneNumber;
                 userIdentity.PhoneNumber = dto.PhoneNumber;
                 hasChanges = true;
             }
 
-            //    if (!string.IsNullOrWhiteSpace(dto.NewPassword))
-            //    {
-            //        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
-            //            throw new Exception("Current password is required to change password.");
-            //        if (!await _userManager.CheckPasswordAsync(userIdentity, dto.CurrentPassword))
-            //            throw new Exception("Current password is incorrect.");
-            //        if (dto.NewPassword != dto.ConfirmNewPassword)
-            //            throw new Exception("New password and confirmation do not match.");
-            //
-            //        var passwordChangeResult = await _userManager.ChangePasswordAsync(userIdentity, dto.CurrentPassword, dto.NewPassword);
-            //        if (!passwordChangeResult.Succeeded)
-            //           throw new Exception(string.Join("; ", passwordChangeResult.Errors.Select(e => e.Description)));
-            //        hasChanges = true;
-            //    }
+            if (!string.IsNullOrWhiteSpace(dto.FullName) && dto.FullName != doctor.FullName)
+            {
+                doctor.FullName = dto.FullName;
+                userIdentity.FullName = dto.FullName;
+                hasChanges = true;
+            }
+
+            if (dto.Gender.HasValue && dto.Gender != doctor.Gender)
+            {
+                doctor.Gender = dto.Gender.Value;
+                hasChanges = true;
+            }
+
+            if (dto.DateOfBirth.HasValue && dto.DateOfBirth != doctor.DateOfBirth)
+            {
+                doctor.DateOfBirth = dto.DateOfBirth.Value;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != userIdentity.Email)
+            {
+                userIdentity.Email = dto.Email;
+                hasChanges = true;
+            }
 
             if (hasChanges)
             {
-                // update AspNetUser  
                 var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
                 if (!updateIdentityResult.Succeeded)
                     throw new Exception(string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description)));
 
-                //update Users  
                 await _dbContext.SaveChangesAsync();
             }
+            return doctor;
         }
         #endregion
 

@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using MediAppointment.Application.DTOs;
+﻿using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Interfaces;
@@ -29,19 +28,9 @@ namespace MediAppointment.Infrastructure.Services
             return await _profileRepository.GetProfileByIdAsync(userIdentityId);
         }
 
-        public async Task<Doctor> UpdateProfileAsync(DoctorUpdateDto dto)
+        public async Task<Doctor> UpdateProfileAsync(Guid userId, DoctorUpdateDto dto)
         {
-            await _identityService.UpdateDoctorAsync(dto.UserIdentityId, dto);
-            var doctor = await _profileRepository.GetProfileByIdAsync(dto.UserIdentityId);
-            if (doctor == null) throw new Exception("Doctor not found after update");
-            return doctor;
+            return await _identityService.UpdateDoctorAsync(userId, dto);
         }
-        //public async Task<DoctorUpdateDto> UpdateProfileAsync(DoctorUpdateDto dto)
-        //{
-        //    await _identityService.UpdateDoctorAsync(dto);
-        //    var doctor = await _identityService.GetDoctorByIdAsync(dto.Id);
-        //    if (doctor == null) throw new Exception("Doctor not found after update");
-        //    return doctor;
-        //}
     }
 }

@@ -35,19 +35,19 @@ namespace MediAppointment.API.Controllers
             return Ok(doctor);
         }
 
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
-        {
-            try
-            {
-                var updatedDoctor = _profileService.UpdateProfileAsync(dto);
-                return Ok(updatedDoctor);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //[HttpPut("profile")]
+        //public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
+        //{
+        //    try
+        //    {
+        //        var updatedDoctor = _profileService.UpdateProfileAsync(dto);
+        //        return Ok(updatedDoctor);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         [HttpGet("appointments/{doctorId:guid}")]
         public async Task<IActionResult> GetAppointmentsAssignedToDoctor(

@@ -10,7 +10,7 @@ namespace MediAppointment.Application.Interfaces
         Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5);
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
         Task DeleteDoctorAsync(Guid doctorId);
-        Task<DoctorDto> GetDoctorByIdAsync(Guid userId);
-        Task<Doctor> ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto);
+        Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId);
+        Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
     }
 }

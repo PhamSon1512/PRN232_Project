@@ -36,12 +36,9 @@ namespace MediAppointment.Infrastructure.Services
             return await _identityService.GetDoctorByIdAsync(doctorId);
         }
 
-        public async Task<Doctor> ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto)
+        public async Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
         {
-            await _identityService.ManagerUpdateDoctorAsync(dto);
-            var doctor = await _profileRepository.GetProfileByIdAsync(dto.UserIdentityId);
-            if (doctor == null) throw new Exception("Doctor not found after update");
-            return doctor;
+            return await _identityService.ManagerUpdateDoctorAsync(doctorId, dto);
         }
 
         public async Task<Guid> CreateDoctorAsync(DoctorCreateDto dto)

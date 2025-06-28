@@ -11,13 +11,13 @@ namespace MediAppointment.Application.Interfaces
         #region Manager
         Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5);
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
-        Task ManagerUpdateDoctorAsync(ManagerDoctorUpdateDTO dto);
+        Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
         Task DeleteDoctorAsync(Guid doctorId);
         #endregion
 
         #region DoctorProfile
         Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId);
-        Task UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto);
+        Task<Doctor> UpdateDoctorAsync(Guid userIdentityId, DoctorUpdateDto dto);
         #endregion
 
         #region PatientProfile

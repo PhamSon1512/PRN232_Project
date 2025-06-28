@@ -2,6 +2,7 @@
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ namespace MediAppointment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Doctor")]
     public class DoctorController : ControllerBase
     {
         private readonly IProfileService _profileService;
@@ -35,29 +37,17 @@ namespace MediAppointment.API.Controllers
         }
 
         [HttpPut("profile")]
-        //public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
-        //{
-        //    try
-        //    {
-        //        var updatedDoctor = await _profileService.UpdateProfileAsync(dto);
-        //        return Ok(updatedDoctor);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
         public async Task<IActionResult> UpdateProfile([FromBody] DoctorUpdateDto dto)
         {
-            try
-            {
-                var updatedDoctor = await _profileService.UpdateProfileAsync(dto); ;
-                return Ok(updatedDoctor);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out Guid userId))
+                return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
+
+            if (dto == null)
+                return BadRequest(new { Message = "Invalid profile data." });
+
+            var updatedDoctor = await _profileService.UpdateProfileAsync(userId, dto);
+            return Ok(updatedDoctor);
         }
 
         [HttpGet("appointments/{doctorId:guid}")]

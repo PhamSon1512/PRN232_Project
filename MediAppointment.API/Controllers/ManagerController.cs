@@ -43,18 +43,29 @@ namespace MediAppointment.API.Controllers
             return Ok(new { DoctorId = doctorId, Message = "Doctor created successfully." });
         }
 
+        [HttpPut("update/{doctorId:guid}")]
+        public async Task<IActionResult> UpdateDoctor(Guid doctorId, [FromBody] ManagerDoctorUpdateDTO dto)
+        {
+            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            if (!Guid.TryParse(managerIdClaim, out Guid managerId))
+                return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
+
+            if (dto == null)
+                return BadRequest(new { Message = "Invalid update data." });
+
+            var updatedDoctor = await _managerService.ManagerUpdateDoctorAsync(doctorId, dto);
+            return Ok(new { DoctorId = updatedDoctor.Id, Message = "Doctor updated successfully." });
+        }
+
         [HttpDelete("{doctorId:guid}")]
         public async Task<IActionResult> DeleteDoctor(Guid doctorId)
         {
-            try
-            {
-                await _managerService.DeleteDoctorAsync(doctorId);
-                return Ok(new { message = "Doctor deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
-            }
+            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            if (!Guid.TryParse(managerIdClaim, out Guid managerId))
+                return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
+
+            await _managerService.DeleteDoctorAsync(doctorId);
+            return Ok(new { Message = "Doctor deleted successfully." });
         }
     }
 }
