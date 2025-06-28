@@ -7,7 +7,7 @@ namespace MediAppointment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Manager")]
+    [Authorize(Roles = "Manager")]
     public class ManagerController : ControllerBase
     {
         private readonly IManagerService _managerService;
@@ -18,6 +18,7 @@ namespace MediAppointment.API.Controllers
         }
 
         [HttpGet("GetAllDoctors")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllDoctors([FromQuery] string text = "", [FromQuery] string department = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
         {
             try
@@ -34,15 +35,12 @@ namespace MediAppointment.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateDoctor([FromBody] DoctorCreateDto dto)
         {
-            try
-            {
-                var doctor = await _managerService.CreateDoctorAsync(dto);
-                return Ok(doctor);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
-            }
+            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            if (!Guid.TryParse(managerIdClaim, out Guid managerId))
+                return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
+
+            var doctorId = await _managerService.CreateDoctorAsync(dto);
+            return Ok(new { DoctorId = doctorId, Message = "Doctor created successfully." });
         }
 
         [HttpDelete("{doctorId:guid}")]

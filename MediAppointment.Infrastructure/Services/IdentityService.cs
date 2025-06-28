@@ -1,4 +1,6 @@
 ﻿using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using MediAppointment.Application.Constants;
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
@@ -29,12 +31,14 @@ namespace MediAppointment.Infrastructure.Services
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
         public IdentityService(
             UserManager<UserIdentity> userManager,
             RoleManager<IdentityRole<Guid>> roleManager,
             SignInManager<UserIdentity> signInManager,
             ApplicationDbContext dbContext,
             IEmailSender<UserIdentity> emailSender,
+            IEmailService emailService,
             ITokenService tokenService,
             IUnitOfWork unitOfWork,
             IConfiguration configuration)
@@ -44,6 +48,7 @@ namespace MediAppointment.Infrastructure.Services
             _signInManager = signInManager;
             _dbContext = dbContext;
             _emailSender = emailSender;
+            _emailService = emailService;
             _tokenService = tokenService;
             _unitOfWork = unitOfWork;
             _configuration = configuration;
@@ -109,73 +114,77 @@ namespace MediAppointment.Infrastructure.Services
                 throw new ArgumentException("Email is already taken.");
 
             string password = GenerateRandomPassword(8);
-
             var userIdentity = new UserIdentity
             {
                 UserName = dto.Email,
                 Email = dto.Email,
                 FullName = dto.FullName,
-                PhoneNumber = dto.PhoneNumber
-            };
-            var result = await _userManager.CreateAsync(userIdentity, password);
-            if (!result.Succeeded)
-                throw new Exception($"Failed to create UserIdentity: {string.Join("; ", result.Errors.Select(e => e.Description))}");
-
-            var roleResult = await _userManager.AddToRoleAsync(userIdentity, UserRoles.Doctor);
-            if (!roleResult.Succeeded)
-                throw new Exception($"Failed to assign Doctor role: {string.Join("; ", roleResult.Errors.Select(e => e.Description))}");
-
-            var doctor = new Doctor
-            {
-                Id = Guid.NewGuid(),
-                FullName = dto.FullName,
-                Gender = dto.Gender ?? true,
-                DateOfBirth = dto.DateOfBirth?.Date ?? DateTime.UtcNow.Date,
-                Email = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
-                Status = Status.Active
+                RefreshToken = string.Empty
             };
-            await _unitOfWork.Repository<Doctor>().AddAsync(doctor);
-            _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
 
-            if (dto.Departments != null && dto.Departments.Any())
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                var validDepartmentIds = await _dbContext.Departments
-                    .Where(d => dto.Departments.Contains(d.Id))
-                    .Select(d => d.Id)
-                    .ToListAsync();
+                var result = await _userManager.CreateAsync(userIdentity, password);
+                if (!result.Succeeded)
+                    throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-                if (validDepartmentIds.Count != dto.Departments.Count)
-                {
-                    var invalidIds = dto.Departments.Except(validDepartmentIds).ToList();
-                    throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
-                }
+                var roleResult = await _userManager.AddToRoleAsync(userIdentity, UserRoles.Doctor);
+                if (!roleResult.Succeeded)
+                    throw new Exception(string.Join("; ", roleResult.Errors.Select(e => e.Description)));
 
-                foreach (var deptId in validDepartmentIds)
+                var doctor = new Doctor
                 {
-                    var doctorDepartment = new DoctorDepartment
+                    Id = Guid.NewGuid(),
+                    FullName = dto.FullName,
+                    Gender = dto.Gender ?? true,
+                    DateOfBirth = dto.DateOfBirth?.Date ?? DateTime.UtcNow.AddHours(7).Date,
+                    Email = dto.Email,
+                    PhoneNumber = dto.PhoneNumber,
+                    Status = Status.Active
+                };
+                _dbContext.Set<User>().Add(doctor);
+                _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
+
+                if (dto.Departments?.Any() == true)
+                {
+                    var validDepartmentIds = await _dbContext.Departments
+                        .Where(d => dto.Departments.Contains(d.Id))
+                        .Select(d => d.Id)
+                        .ToListAsync();
+
+                    if (validDepartmentIds.Count != dto.Departments.Count)
+                        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", dto.Departments.Except(validDepartmentIds))}");
+
+                    foreach (var deptId in validDepartmentIds)
                     {
-                        DoctorId = doctor.Id,
-                        DepartmentId = deptId
-                    };
-                    _dbContext.Set<DoctorDepartment>().Add(doctorDepartment);
+                        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
+                        {
+                            DoctorId = doctor.Id,
+                            DepartmentId = deptId
+                        });
+                    }
                 }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                var subject = "Your MediAppointment Account Credentials";
+                var body = $@"
+                    <p>Hello {dto.FullName},</p>
+                    <p>Your MediAppointment doctor account has been created.</p>
+                    <p><strong>Email:</strong> {dto.Email}</p>
+                    <p><strong>Password:</strong> {password}</p>
+                    <p>Please log in and change your password immediately.</p>";
+                await _emailService.SendAsync(dto.Email, subject, body);
+                return doctor.Id;
             }
-
-            // 6. Send email with generated password (if applicable)
-            //var subject = "Your MediAppointment Account Credentials";
-            //var body = $@"
-            //        <p>Hello {dto.FullName},</p>
-            //        <p>Your MediAppointment doctor account has been created.</p>
-            //        <p><strong>Email:</strong> {dto.Email}</p>
-            //        <p><strong>Password:</strong> {password}</p>
-            //        <p>Please log in and change your password immediately.</p>
-            //        <p><a href=""https://your-app-url/login"">Log in here</a></p>
-            //    ";
-            //await _emailService.SendAsync(dto.Email, subject, body);
-
-            await _dbContext.SaveChangesAsync();
-            return doctor.Id;
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         // UPDATE
@@ -232,12 +241,45 @@ namespace MediAppointment.Infrastructure.Services
         #endregion
 
         #region Helper_method
-        private string GenerateRandomPassword(int length)
+        private static string GenerateRandomPassword(int length)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+            const string specialChars = "!@#$%^&*()_-+=<>?";
+            const string allChars = upperCase + lowerCase + digits + specialChars;
+
+            var random = RandomNumberGenerator.Create();
+            var password = new StringBuilder();
+            var bytes = new byte[1];
+
+            // Ensure at least one character from each category
+            random.GetBytes(bytes);
+            password.Append(upperCase[bytes[0] % upperCase.Length]);
+            random.GetBytes(bytes);
+            password.Append(lowerCase[bytes[0] % lowerCase.Length]);
+            random.GetBytes(bytes);
+            password.Append(digits[bytes[0] % digits.Length]);
+            random.GetBytes(bytes);
+            password.Append(specialChars[bytes[0] % specialChars.Length]);
+
+            // Fill the remaining length with random characters
+            for (int i = 4; i < length; i++)
+            {
+                random.GetBytes(bytes);
+                password.Append(allChars[bytes[0] % allChars.Length]);
+            }
+
+            // Shuffle the password
+            var array = password.ToString().ToCharArray();
+            for (int i = array.Length - 1; i > 0; i--)
+            {
+                random.GetBytes(bytes);
+                int j = bytes[0] % (i + 1);
+                (array[i], array[j]) = (array[j], array[i]);
+            }
+
+            return new string(array);
         }
         #endregion
 
@@ -408,7 +450,7 @@ namespace MediAppointment.Infrastructure.Services
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
             var userId = Guid.Empty;
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
-            if(doctor != null)
+            if (doctor != null)
                 userId = doctor.Id;
 
             var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
