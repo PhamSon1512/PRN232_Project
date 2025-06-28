@@ -8,7 +8,7 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
         public static async Task SeedAsync(IServiceProvider serviceProvider)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-            var roles = new[] { "Admin", "Doctor", "Patient" };
+            var roles = new[] { "Admin", "Doctor", "Patient", "Manager" };
 
             foreach (var role in roles)
             {

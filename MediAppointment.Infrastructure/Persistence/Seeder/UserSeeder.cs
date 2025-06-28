@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Domain.Entities;
+using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -82,6 +83,32 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     dbContext.Patients.Add(patient);
                     dbContext.Entry(patient).Property("UserIdentityId").CurrentValue = patientUser.Id;
                     await dbContext.SaveChangesAsync();
+                }
+            }
+
+            // 3. Seed Manager UserIdentity without domain entity
+            var managerEmail = "manager@mediappointment.com";
+            var managerUser = await userManager.Users.FirstOrDefaultAsync(u => u.Email == managerEmail);
+            if (managerUser == null)
+            {
+                managerUser = new UserIdentity
+                {
+                    UserName = managerEmail,
+                    Email = managerEmail,
+                    FullName = "Default Manager",
+                    PhoneNumber = "0901234567",
+                    EmailConfirmed = true,
+                    RefreshToken = string.Empty, // Set to empty string to satisfy NOT NULL constraint
+                    RefreshTokenExpiryTime = DateTime.MinValue // Set to default value
+                };
+                var result = await userManager.CreateAsync(managerUser, "Manager@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(managerUser, "Manager");
+                }
+                else
+                {
+                    throw new Exception($"Failed to create Manager user: {string.Join("; ", result.Errors.Select(e => e.Description))}");
                 }
             }
         }
