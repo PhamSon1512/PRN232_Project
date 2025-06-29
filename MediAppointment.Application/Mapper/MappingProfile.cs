@@ -28,6 +28,9 @@ namespace MediAppointment.Application.Mapper
 
             // MedicalRecord -> MedicalRecordViewDto
             CreateMap<MedicalRecord, MedicalRecordViewDto>();
+
+            // CreateMedicalRecordDto -> MedicalRecord
+            CreateMap<CreateMedicalRecordDto, MedicalRecord>();
         }
     }
 }

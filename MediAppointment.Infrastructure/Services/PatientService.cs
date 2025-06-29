@@ -4,6 +4,7 @@ using MediAppointment.Application.DTOs.PatientDTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Interfaces;
+using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -15,50 +16,48 @@ namespace MediAppointment.Infrastructure.Services
 {
     internal class PatientService: IPatientService
     {
-        private readonly IGenericRepository<Patient> _patientRepository;
-        private readonly IGenericRepository<MedicalRecord> _medicalRecordRepository;
+        private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
 
         public PatientService(
-            IGenericRepository<Patient> patientRepository,
-            IGenericRepository<MedicalRecord> medicalRecordRepository,
+            ApplicationDbContext context,
             IMapper mapper)
         {
-            _patientRepository = patientRepository;
-            _medicalRecordRepository = medicalRecordRepository;
+            _context = context;
             _mapper = mapper;
         }
 
-        public async Task<PatientWithRecordsResponse?> GetPatientWithRecordsAsync(Guid patientId)
+        public async Task<PatientWithRecordsResponse?> GetPatientWithRecordsAsync(Guid patientIdentityId)
         {
-            var patient = await _patientRepository.Entities
-                .FirstOrDefaultAsync(p => p.Id == patientId);
+
+            var patientID = await _context.Patients.FindAsync(patientIdentityId);
+
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.UserIdentityId == patientID.UserIdentityId);
 
             if (patient == null)
                 return null;
 
-            var medicalRecords = await _medicalRecordRepository.Entities
-                .Where(m => m.PatientId == patientId)
+            var medicalRecords = await _context.MedicalRecords
+                .Where(mr => mr.PatientId == patientID.UserIdentityId)
                 .ToListAsync();
 
-            var response = new PatientWithRecordsResponse
+            return new PatientWithRecordsResponse
             {
-                Id = patient.Id,
+                Id = patient.UserIdentityId.Value,
                 FullName = patient.FullName,
                 Gender = patient.Gender,
                 DateOfBirth = patient.DateOfBirth,
                 Email = patient.Email,
                 PhoneNumber = patient.PhoneNumber,
-                CCCD = patient.CCCD,
-                Address = patient.Address,
-                BHYT = patient.BHYT,
+                CCCD = patient.CCCD ?? "",
+                Address = patient.Address ?? "",
+                BHYT = patient.BHYT ?? "",
                 MedicalRecords = medicalRecords
                     .Select(record => _mapper.Map<MedicalRecordViewDto>(record))
                     .ToList()
             };
-
-            return response;
         }
-    
+
     }
 }

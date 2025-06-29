@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Domain.Entities;
+using MediAppointment.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,37 +11,39 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
         {
             builder.HasKey(m => m.Id);
 
+            // ========== CẤU HÌNH CÁC TRƯỜNG ==========
             builder.Property(m => m.BloodType)
                 .HasMaxLength(10)
-                .IsUnicode(false)
-                .IsRequired(false);
+                .IsUnicode(false);
 
             builder.Property(m => m.Chronic)
                 .HasMaxLength(250)
-                .IsUnicode(true)
-                .IsRequired(false);
+                .IsUnicode(true);
 
-            builder.Property(m => m.MedicalHistory)
-                .IsUnicode(true)
-                .IsRequired(false);
+            builder.Property(m => m.MedicalHistory).IsUnicode(true);
+            builder.Property(m => m.MedicalResult).IsUnicode(true);
+            builder.Property(m => m.Diagnosis).IsUnicode(true);
+            builder.Property(m => m.TreatmentPlan).IsUnicode(true);
+            builder.Property(m => m.Allergies).IsUnicode(true);
+            builder.Property(m => m.Medications).IsUnicode(true);
+            builder.Property(m => m.Symptoms).IsUnicode(true);
+            builder.Property(m => m.VitalSigns).IsUnicode(true);
+            builder.Property(m => m.DepartmentVisited).IsUnicode(true);
+            builder.Property(m => m.DoctorName).IsUnicode(true);
 
-            builder.Property(m => m.MedicalResult)
-                .IsUnicode(true)
-                .IsRequired(false);
-
+          
             builder.Property(m => m.LastUpdated)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .IsRequired(false);
+                .IsRequired(false); 
 
-            builder.HasOne<Doctor>()
+            // ========== CẤU HÌNH KHÓA NGOẠI ==========
+            builder.HasOne<UserIdentity>() // FK tới AspNetUsers (Identity)
                 .WithMany()
-                .HasForeignKey(m => m.DoctorId)
+                .HasForeignKey(m => m.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne<Patient>()
-                .WithMany(p => p.MedicalRecords)
-                .HasForeignKey(m => m.PatientId)
+            builder.HasOne<UserIdentity>()
+                .WithMany()
+                .HasForeignKey(m => m.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

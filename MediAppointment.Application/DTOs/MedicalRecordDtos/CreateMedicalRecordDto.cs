@@ -9,8 +9,6 @@ namespace MediAppointment.Application.DTOs.MedicalRecordDtos
     public class CreateMedicalRecordDto
     {
         public Guid PatientId { get; set; }
-        public Guid? DoctorId { get; set; } // Có thể null nếu bệnh án từ bên ngoài
-
         public float? Height { get; set; }
         public float? Weight { get; set; }
         public string? BloodType { get; set; }

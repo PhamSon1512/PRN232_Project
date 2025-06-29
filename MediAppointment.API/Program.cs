@@ -24,7 +24,6 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
-
     await DbSeeder.SeedAsync(scope.ServiceProvider);
     var jobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     jobManager.AddOrUpdate<IJobService>(

@@ -26,29 +26,31 @@ namespace MediAppointment.Infrastructure.Services
             _mapper = mapper;
         }
 
-        public async Task<Guid> CreateMedicalRecordAsync(CreateMedicalRecordDto dto)
+        public async Task<Guid> CreateMedicalRecordAsync(CreateMedicalRecordDto dto, Guid doctorId)
         {
+            var patientID = await _context.Patients.FindAsync(dto.PatientId);
             // Kiểm tra bệnh nhân tồn tại
-            var patientExists = await _context.Users.AnyAsync(u => u.Id == dto.PatientId);
+            var patientExists = await _context.Users.AnyAsync(u => u.Id == patientID.UserIdentityId);
             if (!patientExists)
                 throw new ArgumentException("Patient not found");
 
-
-            // Nếu có DoctorId thì kiểm tra luôn
-            if (dto.DoctorId.HasValue)
-            {
-                var doctorExists = await _context.Users.AnyAsync(u => u.Id == dto.DoctorId.Value);
-                if (!doctorExists)
-                    throw new ArgumentException("Doctor not found");
-            }
+            // Kiểm tra bác sĩ tồn tại
+            var doctorExists = await _context.Users.AnyAsync(u => u.Id == doctorId);
+            if (!doctorExists)
+                throw new ArgumentException("Doctor not found");
 
             // Ánh xạ và lưu
             var record = _mapper.Map<MedicalRecord>(dto);
+            record.DoctorId = doctorId;
+            record.PatientId = patientID.UserIdentityId.Value;
             record.Id = Guid.NewGuid();
-            record.LastUpdated = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            record.LastUpdated = DateTime.UtcNow;
 
             await _medicalRecordRepo.AddAsync(record);
+            await _medicalRecordRepo.SaveChangeAsync();
+
             return record.Id;
         }
+
     }
 }

@@ -2,11 +2,14 @@
 using MediAppointment.Application.DTOs.MedicalRecordDtos;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace MediAppointment.API.Controllers
 {
+    [Authorize(Roles = "Doctor")]
     [Route("api/[controller]")]
     [ApiController]
     public class DoctorAppoinmentController : ControllerBase
@@ -26,9 +29,15 @@ namespace MediAppointment.API.Controllers
         }
 
   
-        [HttpGet("assigned-slots/{doctorId}")]
-        public async Task<IActionResult> GetAssignedSlots(Guid doctorId, [FromQuery] int? year, [FromQuery] int? week)
+        [HttpGet("assigned-slots")]
+        public async Task<IActionResult> GetAssignedSlots([FromQuery] int? year, [FromQuery] int? week)
         {
+            var doctorIdClaim = User.FindFirst("UserId");
+            if (doctorIdClaim == null)
+                return Unauthorized("Missing UserId claim.");
+
+            Guid doctorId = Guid.Parse(doctorIdClaim.Value);
+
             var slots = await _roomTimeSlotService.GetAssignedSlotsByDoctor(doctorId, year, week);
             return Ok(slots);
         }
@@ -55,22 +64,27 @@ namespace MediAppointment.API.Controllers
         [Route("create")]
         public async Task<IActionResult> Create([FromBody] CreateMedicalRecordDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
-                var id = await _medicalRecordService.CreateMedicalRecordAsync(dto);
+
+                var doctorIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (doctorIdStr == null)
+                    return Unauthorized("Missing name identifier.");
+
+                Guid doctorId = Guid.Parse(doctorIdStr);
+
+                var id = await _medicalRecordService.CreateMedicalRecordAsync(dto, doctorId);
                 return Ok(new { Message = "Medical record created successfully", MedicalRecordId = id });
+
+            }catch(Exception ex)
+{
+                return StatusCode(500, new
+                {
+                    Message = "Internal Server Error",
+                    Details = ex.InnerException?.Message ?? ex.Message
+                });
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "Internal Server Error", Details = ex.Message });
-            }
+
         }
     }
 }

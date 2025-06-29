@@ -9,6 +9,6 @@ namespace MediAppointment.Application.Interfaces
 {
     public interface IMedicalRecordService
     {
-        Task<Guid> CreateMedicalRecordAsync(CreateMedicalRecordDto dto);
+        Task<Guid> CreateMedicalRecordAsync(CreateMedicalRecordDto dto, Guid doctorId);
     }
 }

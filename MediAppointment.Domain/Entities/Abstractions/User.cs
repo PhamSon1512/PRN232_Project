@@ -10,6 +10,9 @@ namespace MediAppointment.Domain.Entities.Abstractions
         public string Email { get; set; } = default!;
         public string PhoneNumber { get; set; } = default!;
         public Status Status { get; set; } = Status.Active;
+
+        public Guid? UserIdentityId { get; set; } 
+
     }
 }
 
