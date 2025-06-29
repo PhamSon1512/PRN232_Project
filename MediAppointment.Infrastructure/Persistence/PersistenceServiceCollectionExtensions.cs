@@ -41,6 +41,7 @@ namespace MediAppointment.Infrastructure.Persistence
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IAdminRepository, AdminRepository>();
             return services;
         }
     }
