@@ -26,7 +26,8 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     Email = doctorEmail,
                     FullName = "Default Doctor",
                     PhoneNumber = "0987654321",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    RefreshToken = string.Empty,
                 };
                 var result = await userManager.CreateAsync(doctorUser, "Doctor@123");
                 if (result.Succeeded)
@@ -60,7 +61,8 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     Email = patientEmail,
                     FullName = "Default Patient",
                     PhoneNumber = "0111222333",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    RefreshToken = string.Empty,
                 };
                 var result = await userManager.CreateAsync(patientUser, "Patient@123");
                 if (result.Succeeded)

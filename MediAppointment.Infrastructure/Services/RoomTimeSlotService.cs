@@ -41,13 +41,7 @@ namespace MediAppointment.Infrastructure.Services
                 .Where(r => r.DoctorId == doctorId && r.Date.Year == currentYear)
                 .ToListAsync(); // lấy dữ liệu từ DB trước
 
-            var filteredSlots = rawData
-                .Where(r => calendar.GetWeekOfYear(r.Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday) == currentWeek)
-                .OrderBy(r => r.Date)
-                .ThenBy(r => r.TimeSlot.TimeStart)
-                .ToList(); // dùng ToList thường vì đang là IEnumerable
-
-            return _mapper.Map<List<RoomTimeSlotResponse>>(filteredSlots);
+            return _mapper.Map<List<RoomTimeSlotResponse>>(rawData);
         }
 
 
@@ -128,6 +122,7 @@ namespace MediAppointment.Infrastructure.Services
                 TimeStart = start.ToString(@"hh\:mm"),
                 TimeEnd = end.ToString(@"hh\:mm"),
                 Duration = duration.ToString(@"hh\:mm"),
+                Shift = slot.TimeSlot.Shift ? "Afternoon" : "Morning",
                 Appointments = slot.Appointments?
                     .OrderBy(a => a.AppointmentDate)
                     .Select(a => _mapper.Map<AppointmentResponse>(a))

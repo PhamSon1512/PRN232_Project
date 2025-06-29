@@ -14,5 +14,6 @@ namespace MediAppointment.Application.DTOs.RoomTimeSlotDTOs
         public TimeSpan TimeStart { get; set; }
         public TimeSpan TimeEnd { get; set; }
         public string Status { get; set; }
+        public string Shift { get; set; } = string.Empty;
     }
 }

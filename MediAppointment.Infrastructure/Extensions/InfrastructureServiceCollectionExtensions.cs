@@ -69,6 +69,8 @@ namespace MediAppointment.Infrastructure.Extensions
             services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
             services.AddScoped<IRoomTimeSlotService, RoomTimeSlotService>();
+            services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+            services.AddScoped<IPatientService, PatientService>();
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
             services.AddHangfireServer();

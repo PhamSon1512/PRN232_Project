@@ -27,6 +27,9 @@ namespace MediAppointment.Infrastructure.Data
         public DbSet<Room> Room { get; set; }
         public DbSet<TimeSlot> TimeSlot { get; set; }
         public DbSet<RoomTimeSlot> RoomTimeSlot { get; set; }
+        public DbSet<UserIdentity> Users { get; set; }  // ✅ Bổ sung
+        
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

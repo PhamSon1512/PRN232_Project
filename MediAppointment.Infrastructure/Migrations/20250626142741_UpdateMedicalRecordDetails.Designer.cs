@@ -4,6 +4,7 @@ using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediAppointment.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250626142741_UpdateMedicalRecordDetails")]
+    partial class UpdateMedicalRecordDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,11 +56,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
 
                     b.Property<Guid?>("UserIdentityId")
                         .HasColumnType("uniqueidentifier")
@@ -150,7 +148,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Allergies")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BloodType")
@@ -164,25 +161,24 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("DepartmentVisited")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Diagnosis")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("DoctorId")
+                    b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DoctorName")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float?>("Height")
+                    b.Property<float>("Height")
                         .HasColumnType("real");
 
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("LastUpdated")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("MedicalHistory")
                         .IsUnicode(true)
@@ -193,7 +189,6 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Medications")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("NextAppointmentDate")
@@ -203,18 +198,15 @@ namespace MediAppointment.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Symptoms")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TreatmentPlan")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VitalSigns")
-                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float?>("Weight")
+                    b.Property<float>("Weight")
                         .HasColumnType("real");
 
                     b.HasKey("Id");
@@ -454,13 +446,6 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -685,19 +670,14 @@ namespace MediAppointment.Infrastructure.Migrations
 
             modelBuilder.Entity("MediAppointment.Domain.Entities.MedicalRecord", b =>
                 {
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
+                    b.HasOne("MediAppointment.Domain.Entities.Doctor", null)
                         .WithMany()
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("MediAppointment.Domain.Entities.Patient", null)
-                        .WithMany("MedicalRecords")
-                        .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("MediAppointment.Infrastructure.Identity.UserIdentity", null)
-                        .WithMany()
+                    b.HasOne("MediAppointment.Domain.Entities.Patient", null)
+                        .WithMany("MedicalRecords")
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
