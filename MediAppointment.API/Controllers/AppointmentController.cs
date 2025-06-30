@@ -18,49 +18,41 @@ namespace MediAppointment.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAppoinment([FromBody]CreateAppointmentRequest request)
         {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out Guid id))
-            {
-            }*/
-            Guid id = Guid.Parse("C7D334CA-90BC-4E77-BCE0-4237F5F246F2");
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
+            
 
-            await _appointmentService.CreateAppointment(id, request);
+            await _appointmentService.CreateAppointment(userId, request);
 
             return Ok();
         }
         [HttpGet("MyAppointment")]
         public async Task<IActionResult> MyAppointment()
         {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out Guid id))
-            {
-            }*/
-            Guid id = Guid.Parse("C7D334CA-90BC-4E77-BCE0-4237F5F246F2");
-            var list = await _appointmentService.ListAppointmentByUser(id);
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
+            var list = await _appointmentService.ListAppointmentByUser(userId);
 
             return Ok(list);
         }
         [HttpGet("MyAppointment/{AppointmentId:guid}")]
         public async Task<IActionResult> AppointmentDetail(Guid AppointmentId)
         {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out Guid id))
-            {
-            }*/
-            
-            var Appoinment = await _appointmentService.AppointmentDetailById(AppointmentId);
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
+
+
+            var Appoinment = await _appointmentService.AppointmentDetailById(userId);
 
             return Ok(Appoinment);
         }
         [HttpGet("CancelAppoint/{AppointmentId:guid}")]
         public async Task<IActionResult> CancelAppointment(Guid AppointmentId)
         {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out Guid id))
-            {
-            }*/
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
 
-            await _appointmentService.CancelById(AppointmentId);
+            await _appointmentService.CancelById(userId);
             return Ok("Cancel is Success");
         }
     }
