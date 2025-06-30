@@ -113,6 +113,32 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     throw new Exception($"Failed to create Manager user: {string.Join("; ", result.Errors.Select(e => e.Description))}");
                 }
             }
+
+            // 4. Seed Admin UserIdentity without domain entity
+            var adminEmail = "admin@mediappointment.com";
+            var adminUser = await userManager.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+            if (adminUser == null)
+            {
+                adminUser = new UserIdentity
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = "Default Admin",
+                    PhoneNumber = "0999888777",
+                    EmailConfirmed = true,
+                    RefreshToken = string.Empty,
+                    RefreshTokenExpiryTime = DateTime.MinValue
+                };
+                var result = await userManager.CreateAsync(adminUser, "Admin@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+                else
+                {
+                    throw new Exception($"Failed to create Admin user: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+                }
+            }
         }
     }
 }
