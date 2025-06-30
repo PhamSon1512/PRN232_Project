@@ -16,24 +16,25 @@ namespace MediAppointment.API.Controllers
         }
         [HttpPost]
         public async Task<IActionResult> Post(List<DoctorScheduleRequest> requests) {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (Guid.TryParse(userIdClaim, out Guid id))
-                {
-                }*/
-            Guid id = Guid.Parse("FD09F480-BD97-4CDA-9402-52E343ED6090");
-            await _service.CreateDoctorSchedule(id, requests);
+
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
+            await _service.CreateDoctorSchedule(userId, requests);
             return Ok();
         }
         [HttpDelete]
         public async Task<IActionResult> Get(DeleteDoctorScheduleDTO request)
         {
-            /*var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (Guid.TryParse(userIdClaim, out Guid id))
-                {
-                }*/
-            Guid id = Guid.Parse("FD09F480-BD97-4CDA-9402-52E343ED6090");
-            await _service.DeleteDoctorSchedule(id,request);
+            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+              ?? throw new Exception("User ID claim is missing"));
+            await _service.DeleteDoctorSchedule(userId,request);
             return Ok();
+        }
+        [HttpPost("GetDoctorSchedule")]
+        public async Task<IActionResult> GetDoctorShcedule(DoctorScheduleRequestDTO request)
+        {
+            var x = await _service.GetDoctorSchedule(request);
+            return Ok(x);
         }
     }
 }
