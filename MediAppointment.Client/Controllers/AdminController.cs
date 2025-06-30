@@ -26,15 +26,15 @@ namespace MediAppointment.Client.Controllers
             return View("Index", users);
         }
 
-        public async Task<IActionResult> SetUserStatus(Guid id, bool isActive)
+        public async Task<IActionResult> UpdateUserStatus(Guid id, Status status)
         {
-            await _adminService.SetUserStatusAsync(id, isActive);
+            await _adminService.UpdateUserStatusAsync(id, status);
             return RedirectToAction("UserManagement");
         }
 
-        public async Task<IActionResult> ChangeUserRole(Guid id, string newRole)
+        public async Task<IActionResult> UpdateUserRole(Guid id, string newRole)
         {
-            await _adminService.ChangeUserRoleAsync(id, newRole);
+            await _adminService.UpdateUserRoleAsync(id, newRole);
             return RedirectToAction("UserManagement");
         }
     }

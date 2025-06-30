@@ -1,5 +1,5 @@
-using MediAppointment.Application.DTOs.AdminDTOs;
-using MediAppointment.Application.DTOs.UserDTOs;
+using MediAppointment.Application.DTOs;
+using MediAppointment.Domain.Enums;
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,75 +15,36 @@ namespace MediAppointment.API.Controllers
             _adminService = adminService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllAdmins()
+        // Quản lý Manager
+        [HttpPost("manager")]
+        public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
         {
-            var admins = await _adminService.GetAllAdminsAsync();
-            return Ok(admins);
+            var id = await _adminService.CreateManagerAsync(request.Email, request.FullName, request.PhoneNumber, request.Password);
+            return Ok(id);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetAdminById(string id)
+        [HttpPut("manager/{id}/role")]
+        public async Task<IActionResult> UpdateManagerRole(string id, [FromQuery] string newRole)
         {
             if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            var admin = await _adminService.GetAdminByIdAsync(guid);
-            if (admin == null) return NotFound();
-            return Ok(admin);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateAdmin([FromBody] AdminDTO adminDto)
-        {
-            await _adminService.CreateAdminAsync(adminDto);
+            await _adminService.UpdateManagerRoleAsync(guid, newRole);
             return Ok();
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateAdmin([FromBody] AdminDTO adminDto)
+        [HttpPut("manager/{id}/status")]
+        public async Task<IActionResult> UpdateManagerStatus(string id, [FromQuery] Status status)
         {
-            await _adminService.UpdateAdminAsync(adminDto);
+            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
+            await _adminService.UpdateManagerStatusAsync(guid, status);
             return Ok();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAdmin(string id)
-        {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            await _adminService.DeleteAdminAsync(guid);
-            return Ok();
-        }
-
-        // Quản lý người dùng
-        [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var users = await _adminService.GetAllUsersAsync();
-            return Ok(users);
-        }
-
-        [HttpGet("users/{id}")]
-        public async Task<IActionResult> GetUserById(string id)
-        {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            var user = await _adminService.GetUserByIdAsync(guid);
-            if (user == null) return NotFound();
-            return Ok(user);
-        }
-
-        [HttpPut("users/{id}/status")]
-        public async Task<IActionResult> SetUserStatus(string id, [FromQuery] bool isActive)
-        {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            await _adminService.SetUserStatusAsync(guid, isActive);
-            return Ok();
-        }
-
-        [HttpPut("users/{id}/role")]
-        public async Task<IActionResult> ChangeUserRole(string id, [FromQuery] string newRole)
-        {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            await _adminService.ChangeUserRoleAsync(guid, newRole);
-            return Ok();
-        }
+    public class CreateManagerRequest
+    {
+        public required string Email { get; set; }
+        public required string FullName { get; set; }
+        public required string PhoneNumber { get; set; }
+        public required string Password { get; set; }
+    }
     }
 }

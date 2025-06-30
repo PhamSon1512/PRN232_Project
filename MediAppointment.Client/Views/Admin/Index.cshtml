@@ -31,15 +31,19 @@
                         <td>
                             @if (user.Status == "Active")
                             {
-                                <a asp-action="SetUserStatus" asp-route-id="@user.Id" asp-route-isActive="false" class="btn btn-warning btn-sm">Inactive</a>
+                                <a asp-action="UpdateUserStatus" asp-route-id="@user.Id" asp-route-status="Inactive" class="btn btn-warning btn-sm">Inactive</a>
                             }
-                            else
+                            else if (user.Status == "Inactive")
                             {
-                                <a asp-action="SetUserStatus" asp-route-id="@user.Id" asp-route-isActive="true" class="btn btn-success btn-sm">Active</a>
+                                <a asp-action="UpdateUserStatus" asp-route-id="@user.Id" asp-route-status="Active" class="btn btn-success btn-sm">Active</a>
+                            }
+                            else if (user.Status == "Deleted")
+                            {
+                                <span class="badge bg-danger">Deleted</span>
                             }
                             @if (user.Role == "Manager" || user.Role == "Doctor")
                             {
-                                <form asp-action="ChangeUserRole" method="post" style="display:inline">
+                                <form asp-action="UpdateUserRole" method="post" style="display:inline">
                                     <input type="hidden" name="id" value="@user.Id" />
                                     <select name="newRole" class="form-select form-select-sm d-inline w-auto">
                                         <option value="Manager" selected="@(user.Role=="Manager"?"selected":null)">Manager</option>

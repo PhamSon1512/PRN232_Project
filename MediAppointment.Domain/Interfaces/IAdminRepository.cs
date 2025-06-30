@@ -1,22 +1,14 @@
-using MediAppointment.Domain.Entities;
-using MediAppointment.Domain.Entities.Abstractions;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
+using MediAppointment.Domain.Enums;
 
 namespace MediAppointment.Domain.Interfaces
 {
     public interface IAdminRepository
     {
-        Task<IEnumerable<Admin>> GetAllAsync();
-        Task<Admin?> GetByIdAsync(Guid id);
-        Task AddAsync(Admin admin);
-        Task UpdateAsync(Admin admin);
-        Task DeleteAsync(Guid id);
-        // Quản lý người dùng
-        Task<IEnumerable<User>> GetAllUsersAsync();
-        Task<User?> GetUserByIdAsync(Guid id);
-        Task SetUserStatusAsync(Guid userId, bool isActive);
-        Task ChangeUserRoleAsync(Guid userId, string newRole);
+        // Quản lý Manager
+        Task<Guid> CreateManagerAsync(string email, string fullName, string phoneNumber, string password);
+        Task UpdateManagerRoleAsync(Guid managerId, string newRole);
+        Task UpdateManagerStatusAsync(Guid managerId, Status status);
     }
 }

@@ -7,7 +7,20 @@ using MediAppointment.Client.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace MediAppointment.Client.Services
-{
+{public enum Status
+    {
+        Inactive = 0,
+        Active = 1,
+        Pending = 2,
+        Deleted = 3
+    }
+
+    public interface IAdminService
+    {
+        Task<IEnumerable<UserViewModel>> GetAllUsersAsync();
+        Task UpdateUserStatusAsync(Guid id, Status status);
+        Task UpdateUserRoleAsync(Guid id, string newRole);
+    }
     public class AdminService : IAdminService
     {
         private readonly HttpClient _httpClient;
@@ -20,15 +33,15 @@ namespace MediAppointment.Client.Services
 
         public async Task<IEnumerable<UserViewModel>> GetAllUsersAsync()
         {
-            return await _httpClient.GetFromJsonAsync<IEnumerable<UserViewModel>>($"{_baseUrl}/users");
+            return await _httpClient.GetFromJsonAsync<IEnumerable<UserViewModel>>($"{_baseUrl}/users") ?? new List<UserViewModel>();
         }
 
-        public async Task SetUserStatusAsync(Guid id, bool isActive)
+        public async Task UpdateUserStatusAsync(Guid id, Status status)
         {
-            await _httpClient.PutAsync($"{_baseUrl}/users/{id}/status?isActive={isActive}", null);
+            await _httpClient.PutAsync($"{_baseUrl}/users/{id}/status?status={status}", null);
         }
 
-        public async Task ChangeUserRoleAsync(Guid id, string newRole)
+        public async Task UpdateUserRoleAsync(Guid id, string newRole)
         {
             await _httpClient.PutAsync($"{_baseUrl}/users/{id}/role?newRole={newRole}", null);
         }
