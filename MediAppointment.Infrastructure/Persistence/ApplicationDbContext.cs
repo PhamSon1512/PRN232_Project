@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using MediAppointment.Domain.Entities;
-using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
