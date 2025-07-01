@@ -13,14 +13,14 @@ namespace MediAppointment.API.Controllers
     {
         protected readonly IAppointmentService _appointmentService;
         public AppointmentController(IAppointmentService appointmentService) {
-        _appointmentService = appointmentService;
+            _appointmentService = appointmentService;
         }
         [HttpPost]
-        public async Task<IActionResult> CreateAppoinment([FromBody]CreateAppointmentRequest request)
+        public async Task<IActionResult> CreateAppoinment([FromBody] CreateAppointmentRequest request)
         {
             var userId = Guid.Parse(User.FindFirst("UserId")?.Value
               ?? throw new Exception("User ID claim is missing"));
-            
+
 
             await _appointmentService.CreateAppointment(userId, request);
 
@@ -54,6 +54,12 @@ namespace MediAppointment.API.Controllers
 
             await _appointmentService.CancelById(userId);
             return Ok("Cancel is Success");
+        }
+        [HttpPost("GetAppointmentExsit")]
+        public async Task<IActionResult> getAppointmentExsit(GetTimeSlotExistDTO request)
+        {
+            var kq=await _appointmentService.GetTimeSlotExsit(request);
+            return Ok(kq);
         }
     }
 }

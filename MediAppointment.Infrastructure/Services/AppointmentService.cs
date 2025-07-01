@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediAppointment.Application.DTOs.AppointmentDTOs;
+using MediAppointment.Application.DTOs.TimeSlotDTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Entities.Abstractions;
@@ -42,10 +43,15 @@ namespace MediAppointment.Infrastructure.Services
 
         public async Task CreateAppointment(Guid UserId,CreateAppointmentRequest request)
         {
-            var RoomTimeSlot =await _context.RoomTimeSlot.Include(x => x.Room)
-                .Where(x => x.Room.DepartmentId == request.DepartmentId).
-                 FirstOrDefaultAsync(x=>x.TimeSlotId==request.TimeSlotId&&x.Date==request.Date &&x.Status!=RoomTimeSlotStatus.Booked);
-            if(RoomTimeSlot != null){
+            var RoomTimeSlot = await _context.RoomTimeSlot
+    .Include(x => x.Room)
+    .Where(x =>
+        x.Room.DepartmentId == request.DepartmentId &&
+        x.TimeSlotId == request.TimeSlotId &&
+        x.Date == request.Date &&
+        x.Status != RoomTimeSlotStatus.Booked)
+       .FirstOrDefaultAsync();
+            if (RoomTimeSlot != null){
                 RoomTimeSlot.Status = RoomTimeSlotStatus.Booked;
                 _context.RoomTimeSlot.Update(RoomTimeSlot);
             }
@@ -117,5 +123,40 @@ namespace MediAppointment.Infrastructure.Services
         }
 
 
+
+        public async Task<IEnumerable<TimeSlotExsitResponse>> GetTimeSlotExsit(GetTimeSlotExistDTO request)
+        {
+            var ListTimeSlot= await _context.TimeSlot.ToListAsync();
+            List<TimeSlotDTO> ListTimeSlotDTO = new List<TimeSlotDTO>();
+            foreach (var timeSlot in ListTimeSlot)
+            {
+              var temp=_mapper.Map<TimeSlotDTO>(timeSlot);
+              ListTimeSlotDTO.Add(temp);
+            }
+            var ListRoomId = await _context.Room.Include(x => x.Department).Where(x => x.DepartmentId == request.DepartmentId).Select(x => x.Id).ToListAsync();
+            List<TimeSlotExsitResponse> timeSlotExsitResponses = new List<TimeSlotExsitResponse>();
+            for (var date = request.StartDate.Date; date <= request.EndDate.Date; date = date.AddDays(1))
+            {
+                foreach (var timeslotdto in ListTimeSlotDTO)
+                {
+                    int counttimeslotbooked = await _context.RoomTimeSlot.Where(x => ListRoomId.Contains(x.RoomId) && x.Date == date && x.TimeSlotId == timeslotdto.Id && x.Status == RoomTimeSlotStatus.Booked).CountAsync();
+
+                    TimeSlotExsitResponse timeSlotExsitResponse = new TimeSlotExsitResponse();
+                    timeSlotExsitResponse.TimeSlot = timeslotdto;
+                    timeSlotExsitResponse.DateTime = date;
+                    if (counttimeslotbooked == ListRoomId.Count())
+                    {
+                        timeSlotExsitResponse.IsFull = true;
+                    }
+                    else
+                    {
+                        timeSlotExsitResponse.IsFull = false;
+                    }
+                    timeSlotExsitResponses.Add(timeSlotExsitResponse);
+
+                }
+            }
+            return timeSlotExsitResponses;
+        }
     }
 }

@@ -2,6 +2,7 @@
 using MediAppointment.Application.DTOs.AppointmentDTOs;
 using MediAppointment.Application.DTOs.MedicalRecordDtos;
 using MediAppointment.Application.DTOs.RoomTimeSlotDTOs;
+using MediAppointment.Application.DTOs.TimeSlotDTOs;
 using MediAppointment.Domain.Entities;
 
 namespace MediAppointment.Application.Mapper
@@ -31,6 +32,8 @@ namespace MediAppointment.Application.Mapper
 
             // CreateMedicalRecordDto -> MedicalRecord
             CreateMap<CreateMedicalRecordDto, MedicalRecord>();
+
+            CreateMap<TimeSlot,TimeSlotDTO>();
         }
     }
 }
