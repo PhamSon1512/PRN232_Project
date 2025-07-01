@@ -19,6 +19,8 @@ namespace MediAppointment.Application.Interfaces
         
         Task CancelById(Guid AppointmentId);
 
+        Task<IEnumerable<TimeSlotExsitResponse>> GetTimeSlotExsit(GetTimeSlotExistDTO request);
+
 
         // liệt kê lịch hẹn của bác sĩ
         Task<IEnumerable<AppointmentResponse>> ListAppointmentsAssignedToDoctor(

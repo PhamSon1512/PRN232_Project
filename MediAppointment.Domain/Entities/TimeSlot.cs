@@ -10,7 +10,6 @@ namespace MediAppointment.Domain.Entities
 {
     public class TimeSlot : Entity
     {
-
         public TimeSpan TimeStart { get; set; }
         public TimeSpan Duration { get; set; }
         public TimeSpan TimeEnd => TimeStart + Duration;
