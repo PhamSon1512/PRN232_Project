@@ -35,6 +35,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IDoctorAppointmentService, DoctorAppointmentService>();
 
 // Add API base URL configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);

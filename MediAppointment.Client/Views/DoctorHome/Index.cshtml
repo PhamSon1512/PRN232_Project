@@ -1,0 +1,121 @@
+﻿@model MediAppointment.Client.Models.Doctor.Doctor_AssginedScheduleViewModel
+@{
+	ViewData["Title"] = "Lịch làm việc";
+	Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+
+	var startOfWeek = (DateTime)ViewBag.StartDate;
+	var weekDates = Enumerable.Range(0, 7)
+		.Select(i => startOfWeek.AddDays(i))
+		.ToList();
+}
+
+<h2 class="text-center my-4">Lịch làm việc trong tuần</h2>
+
+<table class="table table-bordered text-center align-middle">
+	<thead>
+		<tr>
+			<th style="background-color: cornflowerblue; color: white; width: 220px; padding: 8px;">
+				<form asp-action="Index" method="get">
+					<div style="display: flex; align-items: center; margin-bottom: 4px;">
+						<label for="yearSelect" style="width: 50px; margin-right: 7px;"><strong>YEAR:</strong></label>
+						<select name="year" id="yearSelect" class="form-select form-select-sm" style="width: 100%;">
+							@foreach (var y in Model.AvailableYears)
+							{
+								<option value="@y" selected="@(Model.SelectedYear == y ? "selected" : null)">
+									@y
+								</option>
+							}
+						</select>
+					</div>
+					<div style="display: flex; align-items: center; margin-bottom: 4px;">
+						<label for="weekSelect" style="width: 50px; margin-right: 5px"><strong>WEEK:</strong></label>
+						<select name="week" id="weekSelect" class="form-select form-select-sm" style="width: 100%;">
+							@foreach (var w in Model.AvailableWeeks)
+							{
+								<option value="@w" selected="@(Model.SelectedWeek == w ? "selected" : null)">
+									@w
+								</option>
+							}
+						</select>
+					</div>
+				</form>
+			</th>
+
+			@foreach (var date in weekDates)
+			{
+				<th style="background-color: cornflowerblue; color: white;">
+					<div>@date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+					<div>@date.ToString("dd/MM")</div>
+				</th>
+			}
+		</tr>
+	</thead>
+
+	<tbody>
+		<!-- Ca sáng -->
+		<tr>
+			<td><strong>Ca Sáng</strong></td>
+			@foreach (var date in weekDates)
+			{
+				<td>
+					@if (Model.MorningSlots.TryGetValue(date.Date, out var slots) && slots.Any())
+					{
+						var firstSlot = slots.First();
+						<div><strong>@firstSlot.RoomName</strong></div>
+						<div style="color: green">07:00 - 11:00</div>
+						<a asp-controller="Schedule"
+						   asp-action="Details"
+						   asp-route-date="@date.ToString("yyyy-MM-dd")"
+						   asp-route-period="morning"
+						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
+					}
+					else
+					{
+						<span class="text-muted">Không có lịch</span>
+					}
+				</td>
+			}
+		</tr>
+
+		<!-- Ca chiều -->
+		<tr>
+			<td><strong>Ca Chiều</strong></td>
+			@foreach (var date in weekDates)
+			{
+				<td>
+					@if (Model.AfternoonSlots.TryGetValue(date.Date, out var slots) && slots.Any())
+					{
+						var firstSlot = slots.First();
+						<div><strong>@firstSlot.RoomName</strong></div>
+						<div style="color: green">13:00 - 17:00</div>
+						<a asp-controller="Schedule"
+						   asp-action="Details"
+						   asp-route-date="@date.ToString("yyyy-MM-dd")"
+						   asp-route-period="afternoon"
+						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
+					}
+					else
+					{
+						<span class="text-muted">Không có lịch</span>
+					}
+				</td>
+			}
+		</tr>
+	</tbody>
+</table>
+
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const yearSelect = document.getElementById('yearSelect');
+		const weekSelect = document.getElementById('weekSelect');
+
+		yearSelect.addEventListener('change', function () {
+			this.form.submit();
+		});
+
+		weekSelect.addEventListener('change', function () {
+			this.form.submit();
+		});
+	});
+</script>

@@ -24,28 +24,38 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+            var loginResult = await _authService.LoginAsync(model);
 
-            var result = await _authService.LoginAsync(model);
-            
-            if (result.Success)
+            if (loginResult != null && loginResult.Success)
             {
-                TempData["SuccessMessage"] = "Đăng nhập thành công!";
-                
-                if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                Response.Cookies.Append("AccessToken", loginResult.AccessToken, new CookieOptions
                 {
-                    return Redirect(model.ReturnUrl);
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1)
+                });
+
+                HttpContext.Session.SetString("UserId", loginResult.UserId ?? "");
+                HttpContext.Session.SetString("UserRole", loginResult.Role ?? "");
+                HttpContext.Session.SetString("IsAuthenticated", "true");
+
+                // ✅ Chuyển hướng theo vai trò
+                switch (loginResult.Role)
+                {
+                    case "Doctor":
+                        return RedirectToAction("Index", "DoctorHome");
+                    case "Admin":
+                        return RedirectToAction("Index", "AdminDashboard");
+                    default:
+                        return RedirectToAction("Index", "Home"); // fallback nếu role không xác định
                 }
-                
-                return RedirectToAction("Index", "Home");
             }
 
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Đăng nhập thất bại");
+            ModelState.AddModelError("", loginResult?.ErrorMessage ?? "Đăng nhập thất bại");
             return View(model);
         }
+
 
         [HttpGet]
         public IActionResult Register()
