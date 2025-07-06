@@ -27,6 +27,10 @@ namespace MediAppointment.Infrastructure.Services
                     var RoomTimeSlot = await _context.RoomTimeSlot.Where(x => x.RoomId == request.RoomId&&x.TimeSlotId==xtimeslot.Id && x.Date == request.DateSchedule && x.Status == Domain.Enums.RoomTimeSlotStatus.Available).FirstOrDefaultAsync();
                     if (RoomTimeSlot != null)
                     {
+                        if (RoomTimeSlot.DoctorId != null)
+                        {
+                            throw new Exception("This Shift is Booked");
+                        }
                         RoomTimeSlot.DoctorId = DoctorId;
                     }
                     else
