@@ -1,5 +1,6 @@
 using MediAppointment.Client.Models.Auth;
 using MediAppointment.Client.Models.Common;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text;
 
@@ -7,7 +8,7 @@ namespace MediAppointment.Client.Services
 {
     public interface IAuthService
     {
-        Task<ApiResponse<string>> LoginAsync(LoginViewModel model);
+        Task<LoginResultDto?> LoginAsync(LoginViewModel model);
         Task<ApiResponse<string>> RegisterAsync(RegisterViewModel model);
         Task LogoutAsync();
         Task<bool> IsAuthenticatedAsync();
@@ -22,7 +23,9 @@ namespace MediAppointment.Client.Services
             _httpClient = httpClientFactory.CreateClient("ApiClient");
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
-        }public async Task<ApiResponse<string>> LoginAsync(LoginViewModel model)
+        }
+
+        public async Task<LoginResultDto?> LoginAsync(LoginViewModel model)
         {
             try
             {
@@ -40,7 +43,6 @@ namespace MediAppointment.Client.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // API trả về LoginResultDto, không phải ApiResponse<string>
                     var loginResult = JsonSerializer.Deserialize<LoginResultDto>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -48,39 +50,25 @@ namespace MediAppointment.Client.Services
 
                     if (loginResult?.Success == true)
                     {
-                        // Lưu thông tin user vào session
-                        _httpContextAccessor.HttpContext?.Session.SetString("UserId", loginResult.UserId?.ToString() ?? "");
-                        _httpContextAccessor.HttpContext?.Session.SetString("UserRole", loginResult.Role ?? "");
-                        _httpContextAccessor.HttpContext?.Session.SetString("IsAuthenticated", "true");
-                        
-                        return new ApiResponse<string> { 
-                            Success = true, 
-                            Data = loginResult.UserId?.ToString() ?? ""
-                        };
+                        // ✅ Giải mã JWT để lấy role
+                        var handler = new JwtSecurityTokenHandler();
+                        var jwt = handler.ReadJwtToken(loginResult.AccessToken);
+                        var role = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+
+                        loginResult.Role = role ?? string.Empty;
+                        return loginResult;
                     }
-                    else
-                    {
-                        return new ApiResponse<string> { 
-                            Success = false, 
-                            ErrorMessage = loginResult?.ErrorMessage ?? "Đăng nhập thất bại" 
-                        };
-                    }
-                }
-                else
-                {
-                    // Xử lý lỗi HTTP
-                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        return new ApiResponse<string> { Success = false, ErrorMessage = "Email hoặc mật khẩu không đúng" };
-                    }
-                    return new ApiResponse<string> { Success = false, ErrorMessage = "Lỗi kết nối đến server" };
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                return new ApiResponse<string> { Success = false, ErrorMessage = $"Lỗi: {ex.Message}" };
+                // Log lỗi nếu cần
             }
+
+            return null;
         }
+
+
 
         public async Task<ApiResponse<string>> RegisterAsync(RegisterViewModel model)
         {
