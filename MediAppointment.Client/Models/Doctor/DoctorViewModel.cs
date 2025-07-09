@@ -20,4 +20,14 @@ namespace MediAppointment.Client.Models.Doctor
         public string Shift { get; set; } = string.Empty;
         public bool IsAvailable { get; set; }
     }
+
+    public class Doctor_SlotListViewModel
+    {
+        public DateTime Date { get; set; }
+        public string Shift { get; set; } = "";
+        public List<Doctor_AssignedSlotViewModel> Slots { get; set; } = new();
+
+        public int SelectedYear { get; set; }
+        public string SelectedWeek { get; set; } = "";
+    }
 }

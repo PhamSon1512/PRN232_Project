@@ -13,10 +13,10 @@
         public string Diagnosis { get; set; } = "";
         public string DoctorName { get; set; } = "";
         public string Medications { get; set; } = "";
-        public DateTime NextAppointmentDate { get; set; }
+        public DateTime? NextAppointmentDate { get; set; }
         public string Symptoms { get; set; } = "";
         public string TreatmentPlan { get; set; } = "";
         public string VitalSigns { get; set; } = "";
-        public DateTime LastUpdated { get; set; }
+        public string LastUpdated { get; set; }
     }
 }

@@ -63,10 +63,12 @@
 						var firstSlot = slots.First();
 						<div><strong>@firstSlot.RoomName</strong></div>
 						<div style="color: green">07:00 - 11:00</div>
-						<a asp-controller="Schedule"
+						<a asp-controller="DoctorHome"
 						   asp-action="Details"
 						   asp-route-date="@date.ToString("yyyy-MM-dd")"
 						   asp-route-period="morning"
+						   asp-route-week="@Model.SelectedWeek"
+						   asp-route-year="@Model.SelectedYear"
 						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
 					}
 					else
@@ -88,13 +90,15 @@
 						var firstSlot = slots.First();
 						<div><strong>@firstSlot.RoomName</strong></div>
 						<div style="color: green">13:00 - 17:00</div>
-						<a asp-controller="Schedule"
+						<a asp-controller="DoctorHome"
 						   asp-action="Details"
 						   asp-route-date="@date.ToString("yyyy-MM-dd")"
 						   asp-route-period="afternoon"
+						   asp-route-week="@Model.SelectedWeek"
+						   asp-route-year="@Model.SelectedYear"
 						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
 					}
-					else
+					else 
 					{
 						<span class="text-muted">Không có lịch</span>
 					}
