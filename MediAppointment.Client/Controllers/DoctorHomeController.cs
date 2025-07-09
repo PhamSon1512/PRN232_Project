@@ -2,11 +2,13 @@
 using MediAppointment.Client.Models.Doctor;
 using MediAppointment.Client.Models.MedicalRecord;
 using MediAppointment.Client.Services;
+using MediAppointment.Client.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MediAppointment.Client.Controllers
 {
+    [RequireDoctor]
     public class DoctorHomeController : Controller
     {
         private readonly IDoctorAppointmentService _doctorAppointmentService;

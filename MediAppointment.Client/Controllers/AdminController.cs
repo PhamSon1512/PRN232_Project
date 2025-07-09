@@ -1,10 +1,14 @@
 using MediAppointment.Client.Services;
+using MediAppointment.Client.Models.Admin;
+using MediAppointment.Client.Models.Appointment;
+using MediAppointment.Client.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
 namespace MediAppointment.Client.Controllers
 {
+    [RequireAdmin]
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
