@@ -25,8 +25,31 @@
                     <!-- Alert Messages -->
                     <div id="alertContainer"></div>
 
+                    <!-- Alert Messages from TempData -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["InfoMessage"] != null)
+                    {
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            @TempData["InfoMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
                     <!-- Filters -->
-                    <form id="filterForm" method="get">
+                    <form id="filterForm" method="post" action="@Url.Action("Manage")">
                         @Html.AntiForgeryToken()
                         <div class="row mb-4">
                             <div class="col-md-2">
@@ -45,7 +68,7 @@
                                 <label class="form-label">Phòng <span class="text-danger">*</span></label>
                                 <select name="roomId" id="roomSelect" class="form-select" required>
                                     <option value="">-- Chọn phòng --</option>
-                                    @foreach (var room in Model.Rooms)
+                                    @foreach (var room in Model.Rooms.Where(r => r.DepartmentId == Model.DepartmentId))
                                     {
                                         <option value="@room.Id" 
                                                 data-department="@room.DepartmentId"
@@ -54,6 +77,15 @@
                                         </option>
                                     }
                                 </select>
+                                
+                                <!-- Hidden data for JavaScript -->
+                                <script type="application/json" id="allRoomsData">
+                                    @Html.Raw(Json.Serialize(Model.Rooms.Select(r => new { 
+                                        id = r.Id.ToString(), 
+                                        name = r.Name, 
+                                        departmentId = r.DepartmentId.ToString() 
+                                    })))
+                                </script>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Năm <span class="text-danger">*</span></label>
@@ -80,11 +112,8 @@
                             <div class="col-md-4">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-flex gap-2 align-items-end" style="height: 38px;">
-                                    <button type="submit" class="btn btn-outline-primary h-100 flex-fill">
-                                        <i class="bi bi-search"></i> Tìm kiếm
-                                    </button>
-                                    <button type="button" class="btn btn-outline-info h-100 flex-fill" id="quickWeekBtn">
-                                        <i class="bi bi-calendar-week"></i> Tuần này
+                                    <button type="submit" class="btn btn-primary h-100 w-100">
+                                        <i class="bi bi-search"></i> Tải lịch làm việc
                                     </button>
                                 </div>
                             </div>
@@ -92,19 +121,6 @@
 
                         @if (weekDates.Any())
                         {
-                            <!-- Quick Actions -->
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="d-flex gap-2 mb-2">
-                                        <button type="button" class="btn btn-sm btn-success" id="bulkRegisterBtn">
-                                            <i class="bi bi-plus-circle"></i> Đăng ký nhiều ca
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger" id="bulkCancelBtn">
-                                            <i class="bi bi-trash"></i> Hủy nhiều ca
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
                         }
                     </form>
 
@@ -160,12 +176,19 @@
                                                                     <i class="bi bi-check-circle-fill"></i> Đã đăng ký
                                                                 </span>
                                                             </div>
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-outline-danger remove-schedule-btn w-100"
-                                                                    data-date="@date.ToString("yyyy-MM-dd")"
-                                                                    data-period="morning">
-                                                                <i class="bi bi-trash"></i> Hủy đăng ký
-                                                            </button>
+                                                            <form method="post" action="@Url.Action("CancelSchedule")" class="w-100">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                                                <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                                                <input type="hidden" name="period" value="morning" />
+                                                                <input type="hidden" name="year" value="@Model.Year" />
+                                                                <input type="hidden" name="week" value="@Model.Week" />
+                                                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                                        onclick="return confirm('Bạn có chắc chắn muốn hủy ca sáng ngày @date.ToString("dd/MM/yyyy") không?')">
+                                                                    <i class="bi bi-trash"></i> Hủy đăng ký
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     }
                                                     else
@@ -175,12 +198,18 @@
                                                                 <i class="bi bi-calendar-plus text-muted" style="font-size: 1.5rem;"></i>
                                                                 <div class="text-muted small">Chưa đăng ký</div>
                                                             </div>
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-success add-schedule-btn w-100"
-                                                                    data-date="@date.ToString("yyyy-MM-dd")"
-                                                                    data-period="morning">
-                                                                <i class="bi bi-plus-circle"></i> Đăng ký ca sáng
-                                                            </button>
+                                                            <form method="post" action="@Url.Action("RegisterSchedule")" class="w-100">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                                                <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                                                <input type="hidden" name="period" value="morning" />
+                                                                <input type="hidden" name="year" value="@Model.Year" />
+                                                                <input type="hidden" name="week" value="@Model.Week" />
+                                                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-success w-100">
+                                                                    <i class="bi bi-plus-circle"></i> Đăng ký ca sáng
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     }
                                                 </div>
@@ -212,12 +241,19 @@
                                                                     <i class="bi bi-check-circle-fill"></i> Đã đăng ký
                                                                 </span>
                                                             </div>
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-outline-danger remove-schedule-btn w-100"
-                                                                    data-date="@date.ToString("yyyy-MM-dd")"
-                                                                    data-period="afternoon">
-                                                                <i class="bi bi-trash"></i> Hủy đăng ký
-                                                            </button>
+                                                            <form method="post" action="@Url.Action("CancelSchedule")" class="w-100">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                                                <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                                                <input type="hidden" name="period" value="afternoon" />
+                                                                <input type="hidden" name="year" value="@Model.Year" />
+                                                                <input type="hidden" name="week" value="@Model.Week" />
+                                                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                                        onclick="return confirm('Bạn có chắc chắn muốn hủy ca chiều ngày @date.ToString("dd/MM/yyyy") không?')">
+                                                                    <i class="bi bi-trash"></i> Hủy đăng ký
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     }
                                                     else
@@ -227,12 +263,18 @@
                                                                 <i class="bi bi-calendar-plus text-muted" style="font-size: 1.5rem;"></i>
                                                                 <div class="text-muted small">Chưa đăng ký</div>
                                                             </div>
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-success add-schedule-btn w-100"
-                                                                    data-date="@date.ToString("yyyy-MM-dd")"
-                                                                    data-period="afternoon">
-                                                                <i class="bi bi-plus-circle"></i> Đăng ký ca chiều
-                                                            </button>
+                                                            <form method="post" action="@Url.Action("RegisterSchedule")" class="w-100">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                                                                <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+                                                                <input type="hidden" name="period" value="afternoon" />
+                                                                <input type="hidden" name="year" value="@Model.Year" />
+                                                                <input type="hidden" name="week" value="@Model.Week" />
+                                                                <input type="hidden" name="departmentId" value="@Model.DepartmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-success w-100">
+                                                                    <i class="bi bi-plus-circle"></i> Đăng ký ca chiều
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     }
                                                 </div>
@@ -242,6 +284,12 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Advanced Schedule Actions -->
+                        @if (Model.RoomId != Guid.Empty && Model.DepartmentId != Guid.Empty)
+                        {
+                            @await Html.PartialAsync("_AdvancedScheduleActions", Model)
+                        }
                     }
                     else
                     {
@@ -251,116 +299,6 @@
                         </div>
                     }
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Time Slot Selection Modal -->
-<div class="modal fade" id="timeSlotModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Chọn khung giờ làm việc</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-12">
-                        <p class="text-muted">Ngày: <span id="modalDate"></span> - <span id="modalPeriod"></span></p>
-                    </div>
-                </div>
-                <div class="row" id="timeSlotContainer">
-                    <!-- Time slots will be loaded here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirmTimeSlots">Xác nhận</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Register Modal -->
-<div class="modal fade" id="bulkRegisterModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Đăng ký nhiều ca làm việc</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <h6>Chọn các ngày và ca:</h6>
-                    </div>
-                </div>
-                <div id="bulkScheduleContainer">
-                    @if (weekDates.Any())
-                    {
-                        @foreach (var date in weekDates)
-                        {
-                            <div class="row mb-2">
-                                <div class="col-md-3">
-                                    <strong>@date.ToString("ddd dd/MM", new System.Globalization.CultureInfo("vi-VN"))</strong>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input bulk-schedule-check" type="checkbox" 
-                                               value="@date.ToString("yyyy-MM-dd")" 
-                                               data-date="@date.ToString("yyyy-MM-dd")" 
-                                               data-period="morning" 
-                                               id="bulk_@date.ToString("yyyyMMdd")_morning">
-                                        <label class="form-check-label" for="bulk_@date.ToString("yyyyMMdd")_morning">
-                                            Ca sáng
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input bulk-schedule-check" type="checkbox" 
-                                               value="@date.ToString("yyyy-MM-dd")" 
-                                               data-date="@date.ToString("yyyy-MM-dd")" 
-                                               data-period="afternoon" 
-                                               id="bulk_@date.ToString("yyyyMMdd")_afternoon">
-                                        <label class="form-check-label" for="bulk_@date.ToString("yyyyMMdd")_afternoon">
-                                            Ca chiều
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-success" id="confirmBulkRegister">Đăng ký tất cả</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Cancel Modal -->
-<div class="modal fade" id="bulkCancelModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Hủy nhiều ca làm việc</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <h6>Chọn các ca để hủy:</h6>
-                        <div id="registeredSchedulesList">
-                            <!-- Will be populated with existing schedules -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="confirmBulkCancel">Hủy tất cả</button>
             </div>
         </div>
     </div>
@@ -678,5 +616,5 @@
 }
 </style>
 
-@* Include JavaScript file *@
-<script src="~/js/doctor-schedule-manage.js"></script>
+@* Include Simplified JavaScript file for validation and UX enhancements only *@
+<script src="~/js/doctor-schedule-simplified.js"></script>

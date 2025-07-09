@@ -28,393 +28,461 @@ namespace MediAppointment.Client.Controllers
         [HttpGet]
         public async Task<IActionResult> Manage(Guid? departmentId, Guid? roomId, int? year, int? week)
         {
+            var currentYear = DateTime.Now.Year;
+            var currentWeek = GetWeekOfYear(DateTime.Now);
+            
             var model = new DoctorScheduleManagementViewModel
             {
                 DepartmentId = departmentId ?? Guid.Empty,
                 RoomId = roomId ?? Guid.Empty,
-                Year = year ?? DateTime.Now.Year,
-                Week = week ?? GetWeekOfYear(DateTime.Now),
-                AvailableYears = Enumerable.Range(DateTime.Now.Year, 2).ToList(),
+                Year = year ?? currentYear,
+                Week = week ?? currentWeek,
+                AvailableYears = Enumerable.Range(currentYear, 2).ToList(),
                 AvailableWeeks = Enumerable.Range(1, 53).ToList()
             };
 
             // Load departments and rooms
             await LoadDepartmentsAndRooms(model);
 
-            // If no specific filters applied, use first room from the list for initial load
-            if ((!departmentId.HasValue || departmentId == Guid.Empty) && 
-                (!roomId.HasValue || roomId == Guid.Empty) && 
-                model.Departments.Any() && model.Rooms.Any())
+            // Auto-select first department and room if none selected
+            if (model.DepartmentId == Guid.Empty && model.Departments.Any())
             {
                 model.DepartmentId = model.Departments.First().Id;
-                model.RoomId = model.Rooms.First().Id;
-                await LoadWeeklySchedule(model);
             }
-            // Load schedule if filters are applied
-            else if (departmentId.HasValue && departmentId != Guid.Empty && 
-                     roomId.HasValue && roomId != Guid.Empty && 
-                     year.HasValue && week.HasValue)
+            
+            if (model.RoomId == Guid.Empty && model.Rooms.Any())
+            {
+                var departmentRooms = model.Rooms.Where(r => r.DepartmentId == model.DepartmentId).ToList();
+                if (departmentRooms.Any())
+                {
+                    model.RoomId = departmentRooms.First().Id;
+                }
+            }
+
+            // Always try to load schedule if we have department, room, year, and week
+            if (model.DepartmentId != Guid.Empty && model.RoomId != Guid.Empty)
             {
                 await LoadWeeklySchedule(model);
+            }
+            else
+            {
+                // Create empty schedule if missing required data
+                CreateEmptyWeekSchedule(model);
             }
 
             return View(model);
         }
 
+        // Thêm POST action để xử lý filter form submission
         [HttpPost]
-        public async Task<IActionResult> CreateSchedule([FromBody] List<ScheduleCreateRequest> requests)
+        public async Task<IActionResult> Manage(DoctorScheduleManagementViewModel model)
         {
             try
             {
-                if (requests == null || !requests.Any())
-                {
-                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một slot thời gian" });
-                }
+                // Ensure we have valid year and week
+                if (model.Year <= 0)
+                    model.Year = DateTime.Now.Year;
+                if (model.Week <= 0)
+                    model.Week = GetWeekOfYear(DateTime.Now);
 
-                // Validate all requests
-                foreach (var request in requests)
-                {
-                    if (request.RoomId == Guid.Empty)
-                    {
-                        return Json(new { success = false, message = "Phòng không hợp lệ" });
-                    }
-                    if (request.Date == DateTime.MinValue)
-                    {
-                        return Json(new { success = false, message = "Ngày không hợp lệ" });
-                    }
-                    if (string.IsNullOrEmpty(request.Period))
-                    {
-                        return Json(new { success = false, message = "Ca làm việc không hợp lệ" });
-                    }
-                    if (!request.TimeSlotIds.Any())
-                    {
-                        return Json(new { success = false, message = "Vui lòng chọn khung giờ" });
-                    }
-                }
+                model.AvailableYears = Enumerable.Range(DateTime.Now.Year, 2).ToList();
+                model.AvailableWeeks = Enumerable.Range(1, 53).ToList();
 
-                // Transform to API format and call service
-                var result = await _scheduleService.CreateDoctorScheduleAsync(requests);
+                // Load departments and rooms
+                await LoadDepartmentsAndRooms(model);
                 
-                if (result.Success)
+                // Validate selections
+                if (model.DepartmentId != Guid.Empty && model.RoomId != Guid.Empty)
                 {
-                    return Json(new { success = true, message = "Đăng ký lịch làm việc thành công!" });
+                    // Validate that room belongs to department
+                    var selectedRoom = model.Rooms.FirstOrDefault(r => r.Id == model.RoomId && r.DepartmentId == model.DepartmentId);
+                    if (selectedRoom == null)
+                    {
+                        TempData["ErrorMessage"] = "Phòng được chọn không thuộc khoa đã chọn.";
+                        // Reset room selection
+                        model.RoomId = Guid.Empty;
+                        CreateEmptyWeekSchedule(model);
+                        return View(model);
+                    }
+
+                    await LoadWeeklySchedule(model);
+                    TempData["SuccessMessage"] = "Đã tải lịch làm việc thành công!";
+                }
+                else
+                {
+                    CreateEmptyWeekSchedule(model);
+                    if (model.DepartmentId == Guid.Empty)
+                    {
+                        TempData["InfoMessage"] = "Vui lòng chọn khoa để xem danh sách phòng.";
+                    }
+                    else if (model.RoomId == Guid.Empty)
+                    {
+                        TempData["InfoMessage"] = "Vui lòng chọn phòng để xem lịch làm việc.";
+                    }
                 }
 
-                return Json(new { success = false, message = result.ErrorMessage ?? "Đăng ký lịch thất bại" });
+                return View(model);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                _logger.LogError(ex, "Error in Manage POST with model: {@Model}", model);
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi tải lịch làm việc: " + ex.Message;
+                
+                // Ensure we have minimum required data
+                model.AvailableYears = Enumerable.Range(DateTime.Now.Year, 2).ToList();
+                model.AvailableWeeks = Enumerable.Range(1, 53).ToList();
+                await LoadDepartmentsAndRooms(model);
+                CreateEmptyWeekSchedule(model);
+                
+                return View(model);
             }
         }
 
+        // Action để đăng ký single schedule
         [HttpPost]
-        public async Task<IActionResult> DeleteSchedule([FromBody] ScheduleDeleteRequest request)
+        public async Task<IActionResult> RegisterSchedule(Guid roomId, DateTime date, string period, int year, int week, Guid departmentId)
         {
             try
             {
-                if (request.RoomId == Guid.Empty || request.Date == DateTime.MinValue || string.IsNullOrEmpty(request.Period))
+                // Get default time slots for the period
+                var timeSlotsResult = await _timeSlotService.GetTimeSlotsAsync();
+                if (!timeSlotsResult.Success || timeSlotsResult.Data == null)
                 {
-                    return Json(new { success = false, message = "Thông tin xóa lịch không hợp lệ" });
+                    TempData["ErrorMessage"] = "Không thể tải danh sách khung giờ.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
                 }
+
+                var defaultTimeSlots = timeSlotsResult.Data
+                    .Where(ts => ts.Period.Equals(period, StringComparison.OrdinalIgnoreCase))
+                    .Select(ts => ts.Id)
+                    .ToList();
+
+                if (!defaultTimeSlots.Any())
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy khung giờ cho ca làm việc này.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+                }
+
+                var request = new List<ScheduleCreateRequest>
+                {
+                    new ScheduleCreateRequest
+                    {
+                        RoomId = roomId,
+                        Date = date,
+                        Period = period,
+                        TimeSlotIds = defaultTimeSlots
+                    }
+                };
+
+                var result = await _scheduleService.CreateDoctorScheduleAsync(request);
+                
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = $"Đã đăng ký ca {(period == "morning" ? "sáng" : "chiều")} ngày {date:dd/MM/yyyy} thành công!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? "Đăng ký lịch thất bại.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registering schedule");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi đăng ký lịch làm việc.";
+            }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+        }
+
+        // Action để hủy single schedule
+        [HttpPost]
+        public async Task<IActionResult> CancelSchedule(Guid roomId, DateTime date, string period, int year, int week, Guid departmentId)
+        {
+            try
+            {
+                var request = new ScheduleDeleteRequest
+                {
+                    RoomId = roomId,
+                    Date = date,
+                    Period = period
+                };
 
                 var result = await _scheduleService.DeleteDoctorScheduleAsync(request);
                 
                 if (result.Success)
                 {
-                    return Json(new { success = true, message = "Xóa lịch làm việc thành công!" });
+                    TempData["SuccessMessage"] = $"Đã hủy ca {(period == "morning" ? "sáng" : "chiều")} ngày {date:dd/MM/yyyy} thành công!";
                 }
-
-                return Json(new { success = false, message = result.ErrorMessage ?? "Xóa lịch thất bại" });
+                else
+                {
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? "Hủy lịch thất bại.";
+                }
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                _logger.LogError(ex, "Error canceling schedule");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi hủy lịch làm việc.";
             }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
         }
 
+        // Bulk Register Actions
         [HttpPost]
-        public async Task<IActionResult> BulkCreateSchedule([FromBody] BulkScheduleRequest request)
+        public async Task<IActionResult> BulkRegisterWeek(Guid roomId, int year, int week, Guid departmentId, 
+            List<string>? selectedDates, List<string>? periods)
         {
             try
             {
-                if (request?.Schedules == null || !request.Schedules.Any())
+                if (selectedDates?.Any() != true || periods?.Any() != true)
                 {
-                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một ca làm việc" });
+                    TempData["ErrorMessage"] = "Vui lòng chọn ít nhất một ngày và một ca làm việc.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
                 }
 
-                var results = new List<object>();
-                var successCount = 0;
-                var errorCount = 0;
-
-                foreach (var schedule in request.Schedules)
-                {
-                    var createRequest = new List<ScheduleCreateRequest> { schedule };
-                    var result = await _scheduleService.CreateDoctorScheduleAsync(createRequest);
-                    
-                    results.Add(new
-                    {
-                        date = schedule.Date.ToString("dd/MM/yyyy"),
-                        period = schedule.Period,
-                        success = result.Success,
-                        message = result.Success ? "Thành công" : result.ErrorMessage
-                    });
-
-                    if (result.Success)
-                        successCount++;
-                    else
-                        errorCount++;
-                }
-
-                var message = $"Đã đăng ký {successCount} ca thành công";
-                if (errorCount > 0)
-                    message += $", {errorCount} ca thất bại";
-
-                return Json(new { 
-                    success = errorCount == 0, 
-                    message = message,
-                    details = results,
-                    successCount = successCount,
-                    errorCount = errorCount
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in bulk create schedule");
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> BulkDeleteSchedule([FromBody] BulkDeleteRequest request)
-        {
-            try
-            {
-                if (request?.Schedules == null || !request.Schedules.Any())
-                {
-                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một ca để hủy" });
-                }
-
-                var results = new List<object>();
-                var successCount = 0;
-                var errorCount = 0;
-
-                foreach (var schedule in request.Schedules)
-                {
-                    var result = await _scheduleService.DeleteDoctorScheduleAsync(schedule);
-                    
-                    results.Add(new
-                    {
-                        date = schedule.Date.ToString("dd/MM/yyyy"),
-                        period = schedule.Period,
-                        success = result.Success,
-                        message = result.Success ? "Thành công" : result.ErrorMessage
-                    });
-
-                    if (result.Success)
-                        successCount++;
-                    else
-                        errorCount++;
-                }
-
-                var message = $"Đã hủy {successCount} ca thành công";
-                if (errorCount > 0)
-                    message += $", {errorCount} ca thất bại";
-
-                return Json(new { 
-                    success = errorCount == 0, 
-                    message = message,
-                    details = results,
-                    successCount = successCount,
-                    errorCount = errorCount
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in bulk delete schedule");
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetRoomsByDepartment(Guid departmentId)
-        {
-            try
-            {
-                if (departmentId == Guid.Empty)
-                {
-                    return Json(new { success = false, message = "Department ID không hợp lệ" });
-                }
-
-                var result = await _departmentService.GetRoomsByDepartmentAsync(departmentId);
+                var scheduleRequests = new List<ScheduleCreateRequest>();
                 
-                if (result.Success && result.Data != null)
+                // Get default time slots for each period
+                var timeSlotsResult = await _timeSlotService.GetTimeSlotsAsync();
+                if (!timeSlotsResult.Success || timeSlotsResult.Data == null)
                 {
-                    var rooms = result.Data.Select(r => new 
-                    { 
-                        id = r.Id, 
-                        name = r.Name,
-                        departmentId = r.DepartmentId
-                    }).ToList();
-                    
-                    return Json(new { success = true, data = rooms });
+                    TempData["ErrorMessage"] = "Không thể tải danh sách khung giờ.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
                 }
 
-                return Json(new { success = false, message = "Không tìm thấy phòng" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetTimeSlots()
-        {
-            try
-            {
-                var result = await _timeSlotService.GetTimeSlotsAsync();
-                
-                if (result.Success && result.Data != null)
+                foreach (var dateStr in selectedDates)
                 {
-                    var timeSlots = result.Data.Select(ts => new 
-                    { 
-                        id = ts.Id, 
-                        timeRange = ts.TimeRange,
-                        period = ts.Period // Use the Period property from the API response
-                    }).ToList();
-                    
-                    return Json(new { success = true, data = timeSlots });
-                }
-
-                return Json(new { success = false, message = "Không tìm thấy khung giờ" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetWeeklyScheduleDetails(Guid roomId, int year, int week)
-        {
-            try
-            {
-                if (roomId == Guid.Empty || year <= 0 || week <= 0 || week > 53)
-                {
-                    return Json(new { success = false, message = "Thông tin lọc không hợp lệ" });
-                }
-
-                var result = await _scheduleService.GetDoctorScheduleAsync(roomId, year, week);
-                
-                if (result.Success && result.Data != null)
-                {
-                    // Calculate week dates
-                    var jan1 = new DateTime(year, 1, 1);
-                    var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
-                    var firstMonday = jan1.AddDays(daysOffset);
-                    var startOfWeek = firstMonday.AddDays((week - 1) * 7);
-                    var weekDates = Enumerable.Range(0, 7).Select(i => startOfWeek.AddDays(i)).ToList();
-
-                    var weeklyData = new Dictionary<string, object>();
-                    foreach (var date in weekDates)
+                    if (DateTime.TryParse(dateStr, out var date))
                     {
-                        var dailySlots = result.Data.Where(s => s.Date.Date == date.Date)
-                                                   .GroupBy(s => s.Period)
-                                                   .ToDictionary(g => g.Key, g => g.ToList());
-                        
-                        weeklyData[date.ToString("yyyy-MM-dd")] = new
+                        foreach (var period in periods)
                         {
-                            date = date.ToString("dd/MM/yyyy"),
-                            dayOfWeek = date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")),
-                            morning = dailySlots.ContainsKey("morning") ? dailySlots["morning"] : new List<ScheduleSlot>(),
-                            afternoon = dailySlots.ContainsKey("afternoon") ? dailySlots["afternoon"] : new List<ScheduleSlot>()
-                        };
+                            var defaultTimeSlots = timeSlotsResult.Data
+                                .Where(ts => ts.Period.Equals(period, StringComparison.OrdinalIgnoreCase))
+                                .Select(ts => ts.Id)
+                                .ToList();
+
+                            if (defaultTimeSlots.Any())
+                            {
+                                scheduleRequests.Add(new ScheduleCreateRequest
+                                {
+                                    RoomId = roomId,
+                                    Date = date,
+                                    Period = period,
+                                    TimeSlotIds = defaultTimeSlots
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (scheduleRequests.Any())
+                {
+                    var result = await _scheduleService.CreateDoctorScheduleAsync(scheduleRequests);
+                    
+                    if (result.Success)
+                    {
+                        TempData["SuccessMessage"] = $"Đã đăng ký thành công {scheduleRequests.Count} ca làm việc!";
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = result.ErrorMessage ?? "Có lỗi xảy ra khi đăng ký lịch.";
+                    }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không có ca làm việc nào được tạo.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk register week");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi đăng ký lịch làm việc.";
+            }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BulkCancelWeek(Guid roomId, int year, int week, Guid departmentId)
+        {
+            try
+            {
+                // Get all schedules for this week
+                var scheduleResult = await _scheduleService.GetDoctorScheduleAsync(roomId, year, week);
+                
+                if (scheduleResult.Success && scheduleResult.Data?.Any() == true)
+                {
+                    var deleteRequests = scheduleResult.Data
+                        .GroupBy(s => new { s.Date, s.Period })
+                        .Select(g => new ScheduleDeleteRequest
+                        {
+                            RoomId = roomId,
+                            Date = g.Key.Date,
+                            Period = g.Key.Period
+                        })
+                        .ToList();
+
+                    var successCount = 0;
+                    foreach (var request in deleteRequests)
+                    {
+                        var result = await _scheduleService.DeleteDoctorScheduleAsync(request);
+                        if (result.Success) successCount++;
                     }
 
-                    return Json(new { success = true, data = weeklyData });
+                    TempData["SuccessMessage"] = $"Đã hủy thành công {successCount} ca làm việc!";
                 }
-
-                return Json(new { success = false, message = "Không tìm thấy lịch làm việc" });
+                else
+                {
+                    TempData["InfoMessage"] = "Không có ca làm việc nào để hủy trong tuần này.";
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting weekly schedule details");
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                _logger.LogError(ex, "Error in bulk cancel week");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi hủy lịch làm việc.";
             }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ValidateScheduleConflict(Guid roomId, DateTime date, string period)
+        [HttpPost]
+        public async Task<IActionResult> RegisterAllMorning(Guid roomId, int year, int week, Guid departmentId)
+        {
+            return await RegisterPeriodForWeek(roomId, year, week, departmentId, "morning", "tất cả ca sáng");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterAllAfternoon(Guid roomId, int year, int week, Guid departmentId)
+        {
+            return await RegisterPeriodForWeek(roomId, year, week, departmentId, "afternoon", "tất cả ca chiều");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterWorkdays(Guid roomId, int year, int week, Guid departmentId)
         {
             try
             {
-                if (roomId == Guid.Empty || date == DateTime.MinValue || string.IsNullOrEmpty(period))
+                // Calculate week dates (Monday to Friday only)
+                var jan1 = new DateTime(year, 1, 1);
+                var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
+                var firstMonday = jan1.AddDays(daysOffset);
+                var startOfWeek = firstMonday.AddDays((week - 1) * 7);
+                var workdays = Enumerable.Range(0, 5).Select(i => startOfWeek.AddDays(i)).ToList(); // Monday to Friday
+
+                var timeSlotsResult = await _timeSlotService.GetTimeSlotsAsync();
+                if (!timeSlotsResult.Success || timeSlotsResult.Data == null)
                 {
-                    return Json(new { success = false, message = "Thông tin không hợp lệ" });
+                    TempData["ErrorMessage"] = "Không thể tải danh sách khung giờ.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
                 }
 
-                // Check if there's already a schedule for this room, date, and period
-                var existingSchedule = await _scheduleService.GetDoctorScheduleAsync(roomId, date.Year, GetWeekOfYear(date));
-                
-                if (existingSchedule.Success && existingSchedule.Data != null)
-                {
-                    var conflict = existingSchedule.Data.Any(s => s.Date.Date == date.Date && s.Period == period);
-                    
-                    return Json(new { 
-                        success = true, 
-                        hasConflict = conflict,
-                        message = conflict ? "Đã có lịch làm việc cho ca này" : "Có thể đăng ký ca này"
-                    });
-                }
+                var scheduleRequests = new List<ScheduleCreateRequest>();
 
-                return Json(new { success = true, hasConflict = false, message = "Có thể đăng ký ca này" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error validating schedule conflict");
-                return Json(new { success = false, message = "Có lỗi xảy ra khi kiểm tra lịch" });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetScheduleStatistics(Guid roomId, int year, int week)
-        {
-            try
-            {
-                if (roomId == Guid.Empty || year <= 0 || week <= 0)
+                foreach (var date in workdays)
                 {
-                    return Json(new { success = false, message = "Thông tin không hợp lệ" });
-                }
-
-                var result = await _scheduleService.GetDoctorScheduleAsync(roomId, year, week);
-                
-                if (result.Success && result.Data != null)
-                {
-                    var stats = new
+                    // Register both morning and afternoon for each workday
+                    foreach (var period in new[] { "morning", "afternoon" })
                     {
-                        totalSlots = result.Data.Count,
-                        morningSlots = result.Data.Count(s => s.Period == "morning"),
-                        afternoonSlots = result.Data.Count(s => s.Period == "afternoon"),
-                        totalDays = result.Data.GroupBy(s => s.Date.Date).Count(),
-                        registeredDays = result.Data.GroupBy(s => s.Date.Date)
-                                                   .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), 
-                                                                g => new { 
-                                                                    morning = g.Any(s => s.Period == "morning"),
-                                                                    afternoon = g.Any(s => s.Period == "afternoon")
-                                                                })
-                    };
-                    
-                    return Json(new { success = true, data = stats });
+                        var defaultTimeSlots = timeSlotsResult.Data
+                            .Where(ts => ts.Period.Equals(period, StringComparison.OrdinalIgnoreCase))
+                            .Select(ts => ts.Id)
+                            .ToList();
+
+                        if (defaultTimeSlots.Any())
+                        {
+                            scheduleRequests.Add(new ScheduleCreateRequest
+                            {
+                                RoomId = roomId,
+                                Date = date,
+                                Period = period,
+                                TimeSlotIds = defaultTimeSlots
+                            });
+                        }
+                    }
                 }
 
-                return Json(new { success = false, message = "Không thể tải thống kê lịch làm việc" });
+                if (scheduleRequests.Any())
+                {
+                    var result = await _scheduleService.CreateDoctorScheduleAsync(scheduleRequests);
+                    
+                    if (result.Success)
+                    {
+                        TempData["SuccessMessage"] = $"Đã đăng ký thành công tất cả ca làm việc từ Thứ 2 đến Thứ 6!";
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = result.ErrorMessage ?? "Có lỗi xảy ra khi đăng ký lịch.";
+                    }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không có ca làm việc nào được tạo.";
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting schedule statistics");
-                return Json(new { success = false, message = "Có lỗi xảy ra khi tải thống kê" });
+                _logger.LogError(ex, "Error registering workdays");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi đăng ký lịch làm việc.";
             }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+        }
+
+        private async Task<IActionResult> RegisterPeriodForWeek(Guid roomId, int year, int week, Guid departmentId, string period, string periodDisplayName)
+        {
+            try
+            {
+                // Calculate week dates
+                var jan1 = new DateTime(year, 1, 1);
+                var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
+                var firstMonday = jan1.AddDays(daysOffset);
+                var startOfWeek = firstMonday.AddDays((week - 1) * 7);
+                var weekDates = Enumerable.Range(0, 7).Select(i => startOfWeek.AddDays(i)).ToList();
+
+                var timeSlotsResult = await _timeSlotService.GetTimeSlotsAsync();
+                if (!timeSlotsResult.Success || timeSlotsResult.Data == null)
+                {
+                    TempData["ErrorMessage"] = "Không thể tải danh sách khung giờ.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+                }
+
+                var defaultTimeSlots = timeSlotsResult.Data
+                    .Where(ts => ts.Period.Equals(period, StringComparison.OrdinalIgnoreCase))
+                    .Select(ts => ts.Id)
+                    .ToList();
+
+                if (!defaultTimeSlots.Any())
+                {
+                    TempData["ErrorMessage"] = $"Không tìm thấy khung giờ cho {periodDisplayName}.";
+                    return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+                }
+
+                var scheduleRequests = weekDates.Select(date => new ScheduleCreateRequest
+                {
+                    RoomId = roomId,
+                    Date = date,
+                    Period = period,
+                    TimeSlotIds = defaultTimeSlots
+                }).ToList();
+
+                var result = await _scheduleService.CreateDoctorScheduleAsync(scheduleRequests);
+                
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = $"Đã đăng ký thành công {periodDisplayName} trong tuần!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? $"Có lỗi xảy ra khi đăng ký {periodDisplayName}.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registering period for week");
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra khi đăng ký {periodDisplayName}.";
+            }
+
+            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
         }
 
         private async Task LoadDepartmentsAndRooms(DoctorScheduleManagementViewModel model)

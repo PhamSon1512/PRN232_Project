@@ -22,13 +22,21 @@ namespace MediAppointment.API.Controllers
             await _service.CreateDoctorSchedule(userId, requests);
             return Ok();
         }
+        
         [HttpDelete]
-        public async Task<IActionResult> Get(DeleteDoctorScheduleDTO request)
+        public async Task<IActionResult> Delete([FromBody] DeleteDoctorScheduleDTO request)
         {
-            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
-              ?? throw new Exception("User ID claim is missing"));
-            await _service.DeleteDoctorSchedule(userId,request);
-            return Ok();
+            try
+            {
+                var userId = Guid.Parse(User.FindFirst("UserId")?.Value
+                  ?? throw new Exception("User ID claim is missing"));
+                await _service.DeleteDoctorSchedule(userId, request);
+                return Ok(new { success = true, message = "Xóa lịch làm việc thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
         [HttpPost("GetDoctorSchedule")]
         public async Task<IActionResult> GetDoctorShcedule(DoctorScheduleRequestDTO request)
