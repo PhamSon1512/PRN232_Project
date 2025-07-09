@@ -44,7 +44,7 @@ namespace MediAppointment.Infrastructure.Services
 
             return new PatientWithRecordsResponse
             {
-                Id = patient.UserIdentityId.Value,
+                Id = patientIdentityId,
                 FullName = patient.FullName,
                 Gender = patient.Gender,
                 DateOfBirth = patient.DateOfBirth,

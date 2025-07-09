@@ -1,0 +1,121 @@
+﻿@model MediAppointment.Client.Models.Doctor.Doctor_SlotListViewModel
+@{
+	ViewData["Title"] = "Chi tiết lịch khám";
+	Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+}
+
+<style>
+	body {
+		font-family: 'Segoe UI', Roboto, sans-serif;
+	}
+
+	.table-container {
+		background: #ffffff;
+		border-radius: 12px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+		padding: 1rem;
+		overflow-x: auto;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.table th, .table td {
+		padding: 0.75rem;
+		vertical-align: middle;
+	}
+
+	.table th {
+		background-color: #f8f9fa;
+		color: #333;
+	}
+
+	.table td {
+		background-color: #fff;
+	}
+
+	.table-bordered th,
+	.table-bordered td {
+		border: 1px solid #dee2e6;
+	}
+
+	.btn-primary {
+		background-color: #0d6efd;
+		border-color: #0d6efd;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.9rem;
+		border-radius: 6px;
+		transition: all 0.2s ease-in-out;
+	}
+
+		.btn-primary:hover {
+			background-color: #0b5ed7;
+		}
+
+	.btn-back {
+		margin-bottom: 1.5rem;
+	}
+</style>
+
+<a class="btn btn-secondary btn-back mb-3"
+   asp-action="Index"
+   asp-route-year="@Model.SelectedYear"
+   asp-route-week="@Model.SelectedWeek">
+	← Quay lại lịch làm việc
+</a>
+
+<h3 class="mb-4 text-center mt-0">
+	Chi tiết lịch khám - @Model.Date.ToString("dddd, dd/MM/yyyy") (@(Model.Shift == "morning" ? "Ca sáng" : "Ca chiều"))
+</h3>
+
+@if (Model.Slots.Any())
+{
+	<div class="table-container">
+		<table class="table table-bordered text-center">
+			<thead>
+				<tr>
+					<th>STT</th>
+					<th>Phòng</th>
+					<th>Giờ bắt đầu</th>
+					<th>Giờ kết thúc</th>
+					<th>Hành động</th>
+				</tr>
+			</thead>
+			<tbody>
+				@{
+					var index = 1;
+				}
+				@foreach (var slot in Model.Slots.OrderBy(s => s.TimeStart))
+				{
+					<tr>
+						<td>@index</td>
+						<td>@slot.RoomName</td>
+						<td>@slot.TimeStart.ToString(@"hh\:mm")</td>
+						<td>@slot.TimeEnd.ToString(@"hh\:mm")</td>
+						<td>
+							<a asp-controller="DoctorHome"
+							   asp-action="PatientDetail"
+							   asp-route-roomTimeSlotId="@slot.Id"
+							   asp-route-week="@Model.SelectedWeek"
+							   asp-route-year="@Model.SelectedYear"
+							   asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+							   asp-route-period="@Model.Shift"
+							   class="btn btn-sm btn-primary">
+								Xem thông tin bệnh nhân
+							</a>
+						</td>
+					</tr>
+					index++;
+				}
+			</tbody>
+		</table>
+	</div>
+}
+else
+{
+	<div class="alert alert-warning text-center">
+		Không có lịch khám trong ca này.
+	</div>
+}
