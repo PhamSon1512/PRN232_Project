@@ -131,15 +131,38 @@ namespace MediAppointment.Client.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(request);
+                // Get JWT token from session
+                var token = GetJwtTokenFromSession();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new ServiceResult<string>
+                    {
+                        Success = false,
+                        ErrorMessage = "Vui lòng đăng nhập lại"
+                    };
+                }
+
+                // Convert to the DTO format expected by API
+                var deleteRequest = new
+                {
+                    date = request.Date,
+                    Shift = request.Period.ToLower() == "afternoon", // true for afternoon, false for morning
+                    RoomId = request.RoomId
+                };
+
+                var json = JsonSerializer.Serialize(deleteRequest);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "api/DoctorSchedule")
+                var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "api/DoctorSchedule")
                 {
                     Content = content
                 };
 
-                var response = await _httpClient.SendAsync(deleteRequest);
+                // Add Authorization header
+                httpRequest.Headers.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.SendAsync(httpRequest);
                 
                 if (response.IsSuccessStatusCode)
                 {
