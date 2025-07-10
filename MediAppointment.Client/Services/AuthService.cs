@@ -54,8 +54,16 @@ namespace MediAppointment.Client.Services
                         var handler = new JwtSecurityTokenHandler();
                         var jwt = handler.ReadJwtToken(loginResult.AccessToken);
                         var role = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+                        var userId = jwt.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
                         loginResult.Role = role ?? string.Empty;
+                        
+                        // Store in session
+                        _httpContextAccessor.HttpContext?.Session.SetString("AccessToken", loginResult.AccessToken);
+                        _httpContextAccessor.HttpContext?.Session.SetString("UserRole", loginResult.Role);
+                        _httpContextAccessor.HttpContext?.Session.SetString("UserId", userId ?? string.Empty);
+                        _httpContextAccessor.HttpContext?.Session.SetString("IsAuthenticated", "true");
+                        
                         return loginResult;
                     }
                 }
@@ -104,6 +112,7 @@ namespace MediAppointment.Client.Services
             }
         }        public async Task LogoutAsync()
         {
+            _httpContextAccessor.HttpContext?.Session.Remove("AccessToken");
             _httpContextAccessor.HttpContext?.Session.Remove("UserId");
             _httpContextAccessor.HttpContext?.Session.Remove("UserRole");
             _httpContextAccessor.HttpContext?.Session.Remove("IsAuthenticated");

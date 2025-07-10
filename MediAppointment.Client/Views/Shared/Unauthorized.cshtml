@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var message = ViewData["Message"]?.ToString() ?? "Bạn không có quyền truy cập trang này.";
+    var requiredRoles = ViewData["RequiredRoles"] as string[] ?? new string[0];
+    var userRole = ViewData["UserRole"]?.ToString() ?? "Không xác định";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-exclamation display-1 text-warning"></i>
+                    </div>
+                    
+                    <h2 class="text-danger mb-3">@ViewData["Title"]</h2>
+                    
+                    <p class="text-muted mb-4">@message</p>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Thông tin quyền truy cập:</h6>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <strong>Quyền của bạn:</strong><br>
+                                <span class="badge bg-secondary">@userRole</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Quyền yêu cầu:</strong><br>
+                                @foreach (var role in requiredRoles)
+                                {
+                                    <span class="badge bg-primary me-1">@role</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="javascript:history.back()" class="btn btn-secondary me-2">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                        
+                        @if (userRole == "Patient")
+                        {
+                            <a href="/Home" class="btn btn-primary">
+                                <i class="bi bi-house"></i> Trang chủ bệnh nhân
+                            </a>
+                        }
+                        else if (userRole == "Doctor")
+                        {
+                            <a href="/DoctorHome" class="btn btn-primary">
+                                <i class="bi bi-house"></i> Trang chủ bác sĩ
+                            </a>
+                        }
+                        else if (userRole == "Admin" || userRole == "Manager")
+                        {
+                            <a href="/Admin" class="btn btn-primary">
+                                <i class="bi bi-house"></i> Trang quản trị
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Auth/Login" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right"></i> Đăng nhập lại
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .display-1 {
+        font-size: 4rem;
+    }
+    
+    .alert {
+        text-align: left;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+    }
+</style>

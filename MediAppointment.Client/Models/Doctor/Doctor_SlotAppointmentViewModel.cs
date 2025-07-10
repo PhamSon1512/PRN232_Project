@@ -12,7 +12,6 @@
         public string Duration { get; set; } = "";
         public string Shift { get; set; } = "";
 
-        // Chỉ 1 appointment duy nhất
-        public Doctor_AppointmentDetailViewModel? Appointment { get; set; }
+        public List<Doctor_AppointmentDetailViewModel>? Appointments { get; set; }
     }
 }

@@ -47,6 +47,8 @@ namespace MediAppointment.Client.Controllers
                         return RedirectToAction("Index", "DoctorHome");
                     case "Admin":
                         return RedirectToAction("Index", "AdminDashboard");
+                    case "Manager":
+                        return RedirectToAction("Index", "Manager");
                     default:
                         return RedirectToAction("Index", "Home"); // fallback nếu role không xác định
                 }

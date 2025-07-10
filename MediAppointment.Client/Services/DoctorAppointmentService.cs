@@ -93,10 +93,16 @@ namespace MediAppointment.Client.Services
         public async Task<bool> CreateMedicalRecordAsync(CreateMedicalRecordRequest request)
         {
             SetAuthHeader();
-            var url = $"{_baseUrl}/create"; 
+            var url = $"{_baseUrl}/create";
             var response = await _httpClient.PostAsJsonAsync(url, request);
+
+            // 👉 Thêm dòng log này để xem chi tiết phản hồi lỗi
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"CreateMedicalRecordAsync - StatusCode: {response.StatusCode}, Content: {content}");
+
             return response.IsSuccessStatusCode;
         }
+
 
     }
 }

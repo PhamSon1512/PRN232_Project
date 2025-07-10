@@ -1,9 +1,14 @@
-﻿using MediAppointment.Client.Models.Doctor;
+﻿using MediAppointment.Client.Models.Appointment;
+using MediAppointment.Client.Models.Doctor;
+using MediAppointment.Client.Models.MedicalRecord;
 using MediAppointment.Client.Services;
+using MediAppointment.Client.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MediAppointment.Client.Controllers
 {
+    [RequireDoctor]
     public class DoctorHomeController : Controller
     {
         private readonly IDoctorAppointmentService _doctorAppointmentService;
@@ -113,6 +118,164 @@ namespace MediAppointment.Client.Controllers
             }
 
             return weeks;
+        }
+
+
+        [Route("DoctorHome/Details")]
+        public async Task<IActionResult> Details(string date, string period)
+        {
+            if (!DateTime.TryParse(date, out var selectedDate))
+            {
+                return BadRequest("Ngày không hợp lệ.");
+            }
+
+            // Lấy "week" từ query string
+            string selectedWeek = Request.Query["week"];
+            int selectedYear = selectedDate.Year;
+
+            var allSlots = await _doctorAppointmentService.GetAssignedSlotsAsync();
+
+            var filteredSlots = allSlots
+                .Where(s => s.Date.Date == selectedDate.Date && s.Shift.Equals(period, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(s => s.TimeStart)
+                .ToList();
+
+            var viewModel = new Doctor_SlotListViewModel
+            {
+                Date = selectedDate,
+                Shift = period,
+                Slots = filteredSlots,
+                SelectedYear = selectedYear,
+                SelectedWeek = selectedWeek
+            };
+
+            return View(viewModel);
+        }
+
+
+        [Route("DoctorHome/PatientDetail")]
+        public async Task<IActionResult> PatientDetail(Guid roomTimeSlotId, string week, int year, DateTime date, string period)
+        {
+            // Lấy thông tin các cuộc hẹn theo slot
+            var slotAppointments = await _doctorAppointmentService.GetAppointmentsBySlotAsync(roomTimeSlotId);
+
+            // Khởi tạo các biến mặc định
+            Doctor_AppointmentDetailViewModel? firstAppointment = null;
+            Doctor_PatientDetailViewModel? patientDetail = null;
+
+            // Kiểm tra và lấy cuộc hẹn đầu tiên nếu có
+            if (slotAppointments?.Appointments != null && slotAppointments.Appointments.Any())
+            {
+                firstAppointment = slotAppointments.Appointments.First();
+
+                // Lấy thông tin bệnh nhân nếu có cuộc hẹn
+                if (firstAppointment != null)
+                {
+                    patientDetail = await _doctorAppointmentService.GetPatientDetailAsync(firstAppointment.PatientId);
+
+                    if (patientDetail == null)
+                    {
+                        ViewBag.Message = "Không tìm thấy thông tin bệnh nhân.";
+                    }
+                }
+            }
+            else
+            {
+                ViewBag.Message = "Hiện tại chưa có bệnh nhân nào đặt lịch cho ca làm này.";
+            }
+
+            // Chuẩn bị ViewModel
+            var viewModel = new Doctor_PatientInfoViewModel
+            {
+                AppointmentSlot = slotAppointments,
+                AppointmentDetail = firstAppointment,
+                Patient = patientDetail,
+                Week = week,
+                Year = year,
+                Date = date,
+                Period = period
+            };
+
+            return View(viewModel);
+        }
+
+
+
+        [HttpGet]
+        public IActionResult CreateMedicalRecord(Guid patientId, Guid roomTimeSlotId, string week, int year, DateTime date, string period)
+        {
+            var model = new CreateMedicalRecordRequest
+            {
+                PatientId = patientId
+            };
+
+            ViewBag.RoomTimeSlotId = roomTimeSlotId;
+            ViewBag.Week = week;
+            ViewBag.Year = year;
+            ViewBag.Date = date;
+            ViewBag.Period = period;
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateMedicalRecord(
+           CreateMedicalRecordRequest request,
+           Guid roomTimeSlotId,
+           string week,
+           int year,
+           DateTime date,
+           string period)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Gửi lại dữ liệu vào ViewBag để render lại View nếu ModelState không hợp lệ
+                ViewBag.RoomTimeSlotId = roomTimeSlotId;
+                ViewBag.Week = week;
+                ViewBag.Year = year;
+                ViewBag.Date = date;
+                ViewBag.Period = period;
+
+                return View(request);
+            }
+
+            try
+            {
+                var result = await _doctorAppointmentService.CreateMedicalRecordAsync(request);
+
+                if (result)
+                {
+                    // Thông báo thành công
+                    TempData["Success"] = "Thêm hồ sơ bệnh án thành công!";
+
+                    return RedirectToAction("PatientDetail", new
+                    {
+                        patientId = request.PatientId,
+                        roomTimeSlotId = roomTimeSlotId,
+                        week = week,
+                        year = year,
+                        date = date.ToString("yyyy-MM-dd"),
+                        period = period
+                    });
+                }
+
+                // Nếu result = false
+                ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi khi thêm hồ sơ.");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "Lỗi hệ thống: " + ex.Message);
+            }
+
+            // Nếu có lỗi, render lại view với dữ liệu
+            ViewBag.RoomTimeSlotId = roomTimeSlotId;
+            ViewBag.Week = week;
+            ViewBag.Year = year;
+            ViewBag.Date = date;
+            ViewBag.Period = period;
+
+            return View(request);
         }
 
     }
