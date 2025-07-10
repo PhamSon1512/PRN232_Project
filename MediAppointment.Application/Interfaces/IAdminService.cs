@@ -2,14 +2,16 @@ using MediAppointment.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using MediAppointment.Application.DTOs.ManagerDTOs;
+using MediAppointment.Application.DTOs.Pages;
 
 namespace MediAppointment.Application.Interfaces
 {
     public interface IAdminService
     {
-        // Quản lý Manager (tạo, cập nhật role/status, chuyển trạng thái Deleted)
-        Task<Guid> CreateManagerAsync(string email, string fullName, string phoneNumber, string password);
-        Task UpdateManagerRoleAsync(Guid managerId, string newRole);
-        Task UpdateManagerStatusAsync(Guid managerId, MediAppointment.Domain.Enums.Status status);
+        Task<PagedResult<DoctorManagerDto>> GetAllDoctorsAndManagersAsync(string text = "", int page = 1, int pageSize = 5);
+        Task<object> GetAdminProfileAsync(Guid adminId);
+        Task<object> CreateDoctorToManagerAsync(ManagerCreateDto dto);
+        Task<object> UpdateManagerProfileAsync(ManagerUpdateDto dto);
     }
 }
