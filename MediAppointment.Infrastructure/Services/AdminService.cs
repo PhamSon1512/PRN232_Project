@@ -40,7 +40,7 @@ namespace MediAppointment.Application.Services
             var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
             var allUsers = doctorUsers.Concat(managerUsers).Distinct();
 
-            // filtering
+            // Filtering
             if (!string.IsNullOrWhiteSpace(text))
             {
                 text = text.Trim().ToLower();
@@ -53,21 +53,30 @@ namespace MediAppointment.Application.Services
             var users = allUsers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(u => new DoctorManagerDto
-                {
-                    Id = u.Id,
-                    FullName = u.FullName,
-                    Email = u.Email,
-                    PhoneNumber = u.PhoneNumber,
-                    UserName = u.UserName,
-                    Role = doctorUsers.Any(d => d.Id == u.Id) ? "Doctor" : "Manager",
-                    Departments = new List<string>() // Departments not available without dbContext
-                })
                 .ToList();
+
+            var adminDtos = new List<DoctorManagerDto>();
+            foreach (var user in users)
+            {
+                var userEntity = await _dbContext.Set<User>().FirstOrDefaultAsync(u => u.UserIdentityId == user.Id);
+
+                adminDtos.Add(new DoctorManagerDto
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Role = doctorUsers.Any(d => d.Id == user.Id) ? "Doctor" : "Manager",
+                    DateOfBirth = userEntity?.DateOfBirth ?? DateTime.MinValue,
+                    Gender = userEntity?.Gender ?? false,
+                    IsActive = userEntity?.Status == Status.Active
+                });
+            }
 
             return new PagedResult<DoctorManagerDto>
             {
-                Items = users,
+                Items = adminDtos,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
@@ -80,12 +89,17 @@ namespace MediAppointment.Application.Services
             var admin = await _userManager.FindByIdAsync(adminId.ToString());
             if (admin == null) throw new Exception("Admin not found");
 
+            var roles = await _userManager.GetRolesAsync(admin);
+            var role = roles.FirstOrDefault() ?? "Unknown";
+
             return new
             {
+                Id = admin.Id,
                 Email = admin.Email,
                 FullName = admin.FullName,
                 PhoneNumber = admin.PhoneNumber,
-                UserName = admin.UserName
+                UserName = admin.UserName,
+                Role = role
             };
         }
 
@@ -160,6 +174,58 @@ namespace MediAppointment.Application.Services
                 PhoneNumber = manager.PhoneNumber,
                 UserName = manager.UserName,
                 Role = await _userManager.GetRolesAsync(manager) // Returns the current role(s)
+            };
+        }
+
+        public async Task<DoctorManagerDto> GetUserByIdAsync(Guid id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                throw new Exception($"User with Id {id} does not exist.");
+
+            var userEntity = await _dbContext.Set<User>().FirstOrDefaultAsync(u => u.UserIdentityId == user.Id);
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.Contains("Doctor") ? "Doctor" : roles.Contains("Manager") ? "Manager" : "Unknown";
+
+            return new DoctorManagerDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                UserName = user.UserName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Role = role,
+                DateOfBirth = userEntity?.DateOfBirth ?? DateTime.MinValue,
+                Gender = userEntity?.Gender ?? false,
+                IsActive = userEntity?.Status == Status.Active
+            };
+        }
+
+        public async Task<object> UpdateAdminProfileAsync(AdminUpdateProfileDto dto)
+        {
+            var admin = await _userManager.FindByIdAsync(dto.AdminId.ToString());
+            if (admin == null)
+                throw new Exception($"Admin with Id {dto.AdminId} does not exist.");
+            if (!(await _userManager.IsInRoleAsync(admin, "Admin")))
+                throw new Exception($"User with Id {dto.AdminId} does not have the Admin role.");
+
+            if (!string.IsNullOrEmpty(dto.FullName) && dto.FullName != admin.FullName)
+                admin.FullName = dto.FullName;
+            if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != admin.PhoneNumber)
+                admin.PhoneNumber = dto.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(admin);
+            if (!result.Succeeded) throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            await _emailService.SendAsync(admin.Email, "Profile Updated", $"Your profile has been updated.");
+
+            return new
+            {
+                Id = admin.Id,
+                FullName = admin.FullName,
+                Email = admin.Email,
+                PhoneNumber = admin.PhoneNumber,
+                UserName = admin.UserName,
+                Role = await _userManager.GetRolesAsync(admin)
             };
         }
     }

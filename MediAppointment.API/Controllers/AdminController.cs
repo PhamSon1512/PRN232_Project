@@ -36,6 +36,24 @@ namespace MediAppointment.API.Controllers
             }
         }
 
+        [HttpPost("users")]
+        public async Task<IActionResult> GetUserByIdAsync([FromBody] Guid id)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+                var result = await _adminService.GetUserByIdAsync(id);
+                if (result == null) return NotFound("User not found.");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
         [HttpGet("AdminProfile")]
         public async Task<IActionResult> GetAdminProfile()
         {
@@ -72,6 +90,23 @@ namespace MediAppointment.API.Controllers
             try
             {
                 var result = await _adminService.UpdateManagerProfileAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
+        [HttpPut("UpdateAdminProfile")]
+        public async Task<IActionResult> UpdateAdminProfile([FromBody] AdminUpdateProfileDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+            try
+            {
+                var result = await _adminService.UpdateAdminProfileAsync(dto);
                 return Ok(result);
             }
             catch (Exception ex)

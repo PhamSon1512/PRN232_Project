@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MediAppointment.Client.Attributes;
 using MediAppointment.Client.Models.Doctor;
 using MediAppointment.Client.Services;
@@ -91,6 +92,24 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(DoctorUpdateProfile dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.FullName))
+            {
+                ModelState.AddModelError("FullName", "Họ và tên không được để trống");
+            }
+            else if (!Regex.IsMatch(dto.FullName, @"^[a-zA-ZÀ-ỹ\s]+$"))
+            {
+                ModelState.AddModelError("FullName", "Họ và tên chỉ được chứa chữ cái và khoảng trắng");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            {
+                ModelState.AddModelError("PhoneNumber", "Số điện thoại không được để trống");
+            }
+            else if (!Regex.IsMatch(dto.PhoneNumber, @"^\d+$") || dto.PhoneNumber.Length > 11)
+            {
+                ModelState.AddModelError("PhoneNumber", "Số điện thoại phải là số và có độ dài tối đa 11 ký tự");
+            }
+
             if (!ModelState.IsValid)
             {
                 var result = await _doctorService.GetLoggedInDoctorProfileAsync();
