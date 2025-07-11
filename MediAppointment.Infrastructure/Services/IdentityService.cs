@@ -287,6 +287,39 @@ namespace MediAppointment.Infrastructure.Services
         #endregion
 
         #region DoctorUpdateProfile
+        public async Task<List<DoctorDto>> GetAllDoctorsWithoutPaginationAsync(string text = "", string department = "")
+        {
+            var listDoctor = _dbContext.Set<User>().OfType<Doctor>().AsQueryable();
+            listDoctor = listDoctor.Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department);
+
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                text = text.Trim().ToLower();
+                listDoctor = listDoctor.Where(d => d.FullName.ToLower().Contains(text) || d.Email.ToLower().Contains(text));
+            }
+
+            if (!string.IsNullOrWhiteSpace(department))
+            {
+                department = department.Trim().ToLower();
+                listDoctor = listDoctor.Where(d => d.DoctorDepartments.Any(dd => dd.Department.DepartmentName.ToLower().Contains(department)));
+            }
+
+            var doctors = await listDoctor
+                .Select(d => new DoctorDto
+                {
+                    Id = d.Id,
+                    FullName = d.FullName,
+                    Gender = d.Gender,
+                    DateOfBirth = d.DateOfBirth,
+                    Email = d.Email,
+                    PhoneNumber = d.PhoneNumber,
+                    Departments = d.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+                    Status = (int)d.Status
+                })
+                .ToListAsync();
+
+            return doctors;
+        }
         public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)
         {
             var doctor = await _dbContext.Set<User>().OfType<Doctor>().Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department).FirstOrDefaultAsync(d => d.Id == doctorId)

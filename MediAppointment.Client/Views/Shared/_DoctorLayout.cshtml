@@ -50,7 +50,7 @@
                     <i class="bi bi-person-circle"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="/Account/Profile">Xem hồ sơ</a></li>
+                    <li><a class="dropdown-item" asp-controller="Doctor" asp-action="DoctorProfile">Xem hồ sơ</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
@@ -61,7 +61,7 @@
                     </li>
                 </ul>
             </div>
-        </div>
+        </div>  
         <div class="mt-4">
             @RenderBody()
         </div>
