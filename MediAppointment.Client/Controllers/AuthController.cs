@@ -46,7 +46,7 @@ namespace MediAppointment.Client.Controllers
                     case "Doctor":
                         return RedirectToAction("Index", "DoctorHome");
                     case "Admin":
-                        return RedirectToAction("Index", "AdminDashboard");
+                        return RedirectToAction("Index", "Admin");
                     case "Manager":
                         return RedirectToAction("Index", "Manager");
                     default:

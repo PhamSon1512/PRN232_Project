@@ -1,0 +1,79 @@
+﻿@model MediAppointment.Client.Models.Admin.AdminViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid p-0">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (Model == null || string.IsNullOrEmpty(Model.Id.ToString()))
+    {
+        <div class="alert alert-warning" role="alert">
+            Không tìm thấy thông tin người dùng.
+        </div>
+    }
+    else
+    {
+        <div class="mt-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Chỉnh sửa thông tin người dùng</h5>
+                    <form asp-action="EditUser" asp-route-id="@Model.Id" method="post">
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label">Họ và tên</label>
+                            <input asp-for="FullName" class="form-control" value="@Model.FullName" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="UserName" class="form-label">Tên đăng nhập</label>
+                            <input asp-for="UserName" class="form-control" value="@Model.UserName" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" value="@Model.Email" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                            <input asp-for="PhoneNumber" class="form-control" value="@Model.PhoneNumber" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                            <input asp-for="DateOfBirth" type="text" class="form-control" value="@(Model.DateOfBirth == DateTime.MinValue ? "Chưa cập nhật" : Model.DateOfBirth.ToString("dd/MM/yyyy"))" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Gender" class="form-label">Giới tính</label>
+                            <input type="text" class="form-control" value="@(Model.Gender ? "Nam" : "Nữ")" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Role" class="form-label">Vai trò</label>
+                            <select asp-for="Role" class="form-select">
+                                @if (!string.IsNullOrEmpty(Model.Role) && Model.Role == "Doctor")
+                                {
+                                    <option value="Doctor" selected>Doctor</option>
+                                    <option value="Manager">Manager</option>
+                                }
+                                else if (!string.IsNullOrEmpty(Model.Role))
+                                {
+                                    <option value="@Model.Role" selected>@Model.Role</option>
+                                }
+                            </select>
+                            <span class="text-info">Chỉ được nâng cấp từ Doctor thành Manager nếu thay đổi role.</span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="IsActive" class="form-label">Trạng thái</label>
+                            <input asp-for="IsActive" type="text" class="form-control" value="@(Model.IsActive ? "Đang hoạt động" : "Không hoạt động")" disabled />
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        <a href="@Url.Action("UserManagement")" class="btn btn-secondary ms-2">Quay lại</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
