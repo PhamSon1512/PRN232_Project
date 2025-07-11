@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
+using MediAppointment.Domain.Entities;
 using MediAppointment.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +25,49 @@ namespace MediAppointment.API.Controllers
             _appointmentService = appointmentService;
         }
 
-        [HttpGet("profile")]
+        [HttpPost("profile")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetDoctorProfile([FromBody] Guid doctorId)
+        {
+            try
+            {
+                var doctor = await _identityService.GetDoctorByIdAsync(doctorId);   
+                if (doctor == null)
+                    return NotFound(new { Message = "Doctor not found." });
+
+                var startDate = DateTime.Today;
+                var endDate = startDate.AddDays(7);
+                var appointments = await _appointmentService.ListAppointmentsAssignedToDoctor(doctorId, null, startDate, endDate);
+                //var schedules = appointments.Select(a => new
+                //{
+                //    Id = a.Id,
+                //    Date = a.AppointmentDate,
+                //    Shift = a.Time,
+                //    IsAvailable = a.Status == "Scheduled"
+                //}).ToList();
+
+                var doctorViewModel = new
+                {
+                    Id = doctor.Id,
+                    FullName = doctor.FullName,
+                    Gender = doctor.Gender,
+                    DateOfBirth = doctor.DateOfBirth,
+                    Email = doctor.Email,
+                    PhoneNumber = doctor.PhoneNumber,
+                    Departments = doctor.Departments,
+                    //Schedules = schedules,
+                    Status = doctor.Status
+                };
+
+                return Ok(doctorViewModel);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("DoctorProfile")]
         public async Task<IActionResult> Profile()
         {
             var userIdClaim = User.FindFirst("UserId")?.Value;
@@ -32,8 +75,32 @@ namespace MediAppointment.API.Controllers
             //var user = Guid.Parse("B6B013AD-B2B2-481C-88B1-87E3B692A367");
             var doctor = await _identityService.GetDoctorByIdAsync(id);
             if (doctor == null) return NotFound();
-                
-            return Ok(doctor);
+
+            var startDate = DateTime.Today;
+            var endDate = startDate.AddDays(7);
+            var appointments = await _appointmentService.ListAppointmentsAssignedToDoctor(id, null, startDate, endDate);
+            //var schedules = appointments.Select(a => new
+            //{
+            //    Id = a.Id,
+            //    Date = a.AppointmentDate,
+            //    Shift = a.Time,
+            //    IsAvailable = a.Status == "Scheduled"
+            //}).ToList();
+
+            var doctorViewModel = new
+            {
+                Id = doctor.Id,
+                FullName = doctor.FullName,
+                Gender = doctor.Gender,
+                DateOfBirth = doctor.DateOfBirth,
+                Email = doctor.Email,
+                PhoneNumber = doctor.PhoneNumber,
+                Departments = doctor.Departments,
+                //Schedules = schedules,
+                Status = doctor.Status
+            };
+
+            return Ok(doctorViewModel);
         }
 
         [HttpPut("profile")]
@@ -69,6 +136,26 @@ namespace MediAppointment.API.Controllers
 
             return Ok(appointments);
         }
+        [HttpGet("all")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllDoctors()
+        {
+            var pagedResult = await _identityService.GetAllDoctorsAsync();
 
+            var doctorViewModels = pagedResult.Items.Select(d => new
+            {
+                Id = d.Id,
+                FullName = d.FullName,
+                Gender = d.Gender,
+                DateOfBirth = d.DateOfBirth,
+                Email = d.Email,
+                PhoneNumber = d.PhoneNumber,
+                Departments = d.Departments,
+                Schedules = new List<object>(),
+                Status = d.Status
+            }).ToList();
+
+            return Ok(doctorViewModels);
+        }
     }
 }

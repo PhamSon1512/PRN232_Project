@@ -2,10 +2,14 @@ using MediAppointment.Application.DTOs;
 using MediAppointment.Domain.Enums;
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using MediAppointment.Application.DTOs.ManagerDTOs;
 
 namespace MediAppointment.API.Controllers
 {
     [ApiController]
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     public class AdminController : ControllerBase
     {
@@ -15,36 +19,65 @@ namespace MediAppointment.API.Controllers
             _adminService = adminService;
         }
 
-        // Quản lý Manager
-        [HttpPost("manager")]
-        public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
+        [HttpGet("GetAllDoctorsAndManagers")]
+        public async Task<IActionResult> GetAllDoctorsAndManagers([FromQuery] string text = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
         {
-            var id = await _adminService.CreateManagerAsync(request.Email, request.FullName, request.PhoneNumber, request.Password);
-            return Ok(id);
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+                var result = await _adminService.GetAllDoctorsAndManagersAsync(text, page, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
         }
 
-        [HttpPut("manager/{id}/role")]
-        public async Task<IActionResult> UpdateManagerRole(string id, [FromQuery] string newRole)
+        [HttpGet("AdminProfile")]
+        public async Task<IActionResult> GetAdminProfile()
         {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            await _adminService.UpdateManagerRoleAsync(guid, newRole);
-            return Ok();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+            var profile = await _adminService.GetAdminProfileAsync(adminId);
+            return Ok(profile);
         }
 
-        [HttpPut("manager/{id}/status")]
-        public async Task<IActionResult> UpdateManagerStatus(string id, [FromQuery] Status status)
+        [HttpPut("CreateManager")]
+        public async Task<IActionResult> CreateDoctorToManager([FromBody] ManagerCreateDto dto)
         {
-            if (!Guid.TryParse(id, out var guid)) return BadRequest("Invalid Guid format");
-            await _adminService.UpdateManagerStatusAsync(guid, status);
-            return Ok();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+            try
+            {
+                var result = await _adminService.CreateDoctorToManagerAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
         }
 
-    public class CreateManagerRequest
-    {
-        public required string Email { get; set; }
-        public required string FullName { get; set; }
-        public required string PhoneNumber { get; set; }
-        public required string Password { get; set; }
-    }
+        [HttpPut("UpdateManagerProfile")]
+        public async Task<IActionResult> UpdateManagerProfile([FromBody] ManagerUpdateDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var adminId)) return Unauthorized("Invalid admin token");
+
+            try
+            {
+                var result = await _adminService.UpdateManagerProfileAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
     }
 }

@@ -1,0 +1,60 @@
+﻿@model MediAppointment.Client.Models.Doctor.DoctorStatusModel
+@{
+    ViewData["Title"] = "Chỉnh sửa Hồ sơ Bác sĩ";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Chỉnh sửa Hồ sơ</h2>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="UpdateProfile" method="post">
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Họ và Tên</label>
+            <input asp-for="FullName" class="form-control" value="@Model.FullName" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+            <input asp-for="PhoneNumber" class="form-control" value="@Model.PhoneNumber" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Gender" class="form-label">Giới tính</label>
+            <input asp-for="Gender" type="text" class="form-control" value="@Model.GenderDisplay" disabled />
+        </div>
+        <div class="mb-3">
+            <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+            <input asp-for="DateOfBirth" type="date" class="form-control" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" disabled />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" value="@Model.Email" disabled />
+        </div>
+        <div>
+            <strong>Khoa:</strong>
+            @foreach (var dept in Model.Departments)
+            {
+                <span class="badge bg-secondary me-1">@dept</span>
+            }
+        </div>
+        <p class="text-muted"><i class="bi bi-info-circle"></i> Trạng thái: @(Model.Status == 1 ? "Đang hoạt động" : "Không hoạt động")</p>
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a asp-action="DoctorProfile" asp-controller="Doctor" class="btn btn-secondary ms-2">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

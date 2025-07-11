@@ -8,79 +8,159 @@ using MediAppointment.Domain.Enums;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
+using MediAppointment.Application.DTOs.Pages;
+using Microsoft.EntityFrameworkCore;
+using MediAppointment.Application.DTOs.ManagerDTOs;
+using Microsoft.AspNetCore.Mvc;
+using MediAppointment.Domain.Entities.Abstractions;
+using MediAppointment.Infrastructure.Data;
 
 namespace MediAppointment.Application.Services
 {
     public class AdminService : IAdminService
     {
         private readonly UserManager<UserIdentity> _userManager;
-        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IEmailService _emailService;
 
-        public AdminService(UserManager<UserIdentity> userManager, RoleManager<IdentityRole<Guid>> roleManager)
+        public AdminService(UserManager<UserIdentity> userManager, ApplicationDbContext dbContext, IEmailService emailService)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
+            _dbContext = dbContext;
+            _emailService = emailService;
         }
 
-        // Quản lý Manager
-        public async Task<Guid> CreateManagerAsync(string email, string fullName, string phoneNumber, string password)
+        public async Task<PagedResult<DoctorManagerDto>> GetAllDoctorsAndManagersAsync(string text = "", int page = 1, int pageSize = 5)
         {
-            var manager = new UserIdentity
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 5;
+
+            // Get all users with Doctor or Manager roles
+            var doctorUsers = await _userManager.GetUsersInRoleAsync("Doctor");
+            var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
+            var allUsers = doctorUsers.Concat(managerUsers).Distinct();
+
+            // filtering
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                Id = Guid.NewGuid(),
-                Email = email,
-                UserName = email,
-                FullName = fullName,
-                PhoneNumber = phoneNumber
+                text = text.Trim().ToLower();
+                allUsers = allUsers.Where(u => u.FullName.ToLower().Contains(text) || u.Email.ToLower().Contains(text));
+            }
+
+            var totalCount = allUsers.Count();
+
+            // Apply pagination
+            var users = allUsers
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new DoctorManagerDto
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    UserName = u.UserName,
+                    Role = doctorUsers.Any(d => d.Id == u.Id) ? "Doctor" : "Manager",
+                    Departments = new List<string>() // Departments not available without dbContext
+                })
+                .ToList();
+
+            return new PagedResult<DoctorManagerDto>
+            {
+                Items = users,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
             };
-            var result = await _userManager.CreateAsync(manager, password);
-            if (!result.Succeeded)
-                throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
-            await _userManager.AddToRoleAsync(manager, "Manager");
-            return manager.Id;
         }
 
-        public async Task UpdateManagerRoleAsync(Guid managerId, string newRole)
+        // admin profile
+        public async Task<object> GetAdminProfileAsync(Guid adminId)
         {
-            var manager = await _userManager.FindByIdAsync(managerId.ToString());
-            if (manager == null) throw new Exception("Manager not found");
-            var currentRoles = await _userManager.GetRolesAsync(manager);
-            await _userManager.RemoveFromRolesAsync(manager, currentRoles);
-            await _userManager.AddToRoleAsync(manager, newRole);
+            var admin = await _userManager.FindByIdAsync(adminId.ToString());
+            if (admin == null) throw new Exception("Admin not found");
+
+            return new
+            {
+                Email = admin.Email,
+                FullName = admin.FullName,
+                PhoneNumber = admin.PhoneNumber,
+                UserName = admin.UserName
+            };
         }
 
-        public async Task UpdateManagerStatusAsync(Guid managerId, Status status)
+        // create manager
+        public async Task<object> CreateDoctorToManagerAsync(ManagerCreateDto dto)
         {
-            var manager = await _userManager.FindByIdAsync(managerId.ToString());
-            if (manager == null) throw new Exception("Manager not found");
-            // Giả sử bạn có property Status trong UserIdentity hoặc lưu dưới dạng claim
-            // Ở đây sẽ cần mở rộng UserIdentity nếu chưa có property Status
-            // manager.Status = status;
-            // await _userManager.UpdateAsync(manager);
-            // Nếu dùng claim:
-            await _userManager.RemoveClaimAsync(manager, new System.Security.Claims.Claim("Status", "Active"));
-            await _userManager.AddClaimAsync(manager, new System.Security.Claims.Claim("Status", status.ToString()));
+            var doctor = await _userManager.FindByIdAsync(dto.DoctorId.ToString());
+            if (doctor == null)
+                throw new Exception($"User with Id {dto.DoctorId} does not exist.");
+            if (!(await _userManager.IsInRoleAsync(doctor, "Doctor")))
+                throw new Exception($"User with Id {dto.DoctorId} does not have the Doctor role.");
+
+            // Update only editable fields
+            if (!string.IsNullOrEmpty(dto.FullName) && dto.FullName != doctor.FullName)
+                doctor.FullName = dto.FullName;
+            if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
+                doctor.PhoneNumber = dto.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(doctor);
+            if (!result.Succeeded) throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            // Update role from Doctor to Manager (validate NewRole if provided)
+            if (!string.IsNullOrEmpty(dto.NewRole) && dto.NewRole != "Manager")
+                throw new Exception("New role must be Manager");
+            await _userManager.AddToRoleAsync(doctor, "Manager");
+            await _userManager.RemoveFromRoleAsync(doctor, "Doctor");
+
+            // Delete the Doctor record from the User table
+            var doctorEntity = await _dbContext.Set<User>()
+                .OfType<Doctor>()
+                .FirstOrDefaultAsync(d => d.UserIdentityId == dto.DoctorId);
+            if (doctorEntity != null)
+            {
+                _dbContext.Set<User>().Remove(doctorEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+            await _emailService.SendAsync(doctor.Email, "Role Updated", "Your role has been updated to Manager by an Admin. Welcome!");
+            return new
+            {
+                Id = doctor.Id,
+                FullName = doctor.FullName,
+                Email = doctor.Email,
+                PhoneNumber = doctor.PhoneNumber,
+                UserName = doctor.UserName,
+                Role = "Manager"
+            };
         }
 
-        public async Task UpdateUserStatusAsync(Guid userId, Status status)
+        public async Task<object> UpdateManagerProfileAsync(ManagerUpdateDto dto)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null) throw new Exception("User not found");
-            // Update status claim
-            var claims = await _userManager.GetClaimsAsync(user);
-            var oldStatus = claims.FirstOrDefault(c => c.Type == "Status");
-            if (oldStatus != null)
-                await _userManager.RemoveClaimAsync(user, oldStatus);
-            await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Status", status.ToString()));
-        }
+            var manager = await _userManager.FindByIdAsync(dto.DoctorId.ToString());
+            if (manager == null)
+                throw new Exception($"User with Id {dto.DoctorId} does not exist.");
+            if (!(await _userManager.IsInRoleAsync(manager, "Manager")))
+                throw new Exception($"User with Id {dto.DoctorId} does not have the Manager role.");
 
-        public async Task UpdateUserRoleAsync(Guid userId, string newRole)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null) throw new Exception("User not found");
-            var currentRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            await _userManager.AddToRoleAsync(user, newRole);
+            // Update only editable fields if provided and different
+            if (!string.IsNullOrEmpty(dto.FullName) && dto.FullName != manager.FullName)
+                manager.FullName = dto.FullName;
+            if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != manager.PhoneNumber)
+                manager.PhoneNumber = dto.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(manager);
+            if (!result.Succeeded) throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            await _emailService.SendAsync(manager.Email, "Profile Updated", $"Your profile has been updated.");
+
+            return new
+            {
+                Id = manager.Id,
+                FullName = manager.FullName,
+                Email = manager.Email,
+                PhoneNumber = manager.PhoneNumber,
+                UserName = manager.UserName,
+                Role = await _userManager.GetRolesAsync(manager) // Returns the current role(s)
+            };
         }
     }
 }

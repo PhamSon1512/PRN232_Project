@@ -13,6 +13,17 @@ namespace MediAppointment.Client.Models.Doctor
         public List<ScheduleViewModel> Schedules { get; set; } = new();
     }
 
+    public class DoctorStatusModel : DoctorViewModel
+    {
+        public int Status { get; set; }
+    }
+
+    public class DoctorUpdateProfile
+    {
+        public string? FullName { get; set; }
+        public string? PhoneNumber { get; set; }
+    }
+
     public class ScheduleViewModel
     {
         public Guid Id { get; set; }
