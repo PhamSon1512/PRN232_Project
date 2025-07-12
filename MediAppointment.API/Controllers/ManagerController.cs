@@ -1,4 +1,6 @@
-﻿using MediAppointment.Application.DTOs;
+﻿using System.Security.Claims;
+using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.ManagerDTOs;
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,14 +19,68 @@ namespace MediAppointment.API.Controllers
             _managerService = managerService;
         }
 
-        [HttpGet("GetAllDoctors")]
+        [HttpGet("GetAllDoctors")]  
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllDoctors([FromQuery] string text = "", [FromQuery] string department = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
+        public async Task<IActionResult> GetAllDoctors([FromQuery] string text = "", /*[FromQuery] string department = ""*/ [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
         {
             try
             {
-                var doctors = await _managerService.GetAllDoctorsAsync(text, department, page, pageSize);
+                var doctors = await _managerService.GetAllDoctorsAsync(text, /*department,*/ page, pageSize);
                 return Ok(doctors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("doctors/{doctorId:guid}")]
+        public async Task<IActionResult> GetDoctorById(Guid doctorId)
+        {
+            try
+            {
+                var doctor = await _managerService.GetDoctorByIdAsync(doctorId);
+                if (doctor == null)
+                    return NotFound(new { Message = "Doctor not found." });
+                return Ok(doctor);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetManagerProfile()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var managerId)) return Unauthorized("Invalid admin token");
+
+            try
+            {
+                var profile = await _managerService.GetManagerProfileAsync(managerId);
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
+            }
+        }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateManagerProfile([FromBody] ManagerUpdateProfileDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var managerId)) return Unauthorized("Invalid manager token");
+
+            try
+            {
+                var updated = await _managerService.UpdateManagerProfileAsync(dto);
+                if (updated)
+                {
+                    return Ok(new { Message = "Cập nhật hồ sơ Manager thành công." });
+                }
+                return BadRequest(new { Message = "Cập nhật hồ sơ Manager thất bại." });
             }
             catch (Exception ex)
             {

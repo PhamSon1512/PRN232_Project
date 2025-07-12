@@ -1,6 +1,7 @@
 ﻿using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.DTOs.DoctorDTOs;
+using MediAppointment.Application.DTOs.ManagerDTOs;
 using MediAppointment.Application.DTOs.Pages;
 using MediAppointment.Domain.Entities;
 
@@ -9,7 +10,9 @@ namespace MediAppointment.Application.Interfaces
     public interface IIdentityService
     {
         #region Manager
-        Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5);
+        Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", /*string department = "",*/ int page = 1, int pageSize = 5);
+        Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId);
+        Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto);
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
         Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
         Task DeleteDoctorAsync(Guid doctorId);

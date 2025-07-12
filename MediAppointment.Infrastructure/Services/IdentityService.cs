@@ -1,10 +1,12 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using MediAppointment.Application.Constants;
 using MediAppointment.Application.DTOs;
 using MediAppointment.Application.DTOs.Auth;
 using MediAppointment.Application.DTOs.DoctorDTOs;
+using MediAppointment.Application.DTOs.ManagerDTOs;
 using MediAppointment.Application.DTOs.Pages;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
@@ -57,7 +59,7 @@ namespace MediAppointment.Infrastructure.Services
 
         #region ManagerDoctor
         // GET ALL
-        public async Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5)
+        public async Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", /*string department = "",*/ int page = 1, int pageSize = 5)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 5;
@@ -71,11 +73,11 @@ namespace MediAppointment.Infrastructure.Services
                 listDoctor = listDoctor.Where(d => d.FullName.ToLower().Contains(text) || d.Email.ToLower().Contains(text));
             }
 
-            if (!string.IsNullOrWhiteSpace(department))
-            {
-                department = department.Trim().ToLower();
-                listDoctor = listDoctor.Where(d => d.DoctorDepartments.Any(dd => dd.Department.DepartmentName.ToLower().Contains(department)));
-            }
+            //if (!string.IsNullOrWhiteSpace(department))
+            //{
+            //    department = department.Trim().ToLower();
+            //    listDoctor = listDoctor.Where(d => d.DoctorDepartments.Any(dd => dd.Department.DepartmentName.ToLower().Contains(department)));
+            //}
 
             var totalCount = await listDoctor.CountAsync();
 
@@ -240,6 +242,38 @@ namespace MediAppointment.Infrastructure.Services
 
             doctor.Status = Domain.Enums.Status.Deleted;
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId)
+        {
+            var userIdentity = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userIdentityId)
+                ?? throw new ArgumentException("Không tìm thấy UserIdentity");
+
+            if (!await _userManager.IsInRoleAsync(userIdentity, "Manager"))
+                throw new ArgumentException("Người dùng không phải là Manager");
+                
+            var roles = await _userManager.GetRolesAsync(userIdentity);
+            var role = roles.FirstOrDefault() ?? "Không xác định";
+
+            return new ManagerProfileDto
+            {
+                Id = userIdentity.Id,
+                FullName = userIdentity.FullName ?? string.Empty,
+                Email = userIdentity.Email ?? string.Empty,
+                PhoneNumber = userIdentity.PhoneNumber ?? string.Empty,
+                Role = role
+            };
+        }
+        public async Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.ManagerId.ToString())
+                ?? throw new ArgumentException("Không tìm thấy tài khoản Manager");
+
+            user.FullName = dto.FullName;
+            user.PhoneNumber = dto.PhoneNumber;
+
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
         }
         #endregion
 

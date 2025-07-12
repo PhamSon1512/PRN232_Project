@@ -8,6 +8,7 @@ using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MediAppointment.Domain.Interfaces;
+using MediAppointment.Application.DTOs.ManagerDTOs;
 
 namespace MediAppointment.Infrastructure.Services
 {
@@ -26,9 +27,19 @@ namespace MediAppointment.Infrastructure.Services
             _profileRepository = profileRepository;
         }
 
-        public async Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", string department = "", int page = 1, int pageSize = 5)
+        public async Task<PagedResult<DoctorDto>> GetAllDoctorsAsync(string text = "", /*string department = "",*/ int page = 1, int pageSize = 5)
         {
-            return await _identityService.GetAllDoctorsAsync(text, department, page, pageSize);
+            return await _identityService.GetAllDoctorsAsync(text, /*department,*/ page, pageSize);
+        }
+
+        public async Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId)
+        {
+            return await _identityService.GetManagerProfileAsync(userIdentityId);
+        }
+
+        public async Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto)
+        {
+            return await _identityService.UpdateManagerProfileAsync(dto);
         }
 
         public async Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId)

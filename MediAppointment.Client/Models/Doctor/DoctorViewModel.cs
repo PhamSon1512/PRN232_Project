@@ -18,6 +18,22 @@ namespace MediAppointment.Client.Models.Doctor
         public int Status { get; set; }
     }
 
+    public class DoctorCreateModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public bool? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    public class DoctorUpdateModel
+    {
+        public int Status { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
     public class DoctorUpdateProfile
     {
         public string? FullName { get; set; }
