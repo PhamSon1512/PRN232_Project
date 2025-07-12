@@ -1,0 +1,37 @@
+﻿@model MediAppointment.Client.Models.Doctor.DoctorViewModel
+@{
+    ViewData["Title"] = "Chi tiết Bác sĩ";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Chi tiết Bác sĩ</h2>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">@Model.FullName</h5>
+            <p><strong>Email:</strong> @Model.Email</p>
+            <p><strong>Số điện thoại:</strong> @Model.PhoneNumber</p>
+            <p><strong>Giới tính:</strong> @Model.GenderDisplay</p>
+            <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
+            <a asp-action="EditDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
+            <form asp-action="DeleteDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa bác sĩ này?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger ms-2">Xóa</button>
+            </form>
+            <a asp-action="DoctorManagement" asp-controller="Manager" class="btn btn-secondary ms-2">Quay lại</a>
+        </div>
+    </div>
+</div>

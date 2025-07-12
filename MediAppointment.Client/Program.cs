@@ -39,6 +39,7 @@ builder.Services.AddScoped<IDoctorAppointmentService, DoctorAppointmentService>(
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
+builder.Services.AddScoped<IManagerService, ManagerService>();
 
 // Add API base URL configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);

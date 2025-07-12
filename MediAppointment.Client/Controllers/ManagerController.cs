@@ -5,6 +5,9 @@ using MediAppointment.Client.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Security.Claims;
+using MediAppointment.Client.Models.Doctor;
 
 namespace MediAppointment.Client.Controllers
 {
@@ -14,12 +17,14 @@ namespace MediAppointment.Client.Controllers
         private readonly IScheduleService _scheduleService;
         private readonly IDepartmentService _departmentService;
         private readonly IDoctorService _doctorService;
+        private readonly IManagerService _managerService;
 
-        public ManagerController(IScheduleService scheduleService, IDepartmentService departmentService, IDoctorService doctorService)
+        public ManagerController(IScheduleService scheduleService, IDepartmentService departmentService, IDoctorService doctorService, IManagerService managerService)
         {
             _scheduleService = scheduleService;
             _departmentService = departmentService;
             _doctorService = doctorService;
+            _managerService = managerService;
         }
 
         [Route("Manager")]
@@ -28,6 +33,271 @@ namespace MediAppointment.Client.Controllers
             return RedirectToAction("ScheduleOverview");
         }
 
+        #region Management Doctor
+        [HttpGet("Manager/DoctorManagement")]
+        public async Task<IActionResult> DoctorManagement(string text = "", /*string department = "",*/ int page = 1, int pageSize = 5)
+        {
+            var result = await _managerService.GetAllDoctorsAsync(text, /*department,*/ page, pageSize);
+            if (result.Success && result.Data != null)
+            {
+                ViewBag.Text = text;
+                /*ViewBag.Department = department*/
+                ViewBag.Page = page;
+                ViewBag.PageSize = pageSize;
+                return View("~/Views/Manager/DoctorManagement.cshtml", result.Data);
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Không thể tải danh sách bác sĩ";
+            return View("~/Views/Manager/DoctorManagement.cshtml");
+        }
+
+        [HttpGet("Manager/Doctors/{doctorId:guid}")]
+        public async Task<IActionResult> DoctorDetails(Guid doctorId)
+        {
+            var result = await _managerService.GetDoctorByIdAsync(doctorId);
+            if (result.Success && result.Data != null)
+            {
+                return View("~/Views/Manager/DoctorDetails.cshtml", result.Data);
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Không thể tải thông tin bác sĩ";
+            return RedirectToAction("DoctorManagement");
+        }
+
+        [HttpGet("Manager/Doctors/{doctorId:guid}/Edit")]
+        public async Task<IActionResult> EditDoctor(Guid doctorId)
+        {
+            var result = await _managerService.GetDoctorByIdAsync(doctorId);
+            // var deptResult = await _departmentService.GetDepartmentsAsync();
+            if (result.Success && result.Data != null)
+            {
+                var model = new DoctorUpdateModel
+                {
+                    FullName = result.Data.FullName,
+                    PhoneNumber = result.Data.PhoneNumber,
+                    Status = (result.Data as DoctorStatusModel)?.Status ?? 1,
+                    // Departments = deptResult.Success && deptResult.Data != null 
+                    //     ? result.Data.Departments
+                    //         .Select(d => deptResult.Data.FirstOrDefault(dep => dep.Name == d)?.Id ?? Guid.Empty)
+                    //         .Where(id => id != Guid.Empty)
+                    //         .ToList() 
+                    //     : new List<Guid>()
+                };
+                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
+                //     ? deptResult.Data 
+                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                return View("~/Views/Manager/EditDoctor.cshtml", model);
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Không thể tải thông tin bác sĩ";
+            return RedirectToAction("DoctorManagement");
+        }
+
+        [HttpPost("Manager/Doctors/{doctorId:guid}/Update")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDoctor(Guid doctorId, DoctorUpdateModel dto)
+        {
+            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
+            Console.WriteLine($"UserIdClaim: {userIdClaim}");
+            if (!Guid.TryParse(userIdClaim, out var managerId))
+            {
+                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                Console.WriteLine("Invalid manager ID in token");
+                return RedirectToAction("DoctorManagement");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // var deptResult = await _departmentService.GetDepartmentsAsync();
+                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
+                //     ? deptResult.Data 
+                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                return View("EditDoctor", dto);
+            }
+
+            var resultUpdate = await _managerService.UpdateDoctorProfileAsync(doctorId, dto);
+            if (resultUpdate.Success && resultUpdate.Data != null)
+            {
+                TempData["SuccessMessage"] = "Cập nhật hồ sơ bác sĩ thành công!";
+                return RedirectToAction("DoctorDetails", new { doctorId });
+            }
+
+            TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ bác sĩ thất bại";
+            // var deptResultError = await _departmentService.GetDepartmentsAsync();
+            // ViewBag.Departments = deptResultError.Success && deptResultError.Data != null 
+            //     ? deptResultError.Data 
+            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+            return View("EditDoctor", dto);
+        }
+
+        [HttpGet("Manager/Doctors/Create")]
+        public async Task<IActionResult> CreateDoctor()
+        {
+            // var deptResult = await _departmentService.GetDepartmentsAsync();
+            // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
+            //     ? deptResult.Data 
+            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+            return View("~/Views/Manager/CreateDoctor.cshtml", new DoctorCreateModel());
+        }
+
+        [HttpPost("Manager/Doctors/Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateDoctor(DoctorCreateModel dto)
+        {
+            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
+            if (!Guid.TryParse(userIdClaim, out var managerId))
+            {
+                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                return RedirectToAction("DoctorManagement");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // var deptResult = await _departmentService.GetDepartmentsAsync();
+                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
+                //     ? deptResult.Data 
+                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                return View("CreateDoctor", dto);
+            }
+
+            var result = await _managerService.CreateDoctorAsync(dto);
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Tạo bác sĩ thành công!";
+                return RedirectToAction("DoctorManagement");
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Tạo bác sĩ thất bại";
+            // var deptResultError = await _departmentService.GetDepartmentsAsync();
+            // ViewBag.Departments = deptResultError.Success && deptResultError.Data != null 
+            //     ? deptResultError.Data 
+            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+            return View("CreateDoctor", dto);
+        }
+
+        [HttpPost("Manager/Doctors/{doctorId:guid}/Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDoctor(Guid doctorId)
+        {
+            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
+            if (!Guid.TryParse(userIdClaim, out var managerId))
+            {
+                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                return RedirectToAction("DoctorManagement");
+            }
+
+            var result = await _managerService.DeleteDoctorAsync(doctorId);
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Xóa bác sĩ thành công!";
+                return RedirectToAction("DoctorManagement");
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Xóa bác sĩ thất bại";
+            return RedirectToAction("DoctorDetails", new { doctorId });
+        }
+        #endregion
+
+        #region Manager Profile
+        [HttpGet]
+        public async Task<IActionResult> ManagerProfile()
+        {
+            var result = await _managerService.GetManagerProfileAsync();
+
+            if (result.Success && result.Data != null)
+            {
+                return View("~/Views/Account/ManagerProfile.cshtml", result.Data);
+            }
+
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Không thể tải thông tin hồ sơ Manager";
+            return RedirectToAction("DoctorManagement", "Manager");
+        }
+
+        [HttpGet("Manager/EditProfile")]
+        public async Task<IActionResult> EditProfile()
+        {
+            var result = await _managerService.GetManagerProfileAsync();
+            if (result.Success && result.Data != null)
+            {
+                var model = new ManagerViewModel
+                {
+                    Id = result.Data.Id,
+                    FullName = result.Data.FullName,
+                    Email = result.Data.Email,
+                    PhoneNumber = result.Data.PhoneNumber,
+                    Role = result.Data.Role
+                };
+                return View("~/Views/Manager/EditProfile.cshtml", model);
+            }
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Không thể tải thông tin hồ sơ Manager";
+            return RedirectToAction("ManagerProfile");
+        }
+
+        [HttpPost("Manager/UpdateProfile")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(ManagerUpdateProfile dto)
+        {
+            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
+            Console.WriteLine($"UserIdClaim: {userIdClaim}");
+            if (!Guid.TryParse(userIdClaim, out var managerId))
+            {
+                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                Console.WriteLine("Invalid manager ID in token");
+                return RedirectToAction("ManagerProfile");
+            }
+
+            dto.ManagerId = managerId;
+
+            // Điền giá trị hiện tại nếu DTO rỗng
+            var currentProfile = await _managerService.GetManagerProfileAsync();
+            if (string.IsNullOrWhiteSpace(dto.FullName) && currentProfile.Success && currentProfile.Data != null)
+                dto.FullName = currentProfile.Data.FullName;
+            if (string.IsNullOrWhiteSpace(dto.PhoneNumber) && currentProfile.Success && currentProfile.Data != null)
+                dto.PhoneNumber = currentProfile.Data.PhoneNumber;
+
+            if (!ModelState.IsValid)
+            {
+                var result = await _managerService.GetManagerProfileAsync();
+                if (result.Success && result.Data != null)
+                {
+                    var model = new ManagerViewModel
+                    {
+                        Id = result.Data.Id,
+                        FullName = dto.FullName ?? result.Data.FullName,
+                        Email = result.Data.Email,
+                        PhoneNumber = dto.PhoneNumber ?? result.Data.PhoneNumber,
+                        Role = result.Data.Role
+                    };
+                    return View("EditProfile", model);
+                }
+                return RedirectToAction("ManagerProfile");
+            }
+
+            var resultUpdate = await _managerService.UpdateManagerProfileAsync(dto);
+            if (resultUpdate.Success)
+            {
+                TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công!";
+                return RedirectToAction("ManagerProfile");
+            }
+
+            TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ thất bại";
+            var resultProfile = await _managerService.GetManagerProfileAsync();
+            if (resultProfile.Success && resultProfile.Data != null)
+            {
+                return View("EditProfile", new ManagerViewModel
+                {
+                    Id = resultProfile.Data.Id,
+                    FullName = dto.FullName ?? resultProfile.Data.FullName,
+                    Email = resultProfile.Data.Email,
+                    PhoneNumber = dto.PhoneNumber ?? resultProfile.Data.PhoneNumber,
+                    Role = resultProfile.Data.Role
+                });
+            }
+            return RedirectToAction("ManagerProfile");
+        }
+        #endregion
+
+        #region Schedule Management
         [HttpGet]
         public async Task<IActionResult> ScheduleOverview(Guid? departmentId, Guid? roomId, Guid? doctorId, int? year, int? week)
         {
@@ -145,5 +415,6 @@ namespace MediAppointment.Client.Controllers
             var calendar = System.Globalization.CultureInfo.CurrentCulture.Calendar;
             return calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
         }
+        #endregion
     }
 }

@@ -1,0 +1,46 @@
+﻿@model MediAppointment.Client.Models.Manager.ManagerViewModel
+@{
+    ViewData["Title"] = "Hồ sơ Quản lý";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-3" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="bi bi-person-fill"></i> Thông tin cá nhân</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 200px; height: 200px; margin-bottom: 20px;">
+                    <i class="bi bi-person-tie text-white" style="font-size: 4rem;"></i>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <h5>@(Model.FullName ?? "Không có dữ liệu")</h5>
+                <p class="text-muted"><i class="bi bi-envelope"></i> Email: @(Model.Email ?? "Không có dữ liệu")</p>
+                <p class="text-muted"><i class="bi bi-phone"></i> Số điện thoại: @(Model.PhoneNumber ?? "Không có dữ liệu")</p>
+                <p class="text-muted"><i class="bi bi-person-badge"></i> Vai trò: @(Model.Role ?? "Không có dữ liệu")</p>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a asp-action="EditProfile" asp-controller="Manager" class="btn btn-primary">Chỉnh sửa</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+}

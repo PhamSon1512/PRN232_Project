@@ -6,6 +6,13 @@
         public string FullName { get; set; } = default!;
         public string PhoneNumber { get; set; } = default!;
     }
+    public class ManagerUpdateProfileDto
+    {
+        public Guid ManagerId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
     public class AdminUpdateProfileDto
     {
         public Guid AdminId { get; set; }

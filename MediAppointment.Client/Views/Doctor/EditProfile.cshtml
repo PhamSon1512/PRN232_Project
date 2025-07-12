@@ -21,12 +21,12 @@
 
     <form asp-action="UpdateProfile" method="post">
         <div class="mb-3">
-            <label asp-for="FullName" class="form-label">Họ và Tên</label>
+            <label asp-for="FullName" class="form-label">Họ và Tên <span class="text-danger">*</span></label>
             <input asp-for="FullName" class="form-control" value="@Model.FullName" />
             <span asp-validation-for="FullName" class="text-danger"></span>
         </div>
         <div class="mb-3">
-            <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+            <label asp-for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
             <input asp-for="PhoneNumber" class="form-control" value="@Model.PhoneNumber" />
             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
         </div>

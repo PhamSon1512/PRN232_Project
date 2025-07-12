@@ -1,0 +1,82 @@
+﻿@model MediAppointment.Client.Models.Manager.ManagerViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa Hồ sơ Quản lý";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Chỉnh sửa Hồ sơ Quản lý</h2>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="UpdateProfile" asp-controller="Manager" method="post" id="updateProfileForm">
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">Họ và Tên</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên (để trống để giữ nguyên)" value="@Model.FullName" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại (để trống để giữ nguyên)" value="@Model.PhoneNumber" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" value="@Model.Email" disabled />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Role" class="form-label">Vai trò</label>
+                    <input asp-for="Role" class="form-control" value="@Model.Role" disabled />
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a asp-action="ManagerProfile" asp-controller="Manager" class="btn btn-secondary ms-2">Hủy</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#updateProfileForm").on("submit", function (event) {
+                var fullName = $("#FullName").val().trim();
+                var phoneNumber = $("#PhoneNumber").val().trim();
+                var isValid = true;
+
+                // Xóa thông báo lỗi cũ
+                $(".text-danger").text("");
+
+                // Validate FullName nếu không rỗng
+                if (fullName && !/^[a-zA-ZÀ-ỹ\s]+$/.test(fullName)) {
+                    $("#FullName").next(".text-danger").text("Họ và tên chỉ được chứa chữ cái và khoảng trắng");
+                    isValid = false;
+                }
+
+                // Validate PhoneNumber nếu không rỗng
+                if (phoneNumber && (!/^\d+$/.test(phoneNumber) || phoneNumber.length > 11)) {
+                    $("#PhoneNumber").next(".text-danger").text("Số điện thoại phải là số và có độ dài tối đa 11 ký tự");
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    event.preventDefault(); // Ngăn gửi form nếu có lỗi
+                }
+            });
+        });
+    </script>
+}
