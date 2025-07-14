@@ -203,6 +203,7 @@ namespace MediAppointment.Application.Services
 
         public async Task<object> UpdateAdminProfileAsync(AdminUpdateProfileDto dto)
         {
+
             var admin = await _userManager.FindByIdAsync(dto.AdminId.ToString());
             if (admin == null)
                 throw new Exception($"Admin with Id {dto.AdminId} does not exist.");

@@ -1,4 +1,8 @@
-using MediAppointment.Client.Services;
+﻿using MediAppointment.Client.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +17,7 @@ builder.Services.AddHttpClient("ApiClient", (serviceProvider, client) =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7230");
 })
-.ConfigurePrimaryHttpMessageHandler(serviceProvider => new HttpClientHandler()
+.ConfigurePrimaryHttpMessageHandler(serviceProvider => new HttpClientHandler
 {
     UseCookies = true,
     CookieContainer = serviceProvider.GetRequiredService<System.Net.CookieContainer>()
@@ -29,6 +33,29 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Add Authentication and JWT support
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = "MediAppointmentApi", // Khớp với server-side
+        ValidAudience = "MediAppointmentUsers", // Khớp với server-side
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("MediAppointmentSecretKey@@@@@@@@@@@")), // Khớp với server-side
+        NameClaimType = ClaimTypes.NameIdentifier // Ánh xạ "nameid" thành NameIdentifier
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -51,7 +78,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -60,10 +86,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Add Authentication and Authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Add Session middleware
 app.UseSession();
-
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "appointment_book",

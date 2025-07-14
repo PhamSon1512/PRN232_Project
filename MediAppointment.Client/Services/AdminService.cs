@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using MediAppointment.Client.Models.Admin;
 using MediAppointment.Client.Models.Common;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace MediAppointment.Client.Services
 {
@@ -29,15 +31,47 @@ namespace MediAppointment.Client.Services
 
         private void SetAuthHeader()
         {
-            var token = _httpContextAccessor.HttpContext?.Request.Cookies["AccessToken"];
+            var token = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
             if (!string.IsNullOrEmpty(token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                Console.WriteLine($"Token set from session: {token.Substring(0, 10)}... with full length: {token.Length}");
             }
             else
             {
-                // Log lỗi nếu token không tồn tại
-                Console.WriteLine("No AccessToken found in cookies.");
+                Console.WriteLine("No AccessToken found in session.");
+            }
+        }
+
+        private Guid? GetAdminIdFromSession()
+        {
+            try
+            {
+                var token = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    Console.WriteLine("No AccessToken found in session");
+                    return null;
+                }
+
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var userIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == "nameid" || c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                Console.WriteLine($"UserId from token: {userIdClaim ?? "null"}");
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var adminId))
+                {
+                    Console.WriteLine($"Failed to parse userIdClaim: {userIdClaim ?? "null"}");
+                    return null;
+                }
+
+                return adminId;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting admin ID from session: {ex.Message}");
+                return null;
             }
         }
 
@@ -108,6 +142,7 @@ namespace MediAppointment.Client.Services
         {
             try
             {
+                SetAuthHeader();
                 var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto), System.Text.Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"{_configuration["ApiBaseUrl"]}/api/admin/CreateManager", content);
                 if (response.IsSuccessStatusCode)
@@ -127,6 +162,7 @@ namespace MediAppointment.Client.Services
         {
             try
             {
+                SetAuthHeader();
                 var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto), System.Text.Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"{_configuration["ApiBaseUrl"]}/api/admin/UpdateManagerProfile", content);
                 if (response.IsSuccessStatusCode)
@@ -168,21 +204,46 @@ namespace MediAppointment.Client.Services
             try
             {
                 SetAuthHeader();
-                var content = new StringContent(JsonSerializer.Serialize(dto), System.Text.Encoding.UTF8, "application/json");
+
+                // Đảm bảo Id được set từ session nếu chưa có
+                if (dto.Id == null || dto.Id == Guid.Empty)
+                {
+                    var adminId = GetAdminIdFromSession();
+                    if (adminId == null)
+                    {
+                        return new ApiResponse<bool> { Success = false, ErrorMessage = "Không thể xác định ID admin từ session." };
+                    }
+                    dto.Id = adminId.Value;
+                }
+
+                // Tạo DTO cho API server
+                var serverDto = new
+                {
+                    AdminId = dto.Id,
+                    FullName = dto.FullName,
+                    PhoneNumber = dto.PhoneNumber
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(serverDto), System.Text.Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"{_configuration["ApiBaseUrl"]}/api/admin/UpdateAdminProfile", content);
+
                 if (response.IsSuccessStatusCode)
                 {
                     return new ApiResponse<bool> { Success = true };
                 }
+
                 var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Error: {errorContent}");
                 return new ApiResponse<bool> { Success = false, ErrorMessage = errorContent };
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception in UpdateAdminProfileAsync: {ex.Message}");
                 return new ApiResponse<bool> { Success = false, ErrorMessage = ex.Message };
             }
         }
     }
+
     public class ManagerCreateDto
     {
         public Guid DoctorId { get; set; }
@@ -197,4 +258,3 @@ namespace MediAppointment.Client.Services
         public string PhoneNumber { get; set; }
     }
 }
-
