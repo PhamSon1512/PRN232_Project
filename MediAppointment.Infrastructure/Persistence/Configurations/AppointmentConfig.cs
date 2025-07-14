@@ -32,6 +32,12 @@ namespace MediAppointment.Infrastructure.Persistence.Configurations
                 .HasForeignKey(a => a.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Thêm relationship với RoomTimeSlot
+            builder.HasOne(a => a.RoomTimeSlot)
+                .WithMany(rts => rts.Appointments)
+                .HasForeignKey(a => a.RoomTimeSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

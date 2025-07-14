@@ -17,6 +17,7 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
 
             if (!dbContext.TimeSlot.Any())
             {
+                // Morning slots (7:00 AM - 11:00 AM)
                 var baseTimes1 = new List<TimeSpan>
                 {
                     new TimeSpan(7, 0, 0),
@@ -33,10 +34,11 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                 {
                     Id = Guid.NewGuid(),
                     TimeStart = time,
-                    Duration = new TimeSpan(0, 30, 0) ,
-                    Shift = false
+                    Duration = new TimeSpan(0, 30, 0),
+                    Shift = false // Morning = false
                 }).ToList();
 
+                // Afternoon slots (1:00 PM - 5:00 PM)
                 var baseTimes2 = new List<TimeSpan>
                 {
                     new TimeSpan(13, 0, 0),
@@ -54,7 +56,7 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     Id = Guid.NewGuid(),
                     TimeStart = time,
                     Duration = new TimeSpan(0, 30, 0),
-                    Shift = true
+                    Shift = true // Afternoon = true
                 }).ToList();
 
                 dbContext.TimeSlot.AddRange(timeSlots1);

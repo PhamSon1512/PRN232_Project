@@ -11,15 +11,13 @@ namespace MediAppointment.Client.Controllers
         private readonly IAppointmentService _appointmentService;
         private readonly IDoctorService _doctorService;
         private readonly IAuthService _authService;
-        private readonly IDepartmentService _departmentService;
         private readonly ITimeSlotService _timeSlotService;
 
-        public AppointmentController(IAppointmentService appointmentService, IDoctorService doctorService, IAuthService authService, IDepartmentService departmentService, ITimeSlotService timeSlotService)
+        public AppointmentController(IAppointmentService appointmentService, IDoctorService doctorService, IAuthService authService, ITimeSlotService timeSlotService)
         {
             _appointmentService = appointmentService;
             _doctorService = doctorService;
             _authService = authService;
-            _departmentService = departmentService;
             _timeSlotService = timeSlotService;
         }
 
@@ -166,120 +164,6 @@ namespace MediAppointment.Client.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Book(Guid? departmentId, int? year, int? week)
-        {
-            var model = new PatientBookingViewModel
-            {
-                DepartmentId = departmentId ?? Guid.Empty,
-                Year = year ?? DateTime.Now.Year,
-                Week = week ?? GetWeekOfYear(DateTime.Now),
-                AvailableYears = Enumerable.Range(DateTime.Now.Year, 2).ToList(),
-                AvailableWeeks = Enumerable.Range(1, 53).ToList()
-            };
 
-            // Load departments
-            await LoadDepartments(model);
-
-            // Load time slots if filters are applied
-            if (departmentId.HasValue && year.HasValue && week.HasValue)
-            {
-                await LoadWeeklyTimeSlots(model);
-            }
-
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Book(PatientBookingViewModel request)
-        {
-            try
-            {
-                var createRequest = new CreateAppointmentViewModel
-                {
-                    RoomTimeSlotId = request.TimeSlotId,
-                    AppointmentDate = request.Date,
-                    Note = "Đặt lịch từ trang đặt lịch bệnh nhân",
-                    DoctorId = Guid.Empty // This will need to be derived from the time slot or department
-                };
-                
-                var result = await _appointmentService.CreateAppointmentAsync(createRequest);
-                
-                if (result.Success)
-                {
-                    return Json(new { success = true, message = "Đặt lịch hẹn thành công!" });
-                }
-
-                return Json(new { success = false, message = result.ErrorMessage ?? "Đặt lịch hẹn thất bại" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
-            }
-        }
-
-        private async Task LoadDepartments(PatientBookingViewModel model)
-        {
-            try
-            {
-                var result = await _departmentService.GetDepartmentsAsync();
-                if (result.Success && result.Data != null)
-                {
-                    model.Departments = result.Data;
-                }
-                else
-                {
-                    // Return empty list if API fails
-                    model.Departments = new List<DepartmentOption>();
-                }
-            }
-            catch (Exception)
-            {
-                model.Departments = new List<DepartmentOption>();
-            }
-        }
-
-        private async Task LoadWeeklyTimeSlots(PatientBookingViewModel model)
-        {
-            try
-            {
-                // Calculate week dates
-                var jan1 = new DateTime(model.Year, 1, 1);
-                var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
-                var firstMonday = jan1.AddDays(daysOffset);
-                var startOfWeek = firstMonday.AddDays((model.Week - 1) * 7);
-                var endOfWeek = startOfWeek.AddDays(6);
-
-                // Call API to get available time slots for the week
-                var result = await _timeSlotService.GetAvailableTimeSlotsAsync(model.DepartmentId, startOfWeek, endOfWeek);
-                
-                if (result.Success && result.Data != null)
-                {
-                    // Group time slots by date
-                    model.WeeklyTimeSlots = result.Data
-                        .GroupBy(slot => slot.Date.Date)
-                        .ToDictionary(g => g.Key, g => g.ToList());
-                }
-                else
-                {
-                    // Return empty dictionary if API fails
-                    model.WeeklyTimeSlots = new Dictionary<DateTime, List<TimeSlotOption>>();
-                }
-            }
-            catch (Exception)
-            {
-                model.WeeklyTimeSlots = new Dictionary<DateTime, List<TimeSlotOption>>();
-            }
-        }
-
-        private static int GetWeekOfYear(DateTime date)
-        {
-            var jan1 = new DateTime(date.Year, 1, 1);
-            var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
-            var firstMonday = jan1.AddDays(daysOffset);
-            var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
-            return cal.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
-        }
     }
 }

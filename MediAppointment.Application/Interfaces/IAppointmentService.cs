@@ -25,5 +25,14 @@ namespace MediAppointment.Application.Interfaces
         // liệt kê lịch hẹn của bác sĩ
         Task<IEnumerable<AppointmentResponse>> ListAppointmentsAssignedToDoctor(
          Guid doctorId, DateTime? date = null, DateTime? startDate = null, DateTime? endDate = null);
+
+        // Lấy danh sách khoa
+        Task<IEnumerable<DepartmentResponse>> GetDepartments();
+
+        // Lấy thông tin chi tiết về availability của time slots cho booking
+        Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request);
+
+        // Book appointment với thông tin chi tiết hơn
+        Task BookAppointment(Guid userId, BookAppointmentRequest request);
     }
 }
