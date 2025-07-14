@@ -15,7 +15,6 @@ namespace MediAppointment.Client.Models.Appointment
         public Guid RoomTimeSlotId { get; set; }
         public string RoomName { get; set; } = string.Empty;
         public string TimeSlot { get; set; } = string.Empty;
-        public string DoctorName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         
         public string StatusDisplay => Status switch
