@@ -1,0 +1,371 @@
+@model MediAppointment.Client.Models.Appointment.BookingViewModel
+@using DeptOption = MediAppointment.Client.Models.Appointment.DepartmentOption
+@{
+    ViewData["Title"] = "Đặt lịch khám";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-calendar-plus me-2"></i>
+                        Đặt lịch khám bệnh
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Book" method="post" id="bookingForm">
+                        <div class="row">
+                            <!-- Department Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DepartmentId" class="form-label fw-bold">
+                                    <i class="bi bi-building me-1"></i>
+                                    Khoa khám <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="DepartmentId" class="form-select" id="departmentSelect" required>
+                                    <option value="">-- Chọn khoa khám --</option>
+                                    @foreach (var dept in Model.Departments)
+                                    {
+                                        <option value="@dept.Id">
+                                            @dept.Name (@dept.TotalRooms phòng)
+                                        </option>
+                                    }
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Date Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AppointmentDate" class="form-label fw-bold">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Ngày khám <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="AppointmentDate" 
+                                       type="date" 
+                                       class="form-control" 
+                                       id="appointmentDate"
+                                       min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                       max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")"
+                                       required />
+                                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chỉ có thể đặt lịch từ ngày mai đến 30 ngày tới
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Load Time Slots Button -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <button type="button" 
+                                        class="btn btn-outline-primary" 
+                                        id="loadTimeSlotsBtn"
+                                        disabled>
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="loadingSpinner"></span>
+                                    <i class="bi bi-search me-1"></i>
+                                    Tìm giờ khám có sẵn
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Time Slots Selection -->
+                        <div id="timeSlotsContainer" class="d-none">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-clock me-2"></i>
+                                        Chọn giờ khám
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="timeSlotsContent">
+                                        <!-- Time slots will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Time Slot Selection (Hidden) -->
+                        <input asp-for="TimeSlotId" type="hidden" id="selectedTimeSlotId" />
+
+                        <!-- Note -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <label asp-for="Note" class="form-label fw-bold">
+                                    <i class="bi bi-chat-text me-1"></i>
+                                    Ghi chú (tùy chọn)
+                                </label>
+                                <textarea asp-for="Note" 
+                                          class="form-control" 
+                                          rows="3" 
+                                          placeholder="Nhập ghi chú về triệu chứng hoặc yêu cầu đặc biệt..."></textarea>
+                                <span asp-validation-for="Note" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" 
+                                        class="btn btn-success btn-lg" 
+                                        id="submitBtn"
+                                        disabled>
+                                    <i class="bi bi-check2-circle me-2"></i>
+                                    Đặt lịch khám
+                                </button>
+                                <a href="@Url.Action("Index", "Appointment")" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="bi bi-arrow-left me-2"></i>
+                                    Quay lại
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedTimeSlot = null;
+
+            // Enable/disable load button based on selections
+            function checkLoadButtonState() {
+                const department = $('#departmentSelect').val();
+                const date = $('#appointmentDate').val();
+                $('#loadTimeSlotsBtn').prop('disabled', !(department && date));
+            }
+
+            // Enable/disable submit button
+            function checkSubmitButtonState() {
+                const timeSlotSelected = $('#selectedTimeSlotId').val();
+                $('#submitBtn').prop('disabled', !timeSlotSelected);
+            }
+
+            // Event handlers
+            $('#departmentSelect, #appointmentDate').change(function() {
+                checkLoadButtonState();
+                // Clear time slots when department/date changes
+                $('#timeSlotsContainer').addClass('d-none');
+                $('#selectedTimeSlotId').val('');
+                checkSubmitButtonState();
+            });
+
+            // Load time slots
+            $('#loadTimeSlotsBtn').click(function() {
+                const departmentId = $('#departmentSelect').val();
+                const appointmentDate = $('#appointmentDate').val();
+
+                if (!departmentId || !appointmentDate) {
+                    alert('Vui lòng chọn khoa và ngày khám');
+                    return;
+                }
+
+                // Show loading
+                $('#loadingSpinner').removeClass('d-none');
+                $(this).prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("LoadTimeSlots", "Booking")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        departmentId: departmentId,
+                        startDate: appointmentDate
+                    }),
+                    success: function(response) {
+                        console.log('Time slots response:', response); // Debug log
+                        if (response.success && response.timeSlots) {
+                            displayTimeSlots(response.timeSlots);
+                            $('#timeSlotsContainer').removeClass('d-none');
+                        } else {
+                            alert(response.message || 'Không thể tải lịch khám');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi tải lịch khám');
+                    },
+                    complete: function() {
+                        $('#loadingSpinner').addClass('d-none');
+                        $('#loadTimeSlotsBtn').prop('disabled', false);
+                    }
+                });
+            });
+
+            // Display time slots
+            function displayTimeSlots(timeSlots) {
+                let html = '';
+                const selectedDate = new Date($('#appointmentDate').val()).toLocaleDateString('vi-VN');
+
+                // Flatten all time slots
+                const allSlots = Object.values(timeSlots).flat();
+                console.log('All slots before sorting:', allSlots); // Debug log
+                
+                // Sort slots by shift first, then by time
+                allSlots.sort((a, b) => {
+                    // First sort by shift (morning = false, afternoon = true)
+                    if (a.shift !== b.shift) {
+                        return a.shift - b.shift; // false (0) comes before true (1)
+                    }
+                    
+                    // Then sort by time within the same shift
+                    const timeA = a.timeRange.split(' - ')[0];
+                    const timeB = b.timeRange.split(' - ')[0];
+                    return timeA.localeCompare(timeB);
+                });
+
+                console.log('All slots after sorting:', allSlots); // Debug log
+
+                // Group by shift (morning/afternoon) after sorting
+                const morningSlots = allSlots.filter(slot => !slot.shift);
+                const afternoonSlots = allSlots.filter(slot => slot.shift);
+
+                console.log('Morning slots:', morningSlots); // Debug log
+                console.log('Afternoon slots:', afternoonSlots); // Debug log
+
+                if (morningSlots.length > 0) {
+                    html += '<h6 class="text-primary"><i class="bi bi-sun me-2"></i>Buổi sáng</h6>';
+                    html += '<div class="row mb-3">';
+                    morningSlots.forEach(slot => {
+                        const btnClass = slot.isAvailable ? 'btn-outline-success' : 'btn-outline-secondary';
+                        const disabled = !slot.isAvailable ? 'disabled' : '';
+                        const availText = slot.isAvailable ? 
+                            `${slot.availableRooms}/${slot.totalRooms} phòng có sẵn` : 
+                            'Hết chỗ (đã đặt)';
+                        
+                        html += `
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <button type="button" 
+                                        class="btn ${btnClass} w-100 time-slot-btn" 
+                                        data-slot-id="${slot.id}"
+                                        data-time-range="${slot.timeRange}"
+                                        ${disabled}>
+                                    <div class="fw-bold">${slot.timeRange}</div>
+                                    <small class="d-block">${availText}</small>
+                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Available' : 'Booked'}</small>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                if (afternoonSlots.length > 0) {
+                    html += '<h6 class="text-warning"><i class="bi bi-cloud-sun me-2"></i>Buổi chiều</h6>';
+                    html += '<div class="row">';
+                    afternoonSlots.forEach(slot => {
+                        const btnClass = slot.isAvailable ? 'btn-outline-success' : 'btn-outline-secondary';
+                        const disabled = !slot.isAvailable ? 'disabled' : '';
+                        const availText = slot.isAvailable ? 
+                            `${slot.availableRooms}/${slot.totalRooms} phòng có sẵn` : 
+                            'Hết chỗ (đã đặt)';
+                        
+                        html += `
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <button type="button" 
+                                        class="btn ${btnClass} w-100 time-slot-btn" 
+                                        data-slot-id="${slot.id}"
+                                        data-time-range="${slot.timeRange}"
+                                        ${disabled}>
+                                    <div class="fw-bold">${slot.timeRange}</div>
+                                    <small class="d-block">${availText}</small>
+                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Available' : 'Booked'}</small>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                if (html === '') {
+                    html = '<div class="text-center text-muted py-4"><i class="bi bi-calendar-x display-4"></i><br>Không có lịch khám cho ngày này</div>';
+                }
+
+                $('#timeSlotsContent').html(html);
+
+                // Handle time slot selection
+                $('.time-slot-btn').click(function() {
+                    if ($(this).prop('disabled')) return;
+
+                    // Remove previous selection
+                    $('.time-slot-btn').removeClass('btn-success').addClass('btn-outline-success');
+                    
+                    // Mark this as selected
+                    $(this).removeClass('btn-outline-success').addClass('btn-success');
+                    
+                    // Store selection
+                    $('#selectedTimeSlotId').val($(this).data('slot-id'));
+                    selectedTimeSlot = {
+                        id: $(this).data('slot-id'),
+                        timeRange: $(this).data('time-range')
+                    };
+
+                    checkSubmitButtonState();
+                });
+            }
+
+            // Initial state check
+            checkLoadButtonState();
+            checkSubmitButtonState();
+
+            // Form validation
+            $('#bookingForm').submit(function(e) {
+                if (!$('#selectedTimeSlotId').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn giờ khám');
+                    return false;
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .time-slot-btn {
+            transition: all 0.2s ease;
+            border-width: 2px;
+        }
+        
+        .time-slot-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+    </style>
+}

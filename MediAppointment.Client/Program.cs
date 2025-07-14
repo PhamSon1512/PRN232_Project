@@ -97,6 +97,8 @@ app.MapControllerRoute(
     name: "appointment_book",
     pattern: "Appointment/Book",
     defaults: new { controller = "Appointment", action = "Book" });
+app.UseAuthorization();
+
 
 app.MapControllerRoute(
     name: "doctor_schedule",

@@ -4,6 +4,7 @@ using MediAppointment.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediAppointment.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250714081709_FixAppointmentRelationships")]
+    partial class FixAppointmentRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -289,7 +292,13 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.Property<Guid?>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("DoctorId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RoomId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
@@ -302,7 +311,11 @@ namespace MediAppointment.Infrastructure.Migrations
 
                     b.HasIndex("DoctorId");
 
+                    b.HasIndex("DoctorId1");
+
                     b.HasIndex("RoomId");
+
+                    b.HasIndex("RoomId1");
 
                     b.HasIndex("TimeSlotId");
 
@@ -738,15 +751,23 @@ namespace MediAppointment.Infrastructure.Migrations
             modelBuilder.Entity("MediAppointment.Domain.Entities.RoomTimeSlot", b =>
                 {
                     b.HasOne("MediAppointment.Domain.Entities.Doctor", "Doctor")
-                        .WithMany("RoomTimeSlots")
+                        .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("MediAppointment.Domain.Entities.Room", "Room")
+                    b.HasOne("MediAppointment.Domain.Entities.Doctor", null)
                         .WithMany("RoomTimeSlots")
+                        .HasForeignKey("DoctorId1");
+
+                    b.HasOne("MediAppointment.Domain.Entities.Room", "Room")
+                        .WithMany()
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MediAppointment.Domain.Entities.Room", null)
+                        .WithMany("RoomTimeSlots")
+                        .HasForeignKey("RoomId1");
 
                     b.HasOne("MediAppointment.Domain.Entities.TimeSlot", "TimeSlot")
                         .WithMany("RoomSlots")

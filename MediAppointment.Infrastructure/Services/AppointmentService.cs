@@ -30,13 +30,19 @@ namespace MediAppointment.Infrastructure.Services
 
         public async Task<IEnumerable<AppointmentResponse>> ListAppointmentByUser(Guid UserId)
         {
-            var ListAppointment =await _context.Appointments.Where(x=>x.PatientId == UserId).Include(x => x.RoomTimeSlot)
-            .ThenInclude(x => x.Room)
-        .Include(x => x.RoomTimeSlot)
-            .ThenInclude(x => x.TimeSlot).ToListAsync();
+            var ListAppointment = await _context.Appointments
+                .Where(x => x.PatientId == UserId)
+                .Include(x => x.RoomTimeSlot)
+                    .ThenInclude(x => x.Room)
+                        .ThenInclude(x => x.Department) // Include Department
+                .Include(x => x.RoomTimeSlot)
+                    .ThenInclude(x => x.TimeSlot)
+                .ToListAsync();
+                
             List<AppointmentResponse> appointmentResponses = new List<AppointmentResponse>();
-            foreach (var item in ListAppointment) {
-              appointmentResponses.Add(_mapper.Map<AppointmentResponse>(item));
+            foreach (var item in ListAppointment) 
+            {
+                appointmentResponses.Add(_mapper.Map<AppointmentResponse>(item));
             }
             return appointmentResponses;
         }
@@ -48,7 +54,7 @@ namespace MediAppointment.Infrastructure.Services
     .Where(x =>
         x.Room.DepartmentId == request.DepartmentId &&
         x.TimeSlotId == request.TimeSlotId &&
-        x.Date == request.Date &&
+        x.Date.Date == request.Date.Date && // So sánh chính xác Date
         x.Status != RoomTimeSlotStatus.Booked)
        .FirstOrDefaultAsync();
             if (RoomTimeSlot != null){
@@ -72,10 +78,14 @@ namespace MediAppointment.Infrastructure.Services
         }
         public async Task<AppointmentResponse> AppointmentDetailById(Guid AppointmentId)
         {
-            var Appointment = await _context.Appointments.Include(x => x.RoomTimeSlot)
-            .ThenInclude(x => x.Room)
-        .Include(x => x.RoomTimeSlot)
-            .ThenInclude(x => x.TimeSlot).FirstOrDefaultAsync(x => x.Id == AppointmentId);
+            var Appointment = await _context.Appointments
+                .Include(x => x.RoomTimeSlot)
+                    .ThenInclude(x => x.Room)
+                        .ThenInclude(x => x.Department) // Include Department
+                .Include(x => x.RoomTimeSlot)
+                    .ThenInclude(x => x.TimeSlot)
+                .FirstOrDefaultAsync(x => x.Id == AppointmentId);
+                
             var AppointmentDto = _mapper.Map<AppointmentResponse>(Appointment);
             return AppointmentDto;
         }
@@ -85,20 +95,21 @@ namespace MediAppointment.Infrastructure.Services
             var Appointment = await _context.Appointments.Include(x=>x.RoomTimeSlot).FirstOrDefaultAsync(x=>x.Id == AppointmentId);
             if(Appointment != null)
             {
-                Appointment.Status =AppointmentStatus.Cancelled;
+                Appointment.Status = AppointmentStatus.Cancelled;
                 Guid RoomTimeSlotId = Appointment.RoomTimeSlot.Id;
                 _context.Appointments.Update(Appointment);
-                var RoomTimeSlot= await _context.RoomTimeSlot.FirstOrDefaultAsync(x=>x.Id==RoomTimeSlotId);
+                
+                var RoomTimeSlot = await _context.RoomTimeSlot.FirstOrDefaultAsync(x=>x.Id==RoomTimeSlotId);
                 if (RoomTimeSlot != null) {
-                    RoomTimeSlot.Status = RoomTimeSlotStatus.Available;
+                    RoomTimeSlot.Status = RoomTimeSlotStatus.Available; // Reset về Available khi cancel
                     _context.RoomTimeSlot.Update(RoomTimeSlot);
                 }
+                await _context.SaveChangesAsync();
             }
             else
             {
                 throw new Exception("Not Found AppointmentId");
             }
-            await _context.SaveChangesAsync();
         }
 
         // lấy các lịch hẹn của bác sĩ
@@ -157,6 +168,181 @@ namespace MediAppointment.Infrastructure.Services
                 }
             }
             return timeSlotExsitResponses;
+        }
+
+        public async Task<IEnumerable<DepartmentResponse>> GetDepartments()
+        {
+            var departments = await _context.Departments
+                .Include(d => d.Rooms)
+                .ToListAsync();
+
+            return departments.Select(d => new DepartmentResponse
+            {
+                Id = d.Id,
+                DepartmentName = d.DepartmentName ?? "",
+                TotalRooms = d.Rooms?.Count ?? 0
+            });
+        }
+
+        public async Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request)
+        {
+            var timeSlots = await _context.TimeSlot
+                .OrderBy(ts => ts.Shift) // Sáng trước, chiều sau
+                .ThenBy(ts => ts.TimeStart) // Trong cùng ca, sắp xếp theo giờ bắt đầu
+                .ToListAsync();
+            var departmentRooms = await _context.Room
+                .Where(r => r.DepartmentId == request.DepartmentId)
+                .OrderBy(r => r.Name) // Sắp xếp phòng theo tên
+                .ToListAsync();
+
+            var result = new List<TimeSlotAvailabilityResponse>();
+
+            for (var date = request.StartDate.Date; date <= request.EndDate.Date; date = date.AddDays(1))
+            {
+                foreach (var timeSlot in timeSlots)
+                {
+                    var roomAvailabilities = new List<RoomAvailability>();
+                    int availableRoomsCount = 0;
+
+                    foreach (var room in departmentRooms)
+                    {
+                        var roomTimeSlot = await _context.RoomTimeSlot
+                            .FirstOrDefaultAsync(rts => 
+                                rts.RoomId == room.Id &&
+                                rts.TimeSlotId == timeSlot.Id &&
+                                rts.Date.Date == date.Date);
+
+                        // Cải thiện logic kiểm tra availability
+                        bool isRoomAvailable;
+                        if (roomTimeSlot == null)
+                        {
+                            // Nếu chưa có RoomTimeSlot, coi như available
+                            isRoomAvailable = true;
+                        }
+                        else
+                        {
+                            // Nếu đã có RoomTimeSlot, kiểm tra status chính xác
+                            isRoomAvailable = roomTimeSlot.Status == RoomTimeSlotStatus.Available;
+                        }
+                        
+                        if (isRoomAvailable)
+                        {
+                            availableRoomsCount++;
+                        }
+
+                        roomAvailabilities.Add(new RoomAvailability
+                        {
+                            RoomId = room.Id,
+                            RoomName = room.Name ?? "Unknown Room",
+                            IsAvailable = isRoomAvailable,
+                            RoomTimeSlotId = roomTimeSlot?.Id
+                        });
+                    }
+
+                    var mappedTimeSlot = _mapper.Map<TimeSlotDTO>(timeSlot);
+                    result.Add(new TimeSlotAvailabilityResponse
+                    {
+                        Date = date,
+                        TimeSlot = mappedTimeSlot,
+                        IsAvailable = availableRoomsCount > 0,
+                        AvailableRooms = availableRoomsCount,
+                        TotalRooms = departmentRooms.Count,
+                        RoomDetails = roomAvailabilities
+                    });
+                }
+            }
+
+            // Sắp xếp kết quả cuối cùng theo shift và thời gian
+            return result.OrderBy(r => r.TimeSlot.Shift)
+                        .ThenBy(r => r.TimeSlot.TimeStart);
+        }
+
+        public async Task BookAppointment(Guid userId, BookAppointmentRequest request)
+        {
+            // Tìm tất cả các phòng trong department
+            var departmentRooms = await _context.Room
+                .Where(r => r.DepartmentId == request.DepartmentId)
+                .ToListAsync();
+
+            if (!departmentRooms.Any())
+            {
+                throw new Exception("Không tìm thấy phòng khám cho khoa này");
+            }
+
+            // userId từ JWT claim chính là Patient.Id
+            var patient = await _context.Patients.FindAsync(userId);
+            if (patient == null)
+            {
+                throw new Exception($"Không tìm thấy thông tin bệnh nhân với ID: {userId}. Chỉ bệnh nhân mới có thể đặt lịch khám.");
+            }
+
+            // Tìm RoomTimeSlot available đầu tiên
+            RoomTimeSlot? availableRoomTimeSlot = null;
+
+            foreach (var room in departmentRooms)
+            {
+                var existingRoomTimeSlot = await _context.RoomTimeSlot
+                    .FirstOrDefaultAsync(rts =>
+                        rts.RoomId == room.Id &&
+                        rts.TimeSlotId == request.TimeSlotId &&
+                        rts.Date.Date == request.AppointmentDate.Date);
+
+                if (existingRoomTimeSlot != null && existingRoomTimeSlot.Status == RoomTimeSlotStatus.Available)
+                {
+                    // Sử dụng RoomTimeSlot có sẵn với status Available
+                    availableRoomTimeSlot = existingRoomTimeSlot;
+                    break;
+                }
+            }
+
+            // Nếu không tìm thấy RoomTimeSlot available, tạo mới
+            if (availableRoomTimeSlot == null)
+            {
+                // Tìm room đầu tiên chưa có RoomTimeSlot cho time slot này
+                var roomWithoutTimeSlot = departmentRooms.FirstOrDefault(room => 
+                    !_context.RoomTimeSlot.Any(rts =>
+                        rts.RoomId == room.Id &&
+                        rts.TimeSlotId == request.TimeSlotId &&
+                        rts.Date.Date == request.AppointmentDate.Date));
+
+                if (roomWithoutTimeSlot != null)
+                {
+                    availableRoomTimeSlot = new RoomTimeSlot
+                    {
+                        Id = Guid.NewGuid(),
+                        RoomId = roomWithoutTimeSlot.Id,
+                        TimeSlotId = request.TimeSlotId,
+                        Date = request.AppointmentDate.Date,
+                        Status = RoomTimeSlotStatus.Available
+                    };
+                    _context.RoomTimeSlot.Add(availableRoomTimeSlot);
+                    await _context.SaveChangesAsync(); // Save RoomTimeSlot trước
+                }
+            }
+
+            if (availableRoomTimeSlot == null)
+            {
+                throw new Exception("Không còn phòng available cho thời gian này");
+            }
+
+            // Đặt status thành Booked
+            availableRoomTimeSlot.Status = RoomTimeSlotStatus.Booked;
+            _context.RoomTimeSlot.Update(availableRoomTimeSlot);
+
+            // Tạo appointment
+            var appointment = new Appointment
+            {
+                Id = Guid.NewGuid(),
+                PatientId = userId,
+                AppointmentDate = request.AppointmentDate,
+                CreatedDate = DateTime.UtcNow,
+                RoomTimeSlotId = availableRoomTimeSlot.Id,
+                Status = AppointmentStatus.Scheduled,
+                Note = request.Note
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
         }
     }
 }

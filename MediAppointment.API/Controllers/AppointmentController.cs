@@ -42,7 +42,7 @@ namespace MediAppointment.API.Controllers
               ?? throw new Exception("User ID claim is missing"));
 
 
-            var Appoinment = await _appointmentService.AppointmentDetailById(userId);
+            var Appoinment = await _appointmentService.AppointmentDetailById(AppointmentId);
 
             return Ok(Appoinment);
         }
@@ -52,7 +52,7 @@ namespace MediAppointment.API.Controllers
             var userId = Guid.Parse(User.FindFirst("UserId")?.Value
               ?? throw new Exception("User ID claim is missing"));
 
-            await _appointmentService.CancelById(userId);
+            await _appointmentService.CancelById(AppointmentId);
             return Ok("Cancel is Success");
         }
         [HttpPost("GetAppointmentExsit")]
@@ -60,6 +60,42 @@ namespace MediAppointment.API.Controllers
         {
             var kq=await _appointmentService.GetTimeSlotExsit(request);
             return Ok(kq);
+        }
+
+        [HttpGet("Departments")]
+        public async Task<IActionResult> GetDepartments()
+        {
+            var departments = await _appointmentService.GetDepartments();
+            return Ok(departments);
+        }
+
+        [HttpPost("GetAvailableTimeSlots")]
+        public async Task<IActionResult> GetAvailableTimeSlots(GetTimeSlotExistDTO request)
+        {
+            var availableSlots = await _appointmentService.GetAvailableTimeSlotsForBooking(request);
+            return Ok(availableSlots);
+        }
+
+        [HttpPost("BookAppointment")]
+        public async Task<IActionResult> BookAppointment([FromBody] BookAppointmentRequest request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { error = "User ID claim is missing. Please login again." });
+                }
+
+                var userId = Guid.Parse(userIdClaim);
+                await _appointmentService.BookAppointment(userId, request);
+                
+                return Ok(new { message = "Đặt lịch thành công!", success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, success = false });
+            }
         }
     }
 }

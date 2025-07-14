@@ -14,10 +14,18 @@ namespace MediAppointment.Application.Mapper
             // Add your mappings here
             // Example: CreateMap<Source, Destination>();
             CreateMap<Appointment, AppointmentResponse>()
-            .ForMember(dest => dest.RoomName,
-                       opt => opt.MapFrom(src => src.RoomTimeSlot.Room.Name))
-            .ForMember(dest => dest.Time,
-                       opt => opt.MapFrom(src => src.RoomTimeSlot.TimeSlot.TimeStart.ToString(@"hh\:mm")));
+                .ForMember(dest => dest.RoomTimeSlotId,
+                           opt => opt.MapFrom(src => src.RoomTimeSlotId))
+                .ForMember(dest => dest.RoomName,
+                           opt => opt.MapFrom(src => src.RoomTimeSlot.Room.Name))
+                .ForMember(dest => dest.TimeSlot,
+                           opt => opt.MapFrom(src => $"{src.RoomTimeSlot.TimeSlot.TimeStart:hh\\:mm} - {(src.RoomTimeSlot.TimeSlot.TimeStart.Add(src.RoomTimeSlot.TimeSlot.Duration)):hh\\:mm}"))
+                .ForMember(dest => dest.Department,
+                           opt => opt.MapFrom(src => src.RoomTimeSlot.Room.Department.DepartmentName))
+                .ForMember(dest => dest.Status,
+                           opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.PatientName,
+                           opt => opt.MapFrom(src => "")); // Empty for now
 
             // RoomTimeSlot mapping
             CreateMap<RoomTimeSlot, RoomTimeSlotResponse>()
@@ -33,7 +41,11 @@ namespace MediAppointment.Application.Mapper
             // CreateMedicalRecordDto -> MedicalRecord
             CreateMap<CreateMedicalRecordDto, MedicalRecord>();
 
-            CreateMap<TimeSlot,TimeSlotDTO>();
+            CreateMap<TimeSlot, TimeSlotDTO>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.TimeStart, opt => opt.MapFrom(src => src.TimeStart))
+                .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.Duration))
+                .ForMember(dest => dest.Shift, opt => opt.MapFrom(src => src.Shift));
         }
     }
 }

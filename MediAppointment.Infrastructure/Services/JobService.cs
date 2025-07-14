@@ -42,7 +42,7 @@ namespace MediAppointment.Infrastructure.Services
                             TimeSlotId = timeSlot.Id,
                             Date = targetDate,
                             RoomId = room.Id,
-                            Status = RoomTimeSlotStatus.Available
+                            Status = RoomTimeSlotStatus.Available // Đảm bảo tạo với status Available
                         });
                     }
                 }
