@@ -658,7 +658,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasOne("MediAppointment.Domain.Entities.RoomTimeSlot", "RoomTimeSlot")
                         .WithMany("Appointments")
                         .HasForeignKey("RoomTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("RoomTimeSlot");
@@ -745,13 +745,13 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasOne("MediAppointment.Domain.Entities.Room", "Room")
                         .WithMany("RoomTimeSlots")
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MediAppointment.Domain.Entities.TimeSlot", "TimeSlot")
                         .WithMany("RoomSlots")
                         .HasForeignKey("TimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Doctor");
