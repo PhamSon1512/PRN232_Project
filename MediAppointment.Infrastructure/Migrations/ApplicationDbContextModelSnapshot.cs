@@ -751,7 +751,7 @@ namespace MediAppointment.Infrastructure.Migrations
                     b.HasOne("MediAppointment.Domain.Entities.TimeSlot", "TimeSlot")
                         .WithMany("RoomSlots")
                         .HasForeignKey("TimeSlotId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Doctor");
