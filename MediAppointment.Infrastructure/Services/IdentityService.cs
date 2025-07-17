@@ -744,6 +744,7 @@ namespace MediAppointment.Infrastructure.Services
         }
         #endregion
 
+        #region Comment
         //// Tạo role mới
         //public async Task<bool> CreateRoleAsync(string roleName)
         //{
@@ -861,6 +862,6 @@ namespace MediAppointment.Infrastructure.Services
         //        throw new Exception("User not found");
         //    return await _userManager.GenerateEmailConfirmationTokenAsync(user);
         //}
-
+        #endregion
     }
 }

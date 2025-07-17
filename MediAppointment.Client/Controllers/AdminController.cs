@@ -5,6 +5,7 @@ using MediAppointment.Client.Models.Admin;
 using MediAppointment.Client.Models.Common;
 using MediAppointment.Client.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MediAppointment.Client.Controllers
 {
@@ -82,6 +83,8 @@ namespace MediAppointment.Client.Controllers
                 var updateResponse = await _adminService.UpdateManagerProfileAsync(dto);
                 if (updateResponse.Success)
                 {
+                    // Thêm thông báo thành công
+                    TempData["SuccessMessage"] = "Cập nhật thông tin người dùng thành công!";
                     return RedirectToAction("UserManagement");
                 }
                 originalUser.ErrorMessage = updateResponse.ErrorMessage ?? "Cập nhật thất bại.";
@@ -104,6 +107,8 @@ namespace MediAppointment.Client.Controllers
                 var updateResponse = await _adminService.UpgradeToManagerAsync(dto);
                 if (updateResponse.Success)
                 {
+                    // Thêm thông báo thành công cho việc nâng cấp role
+                    TempData["SuccessMessage"] = "Nâng cấp người dùng thành Manager thành công!";
                     return RedirectToAction("UserManagement");
                 }
                 originalUser.ErrorMessage = updateResponse.ErrorMessage ?? "Nâng cấp thất bại.";
@@ -141,6 +146,7 @@ namespace MediAppointment.Client.Controllers
         public async Task<IActionResult> UpdateAdminProfile(AdminUpdateProfile dto)
         {
             var result = await _adminService.GetAdminProfileAsync();
+
             if (string.IsNullOrWhiteSpace(dto.FullName))
             {
                 ModelState.AddModelError("FullName", "Họ và tên không được để trống");
@@ -168,19 +174,16 @@ namespace MediAppointment.Client.Controllers
                 return RedirectToAction("AdminProfile");
             }
 
-            // Gán Id từ token để đảm bảo không dùng GUID mặc định
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out var adminId))
+            // Lấy adminId từ session thay vì từ User claims
+            var adminId = GetAdminIdFromSession();
+            if (adminId == null)
             {
-                dto.Id = adminId;
-            }
-            else
-            {
-                // Log lỗi nếu không parse được
-                Console.WriteLine($"Failed to parse userIdClaim: {userIdClaim}");
-                TempData["ErrorMessage"] = "Không thể xác định ID admin.";
+                Console.WriteLine("Failed to get admin ID from session");
+                TempData["ErrorMessage"] = "Không thể xác định ID admin từ session.";
                 return RedirectToAction("AdminProfile");
             }
+
+            dto.Id = adminId.Value;
 
             var resultUpdate = await _adminService.UpdateAdminProfileAsync(dto);
             if (resultUpdate.Success)
@@ -195,6 +198,43 @@ namespace MediAppointment.Client.Controllers
                 return View("EditAdminProfile", result.Data);
             }
             return RedirectToAction("AdminProfile");
+        }
+
+        private Guid? GetAdminIdFromSession()
+        {
+            try
+            {
+                // Lấy token từ session
+                var token = HttpContext.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    Console.WriteLine("No AccessToken found in session");
+                    return null;
+                }
+
+                // Decode JWT token
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+
+                // Lấy UserId từ claims
+                var userIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == "UserId" || c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                Console.WriteLine($"Token found in session. UserId claim: {userIdClaim ?? "null"}");
+                Console.WriteLine($"All claims: {string.Join(", ", jwt.Claims.Select(c => $"{c.Type}: {c.Value}"))}");
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var adminId))
+                {
+                    Console.WriteLine($"Failed to parse userIdClaim: {userIdClaim ?? "null"}");
+                    return null;
+                }
+
+                return adminId;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting admin ID from session: {ex.Message}");
+                return null;
+            }
         }
     }
 }
