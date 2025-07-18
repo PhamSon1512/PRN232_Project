@@ -220,7 +220,7 @@ namespace MediAppointment.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error canceling schedule");
+                _logger.LogError(ex, "Error canceling schedule - RoomId: {RoomId}, Date: {Date}, Period: {Period}", roomId, date, period);
                 TempData["ErrorMessage"] = "Có lỗi xảy ra khi hủy lịch làm việc.";
             }
 

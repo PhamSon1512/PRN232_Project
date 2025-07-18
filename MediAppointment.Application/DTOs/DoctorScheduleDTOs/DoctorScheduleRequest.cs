@@ -11,5 +11,6 @@ namespace MediAppointment.Application.DTOs.DoctorScheduleDTOs
         public Guid RoomId { get; set; }
         public bool Shift { get; set; }
         public DateTime DateSchedule { get; set; }
+        public Guid TimeSlotId { get; set; }
     }
 }
