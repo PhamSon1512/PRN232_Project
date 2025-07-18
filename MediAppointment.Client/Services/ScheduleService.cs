@@ -211,12 +211,13 @@ namespace MediAppointment.Client.Services
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+                // Create HttpRequestMessage to properly set authorization header
                 var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/DoctorSchedule/DeleteSchedule")
                 {
                     Content = content
                 };
 
-                // Add Authorization header
+                // Add Authorization header to the request (not to the client)
                 httpRequest.Headers.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -224,15 +225,49 @@ namespace MediAppointment.Client.Services
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    return new ServiceResult<string>
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                    
+                    // Check if API returned success
+                    if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
                     {
-                        Success = true,
-                        Data = "Xóa lịch làm việc thành công"
-                    };
+                        return new ServiceResult<string>
+                        {
+                            Success = true,
+                            Data = "Xóa lịch làm việc thành công"
+                        };
+                    }
+                    else
+                    {
+                        var message = result.TryGetProperty("message", out var msgProp) ? msgProp.GetString() : "Không thể xóa lịch làm việc";
+                        return new ServiceResult<string>
+                        {
+                            Success = false,
+                            ErrorMessage = message
+                        };
+                    }
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("API Error: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                
+                // Try to parse error response
+                try
+                {
+                    var errorResult = JsonSerializer.Deserialize<JsonElement>(errorContent);
+                    if (errorResult.TryGetProperty("message", out var errorMsgProp))
+                    {
+                        return new ServiceResult<string>
+                        {
+                            Success = false,
+                            ErrorMessage = errorMsgProp.GetString() ?? "Không thể xóa lịch làm việc"
+                        };
+                    }
+                }
+                catch
+                {
+                    // Ignore JSON parsing errors for error response
+                }
                 
                 return new ServiceResult<string>
                 {
@@ -308,11 +343,14 @@ namespace MediAppointment.Client.Services
                     };
                 }
 
-                // Add Authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                // Create HttpRequestMessage to properly set authorization header
+                var httpRequest = new HttpRequestMessage(HttpMethod.Get, $"api/DoctorSchedule/GetSchedule?roomId={roomId}&year={year}&week={week}");
+                
+                // Add Authorization header to the request (not to the client)
+                httpRequest.Headers.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync($"api/DoctorSchedule/GetSchedule?roomId={roomId}&year={year}&week={week}");
+                var response = await _httpClient.SendAsync(httpRequest);
                 
                 if (response.IsSuccessStatusCode)
                 {

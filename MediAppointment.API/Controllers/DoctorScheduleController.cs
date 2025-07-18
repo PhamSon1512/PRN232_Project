@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Application.DTOs.DoctorScheduleDTOs;
 using MediAppointment.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace MediAppointment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DoctorScheduleController : ControllerBase
     {
         protected IDoctorScheduleService _service;
@@ -16,11 +18,26 @@ namespace MediAppointment.API.Controllers
         }
         [HttpPost]
         public async Task<IActionResult> Post(List<DoctorScheduleRequest> requests) {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { success = false, message = "User ID claim is missing or empty" });
+                }
 
-            var userId = Guid.Parse(User.FindFirst("UserId")?.Value
-              ?? throw new Exception("User ID claim is missing"));
-            await _service.CreateDoctorSchedule(userId, requests);
-            return Ok();
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                {
+                    return BadRequest(new { success = false, message = "Invalid User ID format" });
+                }
+
+                await _service.CreateDoctorSchedule(userId, requests);
+                return Ok(new { success = true, message = "Đăng ký lịch làm việc thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
         
         [HttpDelete]
@@ -64,7 +81,8 @@ namespace MediAppointment.API.Controllers
                         {
                             RoomId = request.RoomId,
                             DateSchedule = request.Date,
-                            Shift = request.Period.ToLower() == "afternoon" // true for afternoon, false for morning
+                            Shift = request.Period.ToLower() == "afternoon", // true for afternoon, false for morning
+                            TimeSlotId = timeSlotId
                         });
                     }
                 }
@@ -83,8 +101,16 @@ namespace MediAppointment.API.Controllers
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirst("UserId")?.Value
-                  ?? throw new Exception("User ID claim is missing"));
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { success = false, message = "User ID claim is missing or empty" });
+                }
+
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                {
+                    return BadRequest(new { success = false, message = "Invalid User ID format" });
+                }
                 
                 var deleteRequest = new DeleteDoctorScheduleDTO
                 {
@@ -107,8 +133,16 @@ namespace MediAppointment.API.Controllers
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirst("UserId")?.Value
-                  ?? throw new Exception("User ID claim is missing"));
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { success = false, message = "User ID claim is missing or empty" });
+                }
+
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                {
+                    return BadRequest(new { success = false, message = "Invalid User ID format" });
+                }
 
                 // Calculate week start and end dates
                 var jan1 = new DateTime(year, 1, 1);
