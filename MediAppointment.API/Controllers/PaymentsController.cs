@@ -10,11 +10,13 @@ namespace MediAppointment.API.Controllers
     {
         private readonly IVnPayService _vnPayService;
         private readonly IWalletService _walletService;
+        private readonly IConfiguration _configuration;
 
-        public PaymentsController(IVnPayService vnPayService, IWalletService walletService)
+        public PaymentsController(IVnPayService vnPayService, IWalletService walletService, IConfiguration configuration)
         {
             _vnPayService = vnPayService;
             _walletService = walletService;
+            _configuration = configuration;
         }
 
         [HttpPost("create-payment-url")]
@@ -29,21 +31,36 @@ namespace MediAppointment.API.Controllers
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
 
-            if (response.Success)
-            {
-                Guid userId;
-                decimal amount = 0;
+            //// Lấy userId từ claim và parse về Guid
+            //var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            //if (!string.IsNullOrEmpty(userIdString) && Guid.TryParse(userIdString, out var userId))
+            //{
+            //    // Kiểm tra response thành công và có OrderDescription
+            //    if (response.Success && !string.IsNullOrEmpty(response.OrderDescription))
+            //    {
+            //        var parts = response.OrderDescription.Split('|');
 
-                if (Guid.TryParse(response.OrderId, out userId))
-                {
-                    amount = 1000000; 
-                    await _walletService.DepositAsync(userId, amount, response.TransactionId);
-                }
-            }
+            //        // Parse phần tử thứ 2 làm amount
+            //        if (parts.Length >= 2 && decimal.TryParse(parts[1], out var amount))
+            //        {
+            //            try
+            //            {
+            //                await _walletService.DepositAsync(userId, amount, response.TransactionId);
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                // Log lỗi nhưng vẫn redirect để FE xử lý
+            //                Console.WriteLine($"Lỗi khi cập nhật số dư: {ex.Message}");
+            //            }
+            //        }
+            //    }
+            //}
 
-            return Ok(response);
+            // Lấy URL từ cấu hình và thêm query string
+            var returnUrl = _configuration["PaymentCallBack:ReturnUrl"];
+            var queryString = Request.QueryString.ToString();
+            return Redirect($"{returnUrl}{queryString}");
         }
-
 
     }
 }
