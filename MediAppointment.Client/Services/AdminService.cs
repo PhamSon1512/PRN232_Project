@@ -3,6 +3,8 @@ using MediAppointment.Client.Models.Admin;
 using MediAppointment.Client.Models.Common;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace MediAppointment.Client.Services
 {
@@ -14,6 +16,7 @@ namespace MediAppointment.Client.Services
         Task<ApiResponse<bool>> UpdateManagerProfileAsync(ManagerUpdateDto dto);
         Task<ApiResponse<AdminViewModel>> GetAdminProfileAsync();
         Task<ApiResponse<bool>> UpdateAdminProfileAsync(AdminUpdateProfile dto);
+        Task<ApiResponse<DashboardViewModel>> GetDashboardStatsAsync();
     }
 
     public class AdminService : IAdminService
@@ -75,26 +78,26 @@ namespace MediAppointment.Client.Services
             }
         }
 
-        public async Task<ApiResponse<PaginatedResult<AdminViewModel>>> GetAllUsersAsync(int page = 1, int pageSize = 5, string text = "")
+        public async Task<ApiResponse<PaginatedResult<AdminViewModel>>> GetAllUsersAsync(int page, int pageSize, string text = "")
         {
             try
             {
                 SetAuthHeader();
-                var url = $"{_configuration["ApiBaseUrl"]}/api/admin/GetAllDoctorsAndManagers?page={page}&pageSize={pageSize}&text={Uri.EscapeDataString(text)}";
-                var response = await _httpClient.GetAsync(url);
+                var query = $"?text={Uri.EscapeDataString(text ?? "")}&page={page}&pageSize={pageSize}";
+                var response = await _httpClient.GetAsync($"/api/Admin/GetAllDoctorsAndManagers{query}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var data = JsonSerializer.Deserialize<PaginatedResult<AdminViewModel>>(content, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<PaginatedResult<AdminViewModel>>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
-                    }) ?? new PaginatedResult<AdminViewModel>();
+                    });
 
                     return new ApiResponse<PaginatedResult<AdminViewModel>>
                     {
                         Success = true,
-                        Data = data
+                        Data = result ?? new PaginatedResult<AdminViewModel>()
                     };
                 }
 
@@ -107,7 +110,7 @@ namespace MediAppointment.Client.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine($"Exception in GetAllUsersAsync: {ex.Message}");
                 return new ApiResponse<PaginatedResult<AdminViewModel>>
                 {
                     Success = false,
@@ -115,6 +118,7 @@ namespace MediAppointment.Client.Services
                 };
             }
         }
+
 
         public async Task<ApiResponse<AdminViewModel>> GetUserByIdAsync(Guid id)
         {
@@ -143,7 +147,7 @@ namespace MediAppointment.Client.Services
             try
             {
                 SetAuthHeader();
-                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto), System.Text.Encoding.UTF8, "application/json");
+                var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"{_configuration["ApiBaseUrl"]}/api/admin/CreateManager", content);
                 if (response.IsSuccessStatusCode)
                 {
@@ -242,6 +246,32 @@ namespace MediAppointment.Client.Services
                 return new ApiResponse<bool> { Success = false, ErrorMessage = ex.Message };
             }
         }
+
+        public async Task<ApiResponse<DashboardViewModel>> GetDashboardStatsAsync()
+        {
+            try
+            {
+                SetAuthHeader();
+                var response = await _httpClient.GetAsync($"{_configuration["ApiBaseUrl"]}/api/admin/dashboard");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var data = JsonSerializer.Deserialize<DashboardViewModel>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new DashboardViewModel();
+                    return new ApiResponse<DashboardViewModel> { Success = true, Data = data };
+                }
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return new ApiResponse<DashboardViewModel>
+                {
+                    Success = false,
+                    ErrorMessage = $"Lỗi khi lấy thống kê dashboard: {errorContent} (Status: {response.StatusCode})"
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetDashboardStatsAsync: {ex.Message}");
+                return new ApiResponse<DashboardViewModel> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
     }
 
     public class ManagerCreateDto
@@ -249,6 +279,7 @@ namespace MediAppointment.Client.Services
         public Guid DoctorId { get; set; }
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
+        public bool? IsActive { get; set; }
     }
 
     public class ManagerUpdateDto
@@ -256,5 +287,6 @@ namespace MediAppointment.Client.Services
         public Guid DoctorId { get; set; }
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

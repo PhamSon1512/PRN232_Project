@@ -19,6 +19,13 @@ namespace MediAppointment.API.Controllers
             _adminService = adminService;
         }
 
+        [HttpGet("dashboard")]
+        public async Task<ActionResult<DashboardDto>> GetDashboardStats()
+        {
+            var stats = await _adminService.GetDashboardStatsAsync();
+            return Ok(stats);
+        }
+
         [HttpGet("GetAllDoctorsAndManagers")]
         public async Task<IActionResult> GetAllDoctorsAndManagers([FromQuery] string text = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
         {

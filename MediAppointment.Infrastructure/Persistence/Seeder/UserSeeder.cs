@@ -1,5 +1,6 @@
 ﻿using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Entities.Abstractions;
+using MediAppointment.Domain.Enums;
 using MediAppointment.Infrastructure.Data;
 using MediAppointment.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -28,6 +29,9 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     PhoneNumber = "0987654321",
                     EmailConfirmed = true,
                     RefreshToken = string.Empty,
+                    Status = Status.Active,
+                    Gender = false,
+                    DateOfBirth = new DateTime(1990, 1, 1)
                 };
                 var result = await userManager.CreateAsync(doctorUser, "Doctor@123");
                 if (result.Succeeded)
@@ -39,10 +43,11 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     {
                         Id = Guid.NewGuid(),
                         FullName = doctorUser.FullName ?? "",
-                        Gender = true,
-                        DateOfBirth = new DateTime(1990, 1, 1),
+                        Gender = doctorUser.Gender,
+                        DateOfBirth = doctorUser.DateOfBirth,
                         Email = doctorUser.Email ?? "",
-                        PhoneNumber = doctorUser.PhoneNumber ?? ""
+                        PhoneNumber = doctorUser.PhoneNumber ?? "",
+                        Status = doctorUser.Status
                     };
                     dbContext.Doctors.Add(doctor);
                     dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = doctorUser.Id;
@@ -63,6 +68,9 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     PhoneNumber = "0111222333",
                     EmailConfirmed = true,
                     RefreshToken = string.Empty,
+                    Status = Status.Active,
+                    Gender = false,
+                    DateOfBirth = new DateTime(1995, 5, 5)
                 };
                 var result = await userManager.CreateAsync(patientUser, "Patient@123");
                 if (result.Succeeded)
@@ -74,13 +82,14 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     {
                         Id = Guid.NewGuid(),
                         FullName = patientUser.FullName ?? "",
-                        Gender = false,
-                        DateOfBirth = new DateTime(1995, 5, 5),
+                        Gender = patientUser.Gender,
+                        DateOfBirth = patientUser.DateOfBirth,
                         Email = patientUser.Email ?? "",
                         PhoneNumber = patientUser.PhoneNumber ?? "",
                         CCCD = "012345678901",
                         Address = "123 Main St",
-                        BHYT = "BHYT123456"
+                        BHYT = "BHYT123456",
+                        Status = patientUser.Status
                     };
                     dbContext.Patients.Add(patient);
                     dbContext.Entry(patient).Property("UserIdentityId").CurrentValue = patientUser.Id;
@@ -100,8 +109,11 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     FullName = "Default Manager",
                     PhoneNumber = "0901234567",
                     EmailConfirmed = true,
-                    RefreshToken = string.Empty, // Set to empty string to satisfy NOT NULL constraint
-                    RefreshTokenExpiryTime = DateTime.MinValue // Set to default value
+                    RefreshToken = string.Empty,
+                    RefreshTokenExpiryTime = DateTime.MinValue,
+                    Status = Status.Active,
+                    Gender = true,
+                    DateOfBirth = new DateTime(1985, 3, 15)
                 };
                 var result = await userManager.CreateAsync(managerUser, "Manager@123");
                 if (result.Succeeded)
@@ -127,7 +139,10 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     PhoneNumber = "0999888777",
                     EmailConfirmed = true,
                     RefreshToken = string.Empty,
-                    RefreshTokenExpiryTime = DateTime.MinValue
+                    RefreshTokenExpiryTime = DateTime.MinValue,
+                    Status = Status.Active,
+                    Gender = true,
+                    DateOfBirth = new DateTime(1980, 7, 10)
                 };
                 var result = await userManager.CreateAsync(adminUser, "Admin@123");
                 if (result.Succeeded)

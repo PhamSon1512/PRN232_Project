@@ -1,4 +1,4 @@
-using MediAppointment.Application.DTOs;
+﻿using MediAppointment.Application.DTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Interfaces;
@@ -35,12 +35,10 @@ namespace MediAppointment.Application.Services
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 5;
 
-            // Get all users with Doctor or Manager roles
             var doctorUsers = await _userManager.GetUsersInRoleAsync("Doctor");
             var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
             var allUsers = doctorUsers.Concat(managerUsers).Distinct();
 
-            // Filtering
             if (!string.IsNullOrWhiteSpace(text))
             {
                 text = text.Trim().ToLower();
@@ -49,7 +47,6 @@ namespace MediAppointment.Application.Services
 
             var totalCount = allUsers.Count();
 
-            // Apply pagination
             var users = allUsers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -58,8 +55,6 @@ namespace MediAppointment.Application.Services
             var adminDtos = new List<DoctorManagerDto>();
             foreach (var user in users)
             {
-                var userEntity = await _dbContext.Set<User>().FirstOrDefaultAsync(u => u.UserIdentityId == user.Id);
-
                 adminDtos.Add(new DoctorManagerDto
                 {
                     Id = user.Id,
@@ -68,9 +63,9 @@ namespace MediAppointment.Application.Services
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
                     Role = doctorUsers.Any(d => d.Id == user.Id) ? "Doctor" : "Manager",
-                    DateOfBirth = userEntity?.DateOfBirth ?? DateTime.MinValue,
-                    Gender = userEntity?.Gender ?? false,
-                    IsActive = userEntity?.Status == Status.Active
+                    DateOfBirth = user.DateOfBirth,
+                    Gender = user.Gender,
+                    IsActive = user.Status == Status.Active
                 });
             }
 
@@ -108,35 +103,47 @@ namespace MediAppointment.Application.Services
         {
             var doctor = await _userManager.FindByIdAsync(dto.DoctorId.ToString());
             if (doctor == null)
-                throw new Exception($"User with Id {dto.DoctorId} does not exist.");
+                throw new Exception($"Người dùng với Id {dto.DoctorId} không tồn tại.");
             if (!(await _userManager.IsInRoleAsync(doctor, "Doctor")))
-                throw new Exception($"User with Id {dto.DoctorId} does not have the Doctor role.");
+                throw new Exception($"Người dùng với Id {dto.DoctorId} không có vai trò Doctor.");
+            if (dto.IsActive.HasValue)
+                doctor.Status = dto.IsActive.Value ? Status.Active : Status.Inactive;
 
-            // Update only editable fields
-            if (!string.IsNullOrEmpty(dto.FullName) && dto.FullName != doctor.FullName)
-                doctor.FullName = dto.FullName;
-            if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
-                doctor.PhoneNumber = dto.PhoneNumber;
-
-            var result = await _userManager.UpdateAsync(doctor);
-            if (!result.Succeeded) throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
-
-            // Update role from Doctor to Manager (validate NewRole if provided)
-            if (!string.IsNullOrEmpty(dto.NewRole) && dto.NewRole != "Manager")
-                throw new Exception("New role must be Manager");
-            await _userManager.AddToRoleAsync(doctor, "Manager");
-            await _userManager.RemoveFromRoleAsync(doctor, "Doctor");
-
-            // Delete the Doctor record from the User table
             var doctorEntity = await _dbContext.Set<User>()
                 .OfType<Doctor>()
                 .FirstOrDefaultAsync(d => d.UserIdentityId == dto.DoctorId);
             if (doctorEntity != null)
             {
+                doctor.Gender = doctorEntity.Gender;
+                doctor.DateOfBirth = doctorEntity.DateOfBirth;
+                await _userManager.UpdateAsync(doctor);
+            }
+            else
+            {
+                doctor.Gender = true;
+                doctor.DateOfBirth = DateTime.MinValue;
+                await _userManager.UpdateAsync(doctor);
+            }
+
+            if (!string.IsNullOrEmpty(dto.FullName) && dto.FullName != doctor.FullName)
+                doctor.FullName = dto.FullName;
+            if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
+                doctor.PhoneNumber = dto.PhoneNumber;
+            await _userManager.UpdateAsync(doctor);
+
+            // Cập nhật vai trò từ Doctor sang Manager
+            if (!string.IsNullOrEmpty(dto.NewRole) && dto.NewRole != "Manager")
+                throw new Exception("Vai trò mới phải là Manager");
+            await _userManager.AddToRoleAsync(doctor, "Manager");
+            await _userManager.RemoveFromRoleAsync(doctor, "Doctor");
+
+            if (doctorEntity != null)
+            {
                 _dbContext.Set<User>().Remove(doctorEntity);
                 await _dbContext.SaveChangesAsync();
             }
-            await _emailService.SendAsync(doctor.Email, "Role Updated", "Your role has been updated to Manager by an Admin. Welcome!");
+
+            await _emailService.SendAsync(doctor.Email, "Cập nhật vai trò", "Vai trò của bạn đã được Admin cập nhật thành Manager. Chào mừng bạn!");
             return new
             {
                 Id = doctor.Id,
@@ -144,7 +151,10 @@ namespace MediAppointment.Application.Services
                 Email = doctor.Email,
                 PhoneNumber = doctor.PhoneNumber,
                 UserName = doctor.UserName,
-                Role = "Manager"
+                Role = "Manager",
+                Gender = doctor.Gender,
+                Status = doctor.Status,
+                DateOfBirth = doctor.DateOfBirth
             };
         }
 
@@ -161,6 +171,8 @@ namespace MediAppointment.Application.Services
                 manager.FullName = dto.FullName;
             if (!string.IsNullOrEmpty(dto.PhoneNumber) && dto.PhoneNumber != manager.PhoneNumber)
                 manager.PhoneNumber = dto.PhoneNumber;
+            if (dto.IsActive.HasValue)
+                manager.Status = dto.IsActive.Value ? Status.Active : Status.Inactive;
 
             var result = await _userManager.UpdateAsync(manager);
             if (!result.Succeeded) throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
@@ -183,7 +195,6 @@ namespace MediAppointment.Application.Services
             if (user == null)
                 throw new Exception($"User with Id {id} does not exist.");
 
-            var userEntity = await _dbContext.Set<User>().FirstOrDefaultAsync(u => u.UserIdentityId == user.Id);
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.Contains("Doctor") ? "Doctor" : roles.Contains("Manager") ? "Manager" : "Unknown";
 
@@ -195,9 +206,9 @@ namespace MediAppointment.Application.Services
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Role = role,
-                DateOfBirth = userEntity?.DateOfBirth ?? DateTime.MinValue,
-                Gender = userEntity?.Gender ?? false,
-                IsActive = userEntity?.Status == Status.Active
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender,
+                IsActive = user.Status == Status.Active
             };
         }
 
@@ -228,6 +239,35 @@ namespace MediAppointment.Application.Services
                 UserName = admin.UserName,
                 Role = await _userManager.GetRolesAsync(admin)
             };
+        }
+
+        public async Task<DashboardDto> GetDashboardStatsAsync()
+        {
+            var doctorUsers = await _userManager.GetUsersInRoleAsync("Doctor");
+            var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
+            var patientUsers = await _dbContext.Patients.CountAsync();
+
+            var totalAppointments = await _dbContext.Appointments.CountAsync();
+            var pendingAppointments = await _dbContext.Appointments.CountAsync(a => a.Status == AppointmentStatus.Pending);
+            var completedAppointments = await _dbContext.Appointments.CountAsync(a => a.Status == AppointmentStatus.Completed);
+            var cancelledAppointments = await _dbContext.Appointments.CountAsync(a => a.Status == AppointmentStatus.Cancelled);
+            //var totalRevenue = await _dbContext.Appointments
+            //    .Where(a => a.Status == AppointmentStatus.Completed)
+            //    .SumAsync(a => a.Price ?? 0);
+
+            var stats = new DashboardDto
+            {
+                TotalDoctors = doctorUsers.Count,
+                TotalManagers = managerUsers.Count,
+                TotalPatients = patientUsers,
+                TotalAppointments = totalAppointments,
+                PendingAppointments = pendingAppointments,
+                CompletedAppointments = completedAppointments,
+                CancelledAppointments = cancelledAppointments,
+                //TotalRevenue = totalRevenue
+            };
+
+            return stats;
         }
     }
 }
