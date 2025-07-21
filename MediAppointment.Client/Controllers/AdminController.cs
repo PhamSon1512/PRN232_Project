@@ -1,11 +1,10 @@
 ﻿using System.Security.Claims;
-using System.Text.RegularExpressions;
+using System.IdentityModel.Tokens.Jwt;
 using MediAppointment.Client.Attributes;
 using MediAppointment.Client.Models.Admin;
 using MediAppointment.Client.Models.Common;
 using MediAppointment.Client.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace MediAppointment.Client.Controllers
 {
@@ -19,21 +18,30 @@ namespace MediAppointment.Client.Controllers
         }
 
         [Route("Admin")]
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            return View();
+            var statsResponse = await _adminService.GetDashboardStatsAsync();
+            if (statsResponse.Success && statsResponse.Data != null)
+            {
+                return View("~/Views/Admin/Dashboard.cshtml", statsResponse.Data);
+            }
+            TempData["ErrorMessage"] = statsResponse.ErrorMessage ?? "Không thể tải thống kê dashboard.";
+            return View("~/Views/Admin/Dashboard.cshtml", new DashboardViewModel());
         }
 
-        [Route("Admin/UserManagement")]
+        [HttpGet("Admin/UserManagement")]
         public async Task<IActionResult> UserManagement(int page = 1, int pageSize = 5, string text = "")
         {
             var apiResponse = await _adminService.GetAllUsersAsync(page, pageSize, text);
-            if (!apiResponse.Success)
+            if (apiResponse.Success && apiResponse.Data != null)
             {
-                ViewBag.ErrorMessage = apiResponse.ErrorMessage ?? "Không thể tải danh sách người dùng.";
-                return View();
+                ViewBag.Text = text;
+                ViewBag.Page = page;
+                ViewBag.PageSize = pageSize;
+                return View("~/Views/Admin/UserManagement.cshtml", apiResponse.Data);
             }
-            return View(apiResponse.Data);
+            TempData["ErrorMessage"] = apiResponse.ErrorMessage ?? "Không thể tải danh sách người dùng.";
+            return View("~/Views/Admin/UserManagement.cshtml");
         }
 
         [Route("Admin/EditUser/{id}")]
@@ -50,12 +58,16 @@ namespace MediAppointment.Client.Controllers
 
         [HttpPost]
         [Route("Admin/EditUser/{id}")]
-        public async Task<IActionResult> EditUser(Guid id, [Bind("FullName,PhoneNumber,Role")] EditUserViewModel model)
+        public async Task<IActionResult> EditUser(Guid id, [Bind("FullName,PhoneNumber,Role,IsActive")] EditUserViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 var user = await _adminService.GetUserByIdAsync(id);
                 var viewModel = user.Success && user.Data != null ? user.Data : new AdminViewModel();
+                viewModel.FullName = model.FullName;
+                viewModel.PhoneNumber = model.PhoneNumber;
+                viewModel.Role = model.Role;
+                viewModel.IsActive = model.IsActive;
                 viewModel.ErrorMessage = ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage)
@@ -77,13 +89,12 @@ namespace MediAppointment.Client.Controllers
                 {
                     DoctorId = id,
                     FullName = model.FullName,
-                    PhoneNumber = model.PhoneNumber
+                    PhoneNumber = model.PhoneNumber,
+                    IsActive = model.IsActive
                 };
-
                 var updateResponse = await _adminService.UpdateManagerProfileAsync(dto);
                 if (updateResponse.Success)
                 {
-                    // Thêm thông báo thành công
                     TempData["SuccessMessage"] = "Cập nhật thông tin người dùng thành công!";
                     return RedirectToAction("UserManagement");
                 }
@@ -96,24 +107,21 @@ namespace MediAppointment.Client.Controllers
                     originalUser.ErrorMessage = "Chỉ được nâng cấp từ Doctor thành Manager.";
                     return View(originalUser);
                 }
-
                 var dto = new ManagerCreateDto
                 {
                     DoctorId = id,
                     FullName = model.FullName,
-                    PhoneNumber = model.PhoneNumber
+                    PhoneNumber = model.PhoneNumber,
+                    IsActive = model.IsActive
                 };
-
                 var updateResponse = await _adminService.UpgradeToManagerAsync(dto);
                 if (updateResponse.Success)
                 {
-                    // Thêm thông báo thành công cho việc nâng cấp role
                     TempData["SuccessMessage"] = "Nâng cấp người dùng thành Manager thành công!";
                     return RedirectToAction("UserManagement");
                 }
                 originalUser.ErrorMessage = updateResponse.ErrorMessage ?? "Nâng cấp thất bại.";
             }
-
             return View(originalUser);
         }
 
@@ -145,40 +153,25 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateAdminProfile(AdminUpdateProfile dto)
         {
-            var result = await _adminService.GetAdminProfileAsync();
-
-            if (string.IsNullOrWhiteSpace(dto.FullName))
-            {
-                ModelState.AddModelError("FullName", "Họ và tên không được để trống");
-            }
-            else if (!Regex.IsMatch(dto.FullName, @"^[a-zA-ZÀ-ỹ\s]+$"))
-            {
-                ModelState.AddModelError("FullName", "Họ và tên chỉ được chứa chữ cái và khoảng trắng");
-            }
-
-            if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
-            {
-                ModelState.AddModelError("PhoneNumber", "Số điện thoại không được để trống");
-            }
-            else if (!Regex.IsMatch(dto.PhoneNumber, @"^\d+$") || dto.PhoneNumber.Length > 11)
-            {
-                ModelState.AddModelError("PhoneNumber", "Số điện thoại phải là số và có độ dài tối đa 11 ký tự");
-            }
-
             if (!ModelState.IsValid)
             {
+                var result = await _adminService.GetAdminProfileAsync();
                 if (result.Success && result.Data != null)
                 {
+                    result.Data.ErrorMessage = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .FirstOrDefault();
                     return View("EditAdminProfile", result.Data);
                 }
+                TempData["ErrorMessage"] = "Không thể tải thông tin admin";
                 return RedirectToAction("AdminProfile");
             }
 
-            // Lấy adminId từ session thay vì từ User claims
+            // Lấy adminId từ session
             var adminId = GetAdminIdFromSession();
             if (adminId == null)
             {
-                Console.WriteLine("Failed to get admin ID from session");
                 TempData["ErrorMessage"] = "Không thể xác định ID admin từ session.";
                 return RedirectToAction("AdminProfile");
             }
@@ -193,9 +186,10 @@ namespace MediAppointment.Client.Controllers
             }
 
             TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ thất bại";
-            if (result.Success && result.Data != null)
+            var resultProfile = await _adminService.GetAdminProfileAsync();
+            if (resultProfile.Success && resultProfile.Data != null)
             {
-                return View("EditAdminProfile", result.Data);
+                return View("EditAdminProfile", resultProfile.Data);
             }
             return RedirectToAction("AdminProfile");
         }
@@ -208,7 +202,6 @@ namespace MediAppointment.Client.Controllers
                 var token = HttpContext.Session.GetString("AccessToken");
                 if (string.IsNullOrEmpty(token))
                 {
-                    Console.WriteLine("No AccessToken found in session");
                     return null;
                 }
 
@@ -219,20 +212,15 @@ namespace MediAppointment.Client.Controllers
                 // Lấy UserId từ claims
                 var userIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == "UserId" || c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-                Console.WriteLine($"Token found in session. UserId claim: {userIdClaim ?? "null"}");
-                Console.WriteLine($"All claims: {string.Join(", ", jwt.Claims.Select(c => $"{c.Type}: {c.Value}"))}");
-
                 if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var adminId))
                 {
-                    Console.WriteLine($"Failed to parse userIdClaim: {userIdClaim ?? "null"}");
                     return null;
                 }
 
                 return adminId;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Error getting admin ID from session: {ex.Message}");
                 return null;
             }
         }

@@ -15,5 +15,6 @@ namespace MediAppointment.Application.Interfaces
         Task<object> CreateDoctorToManagerAsync(ManagerCreateDto dto);
         Task<object> UpdateManagerProfileAsync(ManagerUpdateDto dto);
         Task<object> UpdateAdminProfileAsync(AdminUpdateProfileDto dto);
+        Task<DashboardDto> GetDashboardStatsAsync();
     }
 }
