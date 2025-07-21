@@ -535,11 +535,11 @@ namespace MediAppointment.Infrastructure.Services
             var userId = Guid.Empty;
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);
             if (doctor != null)
-                userId = doctor.Id;
+                userId = user.Id;
 
             var patient = await _dbContext.Patients.FirstOrDefaultAsync(p => EF.Property<Guid?>(p, "UserIdentityId") == user.Id);
             if (patient != null)
-                userId = patient.Id;
+                userId = user.Id;
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
