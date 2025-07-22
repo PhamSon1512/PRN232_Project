@@ -15,5 +15,6 @@ namespace MediAppointment.Application.Interfaces
         Task<DoctorDto> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
         Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId);
         Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto);
+        Task<Dictionary<DateTime, List<ManagerScheduleSlot>>> GetWeeklyScheduleAsync(Guid? departmentId, Guid? roomId, Guid? doctorId, int year, int week);
     }
 }

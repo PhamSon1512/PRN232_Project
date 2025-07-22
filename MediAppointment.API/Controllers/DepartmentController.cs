@@ -39,6 +39,16 @@ namespace MediAppointment.API.Controllers
             }
         }
 
+        [HttpGet("GetRoomsByDepartment/{departmentId}")]
+        public async Task<IActionResult> GetRoomsByDepartment(Guid departmentId)
+        {
+            var rooms = await _context.Room
+                .Where(r => r.DepartmentId == departmentId)
+                .Select(r => new { r.Id, r.Name, r.DepartmentId })
+                .ToListAsync();
+            return Ok(rooms);
+        }
+
         [HttpGet("test")]
         public IActionResult TestConnection()
         {

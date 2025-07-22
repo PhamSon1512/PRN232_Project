@@ -2,25 +2,33 @@
 @{
     ViewData["Title"] = "Tổng quan lịch làm việc";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
-    
+
     var weekDates = new List<DateTime>();
     if (Model.Year > 0 && Model.Week > 0)
     {
         var jan1 = new DateTime(Model.Year, 1, 1);
         var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
+        if (daysOffset > 0) daysOffset -= 7;
         var firstMonday = jan1.AddDays(daysOffset);
         var startOfWeek = firstMonday.AddDays((Model.Week - 1) * 7);
         weekDates = Enumerable.Range(0, 7).Select(i => startOfWeek.AddDays(i)).ToList();
-    }
+    }   
 }
 
 <div class="card">
     <div class="card-body">
         <!-- Alert Messages -->
-        <div id="alertContainer"></div>
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
 
         <!-- Filters -->
-        <form id="filterForm" method="get">
+        <form id="filterForm" method="get" asp-action="ScheduleOverview" asp-controller="Manager">
             @Html.AntiForgeryToken()
             <div class="row mb-4">
                 <div class="col-md-2">
@@ -41,7 +49,7 @@
                         <option value="">-- Tất cả phòng --</option>
                         @foreach (var room in Model.Rooms)
                         {
-                            <option value="@room.Id" 
+                            <option value="@room.Id"
                                     data-department="@room.DepartmentId"
                                     selected="@(Model.RoomId == room.Id ? "selected" : null)">
                                 @room.Name
@@ -55,7 +63,7 @@
                         <option value="">-- Tất cả bác sĩ --</option>
                         @foreach (var doctor in Model.Doctors)
                         {
-                            <option value="@doctor.Id" 
+                            <option value="@doctor.Id"
                                     data-department="@doctor.DepartmentId"
                                     selected="@(Model.DoctorId == doctor.Id ? "selected" : null)">
                                 @doctor.Name
@@ -86,7 +94,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
+                    <label class="form-label"> </label>
                     <div class="d-flex gap-2 align-items-end" style="height: 38px;">
                         <button type="submit" class="btn btn-outline-success h-100 flex-fill">
                             <i class="bi bi-search"></i> Tìm kiếm
@@ -122,8 +130,8 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <h5 class="text-success">
-                        <i class="bi bi-calendar-week"></i> 
-                        Tuần @Model.Week, năm @Model.Year 
+                        <i class="bi bi-calendar-week"></i>
+                        Tuần @Model.Week, năm @Model.Year
                         (@weekDates.First().ToString("dd/MM") - @weekDates.Last().ToString("dd/MM"))
                     </h5>
                 </div>
@@ -133,7 +141,7 @@
                 <table class="table table-bordered table-hover">
                     <thead class="bg-light">
                         <tr>
-                            <th width="15%" class="text-center">Ca làm việc</th>
+                            <th width="15%" class="text-center">Thời gian</th>
                             @foreach (var date in weekDates)
                             {
                                 <th width="12%" class="text-center">
@@ -144,99 +152,62 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Morning shift -->
-                        <tr>
-                            <td class="fw-bold bg-light text-center">
-                                <div>Ca sáng</div>
-                                <small class="text-muted">07:00 - 11:00</small>
-                            </td>
-                            @foreach (var date in weekDates)
-                            {
-                                <td class="text-center">
-                                    @{
-                                        var morningSlots = Model.WeeklySchedule.TryGetValue(date.Date, out var slotsMorning) 
-                                            ? slotsMorning.Where(s => s.Period == "morning").ToList() 
-                                            : new List<MediAppointment.Client.Models.Manager.ManagerScheduleSlot>();
-                                    }
-                                    
-                                    <div class="schedule-cell" data-date="@date.ToString("yyyy-MM-dd")" data-period="morning">
-                                        @if (morningSlots.Any())
-                                        {
-                                            <div class="registered-slots">
-                                                @foreach (var slot in morningSlots)
-                                                {
-                                                    <div class="slot-info mb-2">
-                                                        <div class="fw-bold text-success">@slot.DoctorName</div>
-                                                        <small class="text-muted">@slot.RoomName</small>
-                                                        <div class="mt-1">
-                                                            <span class="badge bg-@(slot.IsFullyBooked ? "danger" : "success")">
-                                                                @slot.AppointmentCount/@slot.MaxAppointments
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="empty-slot">
-                                                <div class="text-center">
-                                                    <i class="bi bi-calendar-x text-muted" style="font-size: 1.5rem;"></i>
-                                                    <div class="text-muted small">Chưa có ca</div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
+                        @{
+                            var timeSlots = Model.WeeklySchedule.Values
+                            .SelectMany(v => v)
+                            .Select(s => new { s.TimeRange, s.Period })
+                            .Distinct()
+                            .OrderBy(t => t.Period == "sáng" ? 0 : 1)
+                            .ThenBy(t => t.TimeRange)
+                            .ToList();
+                        }
+                        @foreach (var timeSlot in timeSlots)
+                        {
+                            <tr>
+                                <td class="fw-bold bg-light text-center">
+                                    <div>@timeSlot.TimeRange</div>
+                                    <small class="text-muted">@(timeSlot.Period == "sáng" ? "Buổi sáng" : "Buổi chiều")</small>
                                 </td>
-                            }
-                        </tr>
-                        
-                        <!-- Afternoon shift -->
-                        <tr>
-                            <td class="fw-bold bg-light text-center">
-                                <div>Ca chiều</div>
-                                <small class="text-muted">13:00 - 17:00</small>
-                            </td>
-                            @foreach (var date in weekDates)
-                            {
-                                <td class="text-center">
-                                    @{
-                                        var afternoonSlots = Model.WeeklySchedule.TryGetValue(date.Date, out var slotsAfternoon) 
-                                            ? slotsAfternoon.Where(s => s.Period == "afternoon").ToList() 
+                                @foreach (var date in weekDates)
+                                {
+                                    <td class="text-center">
+                                        @{
+                                            var slots = Model.WeeklySchedule.TryGetValue(date.Date, out var dailySlots)
+                                            ? dailySlots.Where(s => s.TimeRange == timeSlot.TimeRange && s.Period == timeSlot.Period).ToList()
                                             : new List<MediAppointment.Client.Models.Manager.ManagerScheduleSlot>();
-                                    }
-                                    
-                                    <div class="schedule-cell" data-date="@date.ToString("yyyy-MM-dd")" data-period="afternoon">
-                                        @if (afternoonSlots.Any())
-                                        {
-                                            <div class="registered-slots">
-                                                @foreach (var slot in afternoonSlots)
-                                                {
-                                                    <div class="slot-info mb-2">
-                                                        <div class="fw-bold text-success">@slot.DoctorName</div>
-                                                        <small class="text-muted">@slot.RoomName</small>
-                                                        <div class="mt-1">
-                                                            <span class="badge bg-@(slot.IsFullyBooked ? "danger" : "success")">
-                                                                @slot.AppointmentCount/@slot.MaxAppointments
-                                                            </span>
+                                        }
+                                        <div class="schedule-cell" data-date="@date.ToString("yyyy-MM-dd")" data-period="@timeSlot.Period">
+                                            @if (slots.Any())
+                                            {
+                                                <div class="registered-slots">
+                                                    @foreach (var slot in slots)
+                                                    {
+                                                        <div class="slot-info mb-2">
+                                                            <div class="fw-bold text-success">@slot.DoctorName</div>
+                                                            <small class="text-muted">@slot.RoomName (@slot.DepartmentName)</small>
+                                                            <div class="mt-1">
+                                                                <span class="badge bg-@(slot.IsFullyBooked ? "danger" : "success")">
+                                                                    @slot.AppointmentCount/@slot.MaxAppointments
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="empty-slot">
-                                                <div class="text-center">
-                                                    <i class="bi bi-calendar-x text-muted" style="font-size: 1.5rem;"></i>
-                                                    <div class="text-muted small">Chưa có ca</div>
+                                                    }
                                                 </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </td>
-                            }
-                        </tr>
+                                            }
+                                            else
+                                            {
+                                                <div class="empty-slot">
+                                                    <div class="text-center">
+                                                        <i class="bi bi-calendar-x text-muted" style="font-size: 1.5rem;"></i>
+                                                        <div class="text-muted small">Chưa có ca</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -244,7 +215,7 @@
         else
         {
             <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> 
+                <i class="bi bi-info-circle"></i>
                 Vui lòng chọn năm và tuần để xem lịch làm việc.
             </div>
         }
@@ -253,7 +224,6 @@
 
 @section Styles {
     <style>
-        /* Form control height matching */
         .form-select, .btn {
             height: 38px !important;
             line-height: 1.5;
@@ -267,33 +237,52 @@
             min-width: 0;
         }
 
-        .btn i {
-            margin-right: 4px;
-        }
+            .btn i {
+                margin-right: 4px;
+            }
 
-        /* Responsive adjustments */
+        /* Media query cho màn hình nhỏ hơn 991px */
         @@media (max-width: 991px) {
             .col-md-2 {
                 margin-bottom: 1rem;
             }
-            
+
             .d-flex.gap-2 {
                 flex-direction: column;
                 gap: 0.5rem !important;
             }
-            
-            .d-flex.gap-2 button {
-                width: 100%;
-            }
+
+                .d-flex.gap-2 button {
+                    width: 100%;
+                }
         }
 
+        /* Media query cho màn hình nhỏ hơn 768px */
         @@media (max-width: 768px) {
             .btn {
                 font-size: 0.875rem;
                 padding: 0.375rem 0.75rem;
             }
-            
-            .btn i {
+
+                .btn i {
+                    font-size: 0.875rem;
+                }
+
+            .schedule-cell {
+                min-height: 60px;
+                padding: 6px;
+            }
+
+            .btn-sm {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+
+            .table {
+                font-size: 0.875rem;
+            }
+
+            .form-select, .form-control {
                 font-size: 0.875rem;
             }
         }
@@ -305,9 +294,9 @@
             transition: all 0.3s ease;
         }
 
-        .schedule-cell:hover {
-            background-color: #f8f9fa;
-        }
+            .schedule-cell:hover {
+                background-color: #f8f9fa;
+            }
 
         .registered-slots {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
@@ -340,10 +329,10 @@
             transition: all 0.3s ease;
         }
 
-        .empty-slot:hover {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border-color: #2196f3;
-        }
+            .empty-slot:hover {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border-color: #2196f3;
+            }
 
         .card {
             border: none;
@@ -356,10 +345,10 @@
             transition: all 0.3s ease;
         }
 
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
+            .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
 
         .table {
             border-radius: 8px;
@@ -367,19 +356,19 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .table th {
-            border-top: none;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.875rem;
-            letter-spacing: 0.5px;
-        }
+            .table th {
+                border-top: none;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.875rem;
+                letter-spacing: 0.5px;
+            }
 
-        .table td {
-            vertical-align: middle;
-            border-color: #e9ecef;
-        }
+            .table td {
+                vertical-align: middle;
+                border-color: #e9ecef;
+            }
 
         .alert {
             border-radius: 8px;
@@ -393,36 +382,15 @@
             transition: all 0.3s ease;
         }
 
-        .form-select:focus, .form-control:focus {
-            border-color: #198754;
-            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
-            transform: scale(1.02);
-        }
+            .form-select:focus, .form-control:focus {
+                border-color: #198754;
+                box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+                transform: scale(1.02);
+            }
 
         .badge {
             border-radius: 6px;
             font-weight: 500;
-        }
-
-        /* Responsive improvements */
-        @@media (max-width: 768px) {
-            .schedule-cell {
-                min-height: 60px;
-                padding: 6px;
-            }
-            
-            .btn-sm {
-                font-size: 0.75rem;
-                padding: 0.25rem 0.5rem;
-            }
-            
-            .table {
-                font-size: 0.875rem;
-            }
-            
-            .form-select, .form-control {
-                font-size: 0.875rem;
-            }
         }
     </style>
 }
@@ -430,29 +398,31 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Handle department change to filter rooms and doctors
             const departmentSelect = document.getElementById('departmentSelect');
             const roomSelect = document.getElementById('roomSelect');
             const doctorSelect = document.getElementById('doctorSelect');
+            const yearSelect = document.getElementById('yearSelect');
+            const weekSelect = document.getElementById('weekSelect');
+            const filterForm = document.getElementById('filterForm');
 
             function filterOptions() {
                 const selectedDepartment = departmentSelect.value;
-                
-                // Filter rooms
+
+                // Lọc phòng
                 Array.from(roomSelect.options).forEach(option => {
                     if (option.value === '') return;
                     const roomDeptId = option.getAttribute('data-department');
                     option.style.display = !selectedDepartment || roomDeptId === selectedDepartment ? 'block' : 'none';
                 });
 
-                // Filter doctors
+                // Lọc bác sĩ
                 Array.from(doctorSelect.options).forEach(option => {
                     if (option.value === '') return;
                     const doctorDeptId = option.getAttribute('data-department');
                     option.style.display = !selectedDepartment || doctorDeptId === selectedDepartment ? 'block' : 'none';
                 });
 
-                // Reset selections if they're not visible
+                // Đặt lại lựa chọn nếu chúng không hiển thị
                 if (roomSelect.selectedOptions[0] && roomSelect.selectedOptions[0].style.display === 'none') {
                     roomSelect.value = '';
                 }
@@ -461,19 +431,49 @@
                 }
             }
 
-            departmentSelect.addEventListener('change', filterOptions);
-            filterOptions(); // Initialize
+            // Cập nhật phòng khi khoa thay đổi
+            departmentSelect.addEventListener('change', async function() {
+                filterOptions();
+                if (departmentSelect.value) {
+                    try {
+                        const response = await fetch(`/api/Department/GetRoomsByDepartment/${departmentSelect.value}`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + sessionStorage.getItem('AccessToken')
+                            }
+                        });
+                        if (!response.ok) {
+                            throw new Error('Không thể tải danh sách phòng');
+                        }
+                        const rooms = await response.json();
+                        roomSelect.innerHTML = '<option value="">-- Tất cả phòng --</option>';
+                        rooms.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.text = room.name;
+                            option.setAttribute('data-department', room.departmentId);
+                            roomSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        console.error('Lỗi khi lấy danh sách phòng:', error);
+                        roomSelect.innerHTML = '<option value="">-- Tất cả phòng --</option>';
+                    }
+                } else {
+                    roomSelect.innerHTML = '<option value="">-- Tất cả phòng --</option>';
+                }
+                filterForm.submit();
+            });
 
-            // Quick week button
+            // Tự động gửi biểu mẫu khi bộ lọc thay đổi
+            [roomSelect, doctorSelect, yearSelect, weekSelect].forEach(select => {
+                select.addEventListener('change', () => filterForm.submit());
+            });
+
+            // Nút tuần nhanh
             document.getElementById('quickWeekBtn').addEventListener('click', function() {
                 const now = new Date();
-                const year = now.getFullYear();
-                const week = getWeekOfYear(now);
-                
-                document.getElementById('yearSelect').value = year;
-                document.getElementById('weekSelect').value = week;
-                
-                document.getElementById('filterForm').submit();
+                yearSelect.value = now.getFullYear();
+                weekSelect.value = getWeekOfYear(now);
+                filterForm.submit();
             });
 
             function getWeekOfYear(date) {
@@ -481,19 +481,16 @@
                 const pastDaysOfYear = (date - startOfYear) / 86400000;
                 return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
             }
-        });
 
-        function exportSchedule(format) {
-            const form = document.getElementById('filterForm');
-            const formData = new FormData(form);
-            
-            const params = new URLSearchParams();
-            for (let [key, value] of formData.entries()) {
-                if (value) params.append(key, value);
+            function exportSchedule(format) {
+                const formData = new FormData(filterForm);
+                const params = new URLSearchParams();
+                for (let [key, value] of formData.entries()) {
+                    if (value) params.append(key, value);
+                }
+                params.append('format', format);
+                window.open(`/Manager/ExportSchedule?${params.toString()}`, '_blank');
             }
-            params.append('format', format);
-            
-            window.open(`/Manager/ExportSchedule?${params.toString()}`, '_blank');
-        }
+        });
     </script>
 }

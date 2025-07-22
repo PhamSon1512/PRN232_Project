@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Security.Claims;
 using MediAppointment.Client.Models.Doctor;
 using System.IdentityModel.Tokens.Jwt;
+using ClosedXML.Excel;
 
 namespace MediAppointment.Client.Controllers
 {
@@ -362,43 +363,123 @@ namespace MediAppointment.Client.Controllers
         [HttpGet]
         public async Task<IActionResult> ScheduleOverview(Guid? departmentId, Guid? roomId, Guid? doctorId, int? year, int? week)
         {
+            var now = DateTime.Now;
             var model = new ManagerScheduleOverviewViewModel
             {
                 DepartmentId = departmentId,
                 RoomId = roomId,
                 DoctorId = doctorId,
-                Year = year ?? DateTime.Now.Year,
-                Week = week ?? GetWeekOfYear(DateTime.Now),
-                AvailableYears = Enumerable.Range(DateTime.Now.Year, 2).ToList(),
-                AvailableWeeks = Enumerable.Range(1, 53).ToList()
+                Year = year ?? now.Year, // Giá trị mặc định là năm hiện tại
+                Week = week ?? GetWeekOfYear(now), // Giá trị mặc định là tuần hiện tại
+                AvailableYears = Enumerable.Range(now.Year, 2).ToList(),
+                AvailableWeeks = Enumerable.Range(1, 53).ToList(),
+                WeeklySchedule = new Dictionary<DateTime, List<ManagerScheduleSlot>>()
             };
 
-            // Load filter options
+            // Tải các tùy chọn bộ lọc
             await LoadFilterOptions(model);
 
-            // Load schedule if year and week are selected
-            if (year.HasValue && week.HasValue)
+            // Tải lịch mặc định nếu không có lỗi bộ lọc
+            try
             {
-                LoadManagerWeeklySchedule(model);
+                model.WeeklySchedule = await _managerService.GetWeeklyScheduleAsync(
+                    model.DepartmentId,
+                    model.RoomId,
+                    model.DoctorId,
+                    model.Year,
+                    model.Week
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Không thể tải lịch làm việc: {ex.Message}";
             }
 
-            return View(model);
+            return View("~/Views/Manager/ScheduleOverview.cshtml", model);
         }
 
         [HttpGet]
-        public IActionResult ExportSchedule(string format, Guid? departmentId, Guid? roomId, Guid? doctorId, int? year, int? week)
+        public async Task<IActionResult> ExportSchedule(string format, Guid? departmentId, Guid? roomId, Guid? doctorId, int? year, int? week)
         {
             try
             {
                 if (!year.HasValue || !week.HasValue)
                 {
-                    TempData["ErrorMessage"] = "Vui lòng chọn năm và tuần để xuất lịch";
-                    return RedirectToAction("ScheduleOverview");
+                    TempData["ErrorMessage"] = "Vui lòng chọn năm và tuần để xuất lịch.";
+                    return RedirectToAction("ScheduleOverview", new { departmentId, roomId, doctorId, year, week });
                 }
 
-                // Call API to export schedule
-                // For now, just redirect back with success message
-                TempData["SuccessMessage"] = $"Xuất lịch thành công dưới định dạng {format?.ToUpper() ?? "EXCEL"}";
+                var schedule = await _managerService.GetWeeklyScheduleAsync(departmentId, roomId, doctorId, year.Value, week.Value);
+                if (format?.ToLower() == "excel")
+                {
+                    using var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add($"Lịch Tuần {week} Năm {year}");
+                    var row = 1;
+
+                    // Tiêu đề
+                    worksheet.Cell(row, 1).Value = "Ca làm việc";
+                    var col = 2;
+                    var jan1 = new DateTime(year.Value, 1, 1);
+                    var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
+                    if (daysOffset > 0) daysOffset -= 7;
+                    var firstMonday = jan1.AddDays(daysOffset);
+                    var startOfWeek = firstMonday.AddDays((week.Value - 1) * 7);
+
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var date = startOfWeek.AddDays(i);
+                        worksheet.Cell(row, col).Value = $"{date:dd/MM/yyyy} ({date:dddd})";
+                        col++;
+                    }
+                    row++;
+
+                    // Dữ liệu - Ca sáng
+                    worksheet.Cell(row, 1).Value = "Ca sáng";
+                    col = 2;
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var date = startOfWeek.AddDays(i);
+                        var morningSlots = schedule.ContainsKey(date.Date)
+                            ? schedule[date.Date].Where(s => s.Period == "sáng").ToList()
+                            : new List<ManagerScheduleSlot>();
+
+                        var cellContent = morningSlots.Any()
+                            ? string.Join("\n", morningSlots.Select(s => $"{s.DoctorName} - {s.RoomName} ({s.AppointmentCount}/{s.MaxAppointments})"))
+                            : "Chưa có ca";
+                        worksheet.Cell(row, col).Value = cellContent;
+                        col++;
+                    }
+                    row++;
+
+                    // Dữ liệu - Ca chiều
+                    worksheet.Cell(row, 1).Value = "Ca chiều";
+                    col = 2;
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var date = startOfWeek.AddDays(i);
+                        var afternoonSlots = schedule.ContainsKey(date.Date)
+                            ? schedule[date.Date].Where(s => s.Period == "chiều").ToList()
+                            : new List<ManagerScheduleSlot>();
+
+                        var cellContent = afternoonSlots.Any()
+                            ? string.Join("\n", afternoonSlots.Select(s => $"{s.DoctorName} - {s.RoomName} ({s.AppointmentCount}/{s.MaxAppointments})"))
+                            : "Chưa có ca";
+                        worksheet.Cell(row, col).Value = cellContent;
+                        col++;
+                    }
+
+                    using var stream = new MemoryStream();
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Schedule_Week{week}_{year}.xlsx");
+                }
+                else if (format?.ToLower() == "pdf")
+                {
+                    TempData["ErrorMessage"] = "Chức năng xuất PDF chưa được triển khai.";
+                    return RedirectToAction("ScheduleOverview", new { departmentId, roomId, doctorId, year, week });
+                }
+
+                TempData["ErrorMessage"] = "Định dạng xuất không hợp lệ.";
                 return RedirectToAction("ScheduleOverview", new { departmentId, roomId, doctorId, year, week });
             }
             catch (Exception ex)
@@ -412,7 +493,7 @@ namespace MediAppointment.Client.Controllers
         {
             try
             {
-                // Load departments
+                // Tải danh sách khoa
                 var departmentsResult = await _departmentService.GetDepartmentsAsync();
                 model.Departments = departmentsResult.Success && departmentsResult.Data != null
                     ? departmentsResult.Data.Select(d => new Models.Appointment.DepartmentOption
@@ -422,7 +503,7 @@ namespace MediAppointment.Client.Controllers
                     }).ToList()
                     : new List<Models.Appointment.DepartmentOption>();
 
-                // Load rooms for selected department
+                // Tải danh sách phòng nếu có DepartmentId
                 if (model.DepartmentId.HasValue && model.DepartmentId != Guid.Empty)
                 {
                     var roomsResult = await _departmentService.GetRoomsByDepartmentAsync(model.DepartmentId.Value);
@@ -430,7 +511,8 @@ namespace MediAppointment.Client.Controllers
                         ? roomsResult.Data.Select(r => new Models.Manager.RoomOption
                         {
                             Id = r.Id,
-                            Name = r.Name
+                            Name = r.Name,
+                            DepartmentId = r.DepartmentId
                         }).ToList()
                         : new List<Models.Manager.RoomOption>();
                 }
@@ -439,22 +521,32 @@ namespace MediAppointment.Client.Controllers
                     model.Rooms = new List<Models.Manager.RoomOption>();
                 }
 
-                // Load doctors
+                // Tải danh sách bác sĩ
                 var doctorsResult = await _doctorService.GetAllDoctorsAsync();
                 model.Doctors = doctorsResult.Success && doctorsResult.Data != null
                     ? doctorsResult.Data.Select(d => new Models.Manager.DoctorOption
                     {
                         Id = d.Id,
-                        Name = d.FullName
+                        Name = d.FullName,
+                        DepartmentId = d.Departments != null && d.Departments.Any() && Guid.TryParse(d.Departments.First(), out var deptId)
+                            ? deptId
+                            : Guid.Empty
                     }).ToList()
                     : new List<Models.Manager.DoctorOption>();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                TempData["ErrorMessage"] = $"Không thể tải tùy chọn bộ lọc: {ex.Message}";
                 model.Departments = new List<Models.Appointment.DepartmentOption>();
                 model.Rooms = new List<Models.Manager.RoomOption>();
                 model.Doctors = new List<Models.Manager.DoctorOption>();
             }
+        }
+
+        private int GetWeekOfYear(DateTime date)
+        {
+            var calendar = System.Globalization.CultureInfo.CurrentCulture.Calendar;
+            return calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
         }
 
         private void LoadManagerWeeklySchedule(ManagerScheduleOverviewViewModel model)
@@ -469,12 +561,6 @@ namespace MediAppointment.Client.Controllers
             {
                 model.WeeklySchedule = new Dictionary<DateTime, List<ManagerScheduleSlot>>();
             }
-        }
-
-        private int GetWeekOfYear(DateTime date)
-        {
-            var calendar = System.Globalization.CultureInfo.CurrentCulture.Calendar;
-            return calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
         }
         #endregion
     }
