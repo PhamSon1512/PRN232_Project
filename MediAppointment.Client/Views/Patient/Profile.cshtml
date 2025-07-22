@@ -1,0 +1,155 @@
+﻿@model MediAppointment.Client.Models.Patient.PatientViewModel
+@{
+    ViewData["Title"] = "Hồ sơ bệnh nhân";
+}
+
+<h2>Thông tin hồ sơ bệnh nhân</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">Thông tin cá nhân</div>
+    <div class="card-body">
+        <p><strong>Họ tên:</strong> @Model.FullName</p>
+        <p><strong>Email:</strong> @Model.Email</p>
+        <p><strong>Số điện thoại:</strong> @Model.PhoneNumber</p>
+        <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
+        <p><strong>Giới tính:</strong> @Model.GenderDisplay</p>
+        <p><strong>Địa chỉ:</strong> @Model.Address</p>
+        <p><strong>BHYT:</strong> @Model.BHYT</p>
+        <p><strong>CCCD:</strong> @Model.CCCD</p>
+        <p><strong>Tuổi:</strong> @Model.Age</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <span>Danh sách hồ sơ bệnh án</span>
+        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addRecordModal">+ Thêm hồ sơ</button>
+    </div>
+    <div class="card-body">
+        @if (Model.MedicalRecords != null && Model.MedicalRecords.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Ngày cập nhật</th>
+                        <th>Chẩn đoán</th>
+                        <th>Triệu chứng</th>
+                        <th>Kết quả</th>
+                        <th>Bác sĩ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var record in Model.MedicalRecords)
+                    {
+                        <tr>
+                            <td>@record.LastUpdated</td>
+                            <td>@record.Diagnosis</td>
+                            <td>@record.Symptoms</td>
+                            <td>@record.MedicalResult</td>
+                            <td>@record.DoctorName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted">Chưa có hồ sơ bệnh án nào.</p>
+        }
+    </div>
+</div>
+
+<!-- Modal Thêm Hồ Sơ -->
+<div class="modal fade" id="addRecordModal" tabindex="-1" aria-labelledby="addRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form asp-action="AddMedicalRecord" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecordModalLabel">Thêm hồ sơ bệnh án</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" name="PatientId" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Chiều cao (cm)</label>
+                            <input type="number" class="form-control" name="Height" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cân nặng (kg)</label>
+                            <input type="number" class="form-control" name="Weight" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nhóm máu</label>
+                        <input type="text" class="form-control" name="BloodType" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bệnh mãn tính</label>
+                        <textarea class="form-control" name="Chronic"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Triệu chứng</label>
+                        <textarea class="form-control" name="Symptoms"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Chẩn đoán</label>
+                        <textarea class="form-control" name="Diagnosis"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bác sĩ</label>
+                        <input type="text" class="form-control" name="DoctorName" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Kết quả khám</label>
+                        <textarea class="form-control" name="MedicalResult"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Lịch tái khám</label>
+                        <input type="date" class="form-control" name="NextAppointmentDate" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phác đồ điều trị</label>
+                        <textarea class="form-control" name="TreatmentPlan"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Thuốc được kê</label>
+                        <textarea class="form-control" name="Medications"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Dấu hiệu sinh tồn</label>
+                        <input type="text" class="form-control" name="VitalSigns" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+}

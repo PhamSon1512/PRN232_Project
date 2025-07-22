@@ -1,0 +1,279 @@
+﻿@using MediAppointment.Client.Models.EWallet
+@model WalletViewModel
+@{
+    ViewData["Title"] = "E-Wallet Dashboard";
+    var userId = Context.Session.GetString("UserId");
+
+}
+<link href="~/css/ewallet.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+<!-- UI Hiển thị -->
+<div class="container-custom my-4">
+    <div class="row">
+        <!-- Số dư -->
+        <div class="col-12 mb-4">
+            <div class="card balance-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0"><i class="fas fa-wallet me-2"></i>Số dư tài khoản</h5>
+                        <button class="btn btn-outline-light btn-sm rounded-pill" onclick="toggleBalance()">
+                            <i id="balanceToggleIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="balance-amount fade-transition" id="balanceAmount">
+                        @Model.Balance <small class="fs-6">VNĐ</small>
+                    </div>
+                    <div class="text-muted small mt-1" id="lastUpdated">Cập nhật lần cuối: chưa xác định</div>
+                    <div class="balance-actions mt-2">
+                        <button class="balance-btn" data-bs-toggle="modal" data-bs-target="#depositModal">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử giao dịch -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent border-0 p-4">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Lịch sử giao dịch</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div id="transactionsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nạp tiền -->
+<div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="depositModalLabel">Nạp Tiền Vào Ví</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <input type="number" id="deposit-amount" class="form-control mb-2" placeholder="Nhập số tiền (VNĐ)" min="1000" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button id="confirm-deposit-btn" class="btn btn-primary">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Success Modal -->
+<!-- Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Giao Dịch Thành Công</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <h4>Nạp Tiền Thành Công!</h4>
+                <p>Số tiền <strong id="amount_text">1.000.000 VNĐ</strong> đã được nạp vào tài khoản của bạn.</p>
+                <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+    <div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">Giao dịch thành công!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- JS xử lý -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    let balanceHidden = false;
+    let mockBalance = 0;
+    let allTransactions = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        updateBalance();
+        fetchTransactions();
+    });
+
+    function toggleBalance() {
+        const el = document.getElementById("balanceAmount");
+        const icon = document.getElementById("balanceToggleIcon");
+        el.classList.add("loading");
+        setTimeout(() => {
+            if (balanceHidden) {
+                el.innerHTML = `${mockBalance.toLocaleString()} <small class="fs-6">VNĐ</small>`;
+                el.classList.remove("hidden-balance");
+                icon.className = "fas fa-eye";
+            } else {
+                el.innerHTML = "••••••• VNĐ";
+                el.classList.add("hidden-balance");
+                icon.className = "fas fa-eye-slash";
+            }
+            balanceHidden = !balanceHidden;
+            el.classList.remove("loading");
+        }, 200);
+    }
+
+    async function updateBalance() {
+        try {
+            const res = await fetch("/Ewallet/get-balance");
+            const data = await res.json();
+            if (data.success) {
+                mockBalance = data.balance;
+                document.getElementById("balanceAmount").innerHTML = `${mockBalance.toLocaleString()} <small class="fs-6">VNĐ</small>`;
+                document.getElementById("lastUpdated").textContent = `Cập nhật lần cuối: ${new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+            }
+        } catch (err) {
+            console.error("Lỗi lấy số dư:", err);
+        }
+    }
+
+    async function fetchTransactions() {
+        try {
+            const res = await fetch("/Ewallet/get-transactions");
+            const data = await res.json();
+            if (data.success) {
+                allTransactions = data.transactions;
+                displayTransactions();
+            }
+        } catch (err) {
+            console.error("Lỗi lấy giao dịch:", err);
+        }
+    }
+
+    function displayTransactions() {
+        const container = document.getElementById("transactionsList");
+        container.innerHTML = "";
+        allTransactions.forEach(tx => {
+            const item = document.createElement("div");
+            item.className = "transaction-item d-flex align-items-center fade-transition";
+            item.innerHTML = `
+                <div class="transaction-icon ${tx.type === "DEPOSIT" ? "transaction-income" : "transaction-expense"} me-3">
+                    <i class="fas ${tx.type === "DEPOSIT" ? "fa-arrow-down" : "fa-arrow-up"}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold">${tx.description || "Không có mô tả"}</div>
+                    <div class="text-muted small">${new Date(tx.date).toLocaleString("vi-VN")}</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold ${tx.type === "DEPOSIT" ? "text-success" : "text-danger"}">
+                        ${tx.type === "DEPOSIT" ? "+" : "-"}${tx.amount.toLocaleString()} VNĐ
+                    </div>
+                </div>`;
+            container.appendChild(item);
+        });
+    }
+
+    async function deposit(userId, amount, transactionId) {
+        if (!userId || !transactionId || amount <= 0) {
+            console.warn("Dữ liệu cập nhật ví không hợp lệ");
+            return;
+        }
+
+        try {
+            const response = await fetch("/Ewallet/deposit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    amount: amount,
+                    transactionId: transactionId
+                })
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                console.error("Cập nhật ví thất bại:", data.message);
+                alert("Không thể cập nhật số dư ví: " + (data.message || "Lỗi không xác định"));
+            }
+        } catch (error) {
+            console.error("Lỗi gọi API cập nhật ví:", error);
+            alert("Lỗi khi gọi API cập nhật số dư: " + error.message);
+        }
+    }
+
+
+    document.getElementById("confirm-deposit-btn").addEventListener("click", async () => {
+        const amount = parseInt(document.getElementById("deposit-amount").value);
+        if (!amount || amount < 1000) return alert("Số tiền tối thiểu là 1000 VNĐ");
+
+        try {
+            const res = await fetch("/Ewallet/deposit-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount })
+            });
+            const data = await res.json();
+            if (data.success && data.paymentUrl) {
+                window.location.href = data.paymentUrl;
+            } else {
+                alert(data.message || "Không thể tạo thanh toán");
+            }
+        } catch (err) {
+            console.error("Lỗi nạp tiền:", err);
+        }
+    });
+
+    window.addEventListener("load", () => {
+        const params = new URLSearchParams(window.location.search);
+        const resCode = params.get("vnp_ResponseCode");
+        if (resCode === "00") {
+            const paymentData = {
+                orderDescription: params.get("vnp_OrderInfo"),
+                transactionId: params.get("vnp_TransactionNo"),
+                orderId: params.get("vnp_TxnRef"),
+                paymentMethod: "VnPay",
+                paymentId: params.get("vnp_TransactionNo"),
+                success: true,
+                token: params.get("vnp_SecureHash"),
+                vnPayResponseCode: resCode
+            };
+
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
+            const userId = "@userId"
+            const amount = paymentData.orderDescription.split("|")[1];
+            setText("amount_text", amount);
+            const transactionId = paymentData.transactionId;
+            const modal = new bootstrap.Modal(document.getElementById("successModal"));
+            modal.show();
+
+            // ✅ Sau khi modal show xong thì mới xử lý backend và UI
+            setTimeout(async () => {
+            await deposit(userId, amount, transactionId);
+            await updateBalance();
+            await fetchTransactions();
+
+            // ✅ Xoá params callback khỏi URL để tránh lặp
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            const toast = new bootstrap.Toast(document.querySelector(".toast"));
+            toast.show();
+        }, 500); // delay nhẹ để modal hiện xong
+        }
+    });
+</script>

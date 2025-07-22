@@ -2,235 +2,723 @@
     ViewData["Title"] = "Liên hệ";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="text-primary">Liên hệ với chúng tôi</h1>
-                <p class="lead text-muted">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
-            </div>
-
-            <div class="row">
-                <!-- Contact Info -->
-                <div class="col-md-4 mb-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="text-primary mb-4">Thông tin liên hệ</h5>
-                            
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-map-marker-alt text-primary me-3"></i>
-                                    <strong>Địa chỉ</strong>
-                                </div>
-                                <p class="text-muted ms-4">
-                                    123 Đường ABC, Quận Ba Đình<br>
-                                    Hà Nội, Việt Nam
-                                </p>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-phone text-success me-3"></i>
-                                    <strong>Điện thoại</strong>
-                                </div>
-                                <p class="text-muted ms-4">
-                                    <a href="tel:+84241234567" class="text-decoration-none">(024) 123-4567</a><br>
-                                    <a href="tel:+84987654321" class="text-decoration-none">(098) 765-4321</a>
-                                </p>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-envelope text-warning me-3"></i>
-                                    <strong>Email</strong>
-                                </div>
-                                <p class="text-muted ms-4">
-                                    <a href="mailto:info@mediappointment.com" class="text-decoration-none">
-                                        info@mediappointment.com
-                                    </a><br>
-                                    <a href="mailto:support@mediappointment.com" class="text-decoration-none">
-                                        support@mediappointment.com
-                                    </a>
-                                </p>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-clock text-info me-3"></i>
-                                    <strong>Giờ làm việc</strong>
-                                </div>
-                                <p class="text-muted ms-4">
-                                    Thứ 2 - Thứ 6: 8:00 - 18:00<br>
-                                    Thứ 7: 8:00 - 12:00<br>
-                                    Chủ nhật: Nghỉ
-                                </p>
-                            </div>
-
-                            <div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-headset text-danger me-3"></i>
-                                    <strong>Hỗ trợ khẩn cấp</strong>
-                                </div>
-                                <p class="text-muted ms-4">
-                                    Hotline 24/7: <a href="tel:+84911234567" class="text-decoration-none">(091) 123-4567</a>
-                                </p>
-                            </div>
+<div class="container-fluid px-0">
+    <!-- Hero Section -->
+    <section class="contact-hero position-relative overflow-hidden">
+        <div class="hero-background">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="row align-items-center min-vh-40">
+                <div class="col-lg-8 mx-auto text-center text-white">
+                    <h1 class="display-4 fw-bold mb-4 animate-fade-in">Liên hệ với chúng tôi</h1>
+                    <p class="lead mb-4 animate-fade-in" style="animation-delay: 0.2s;">
+                        Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7. Hãy để lại thông tin và chúng tôi sẽ phản hồi sớm nhất.
+                    </p>
+                    <div class="hero-features d-flex flex-wrap justify-content-center gap-4 animate-fade-in" style="animation-delay: 0.4s;">
+                        <div class="feature-badge bg-white bg-opacity-20 rounded-pill px-4 py-2 text-dark">
+                            <i class="fas fa-clock me-2 text-dark"></i>Phản hồi nhanh chóng
                         </div>
-                    </div>
-                </div>
-
-                <!-- Contact Form -->
-                <div class="col-md-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="text-primary mb-4">Gửi tin nhắn cho chúng tôi</h5>
-                            
-                            <form>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="firstName" class="form-label">Họ và tên *</label>
-                                        <input type="text" class="form-control" id="firstName" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="email" class="form-label">Email *</label>
-                                        <input type="email" class="form-control" id="email" required>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="phone" class="form-label">Số điện thoại</label>
-                                        <input type="tel" class="form-control" id="phone">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="subject" class="form-label">Chủ đề *</label>
-                                        <select class="form-select" id="subject" required>
-                                            <option value="">Chọn chủ đề</option>
-                                            <option value="support">Hỗ trợ kỹ thuật</option>
-                                            <option value="booking">Đặt lịch hẹn</option>
-                                            <option value="complaint">Khiếu nại</option>
-                                            <option value="suggestion">Góp ý</option>
-                                            <option value="other">Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="message" class="form-label">Tin nhắn *</label>
-                                    <textarea class="form-control" id="message" rows="5" 
-                                              placeholder="Nhập nội dung tin nhắn của bạn..." required></textarea>
-                                </div>
-
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="agree" required>
-                                    <label class="form-check-label" for="agree">
-                                        Tôi đồng ý với <a href="#" class="text-decoration-none">điều khoản sử dụng</a> 
-                                        và <a href="#" class="text-decoration-none">chính sách bảo mật</a> *
-                                    </label>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
-                                </button>
-                            </form>
+                        <div class="feature-badge bg-white bg-opacity-20 rounded-pill px-4 py-2 text-dark">
+                            <i class="fas fa-headset me-2 text-dark"></i>Hỗ trợ 24/7
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FAQ Section -->
-            <div class="mt-5">
-                <h3 class="text-primary text-center mb-4">Câu hỏi thường gặp</h3>
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-primary">Làm thế nào để đặt lịch hẹn?</h6>
-                                <p class="text-muted small">
-                                    Bạn cần đăng ký tài khoản, sau đó chọn bác sĩ, ngày và giờ khám phù hợp. 
-                                    Hệ thống sẽ xác nhận lịch hẹn của bạn.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-primary">Có thể hủy lịch hẹn không?</h6>
-                                <p class="text-muted small">
-                                    Có, bạn có thể hủy lịch hẹn trước 24 giờ. 
-                                    Vui lòng liên hệ hotline hoặc hủy trực tiếp trên hệ thống.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-primary">Chi phí khám bệnh như thế nào?</h6>
-                                <p class="text-muted small">
-                                    Chi phí khám bệnh phụ thuộc vào chuyên khoa và bác sĩ. 
-                                    Bạn có thể xem chi tiết khi đặt lịch.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <h6 class="text-primary">Thông tin cá nhân có được bảo mật?</h6>
-                                <p class="text-muted small">
-                                    Chúng tôi cam kết bảo mật tuyệt đối thông tin cá nhân và y tế của bạn 
-                                    theo tiêu chuẩn quốc tế.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Map Section -->
-            <div class="mt-5">
-                <h3 class="text-primary text-center mb-4">Vị trí của chúng tôi</h3>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <!-- Google Maps Embed would go here -->
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
-                            <div class="text-center text-muted">
-                                <i class="fas fa-map-marked-alt mb-2" style="font-size: 3rem;"></i>
-                                <p>Bản đồ sẽ được hiển thị tại đây</p>
-                                <small>123 Đường ABC, Quận Ba Đình, Hà Nội</small>
-                            </div>
+                        <div class="feature-badge bg-white bg-opacity-20 rounded-pill px-4 py-2 text-dark">
+                            <i class="fas fa-shield-alt me-2 text-dark"></i>Bảo mật thông tin
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </section>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-11">
+
+            <!-- Contact Section -->
+            <section class="contact-section py-5">
+                <div class="row g-4">
+                    <!-- Contact Info -->
+                    <div class="col-lg-4">
+                        <div class="contact-info-card h-100 bg-white rounded-4 shadow-lg p-4">
+                            <div class="text-center mb-4">
+                                <div class="contact-icon bg-primary-gradient rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-address-book text-white fs-3"></i>
+                                </div>
+                                <h4 class="text-primary fw-bold">Thông tin liên hệ</h4>
+                                <p class="text-muted">Các cách để bạn có thể liên lạc với chúng tôi</p>
+                            </div>
+                            
+                            <div class="contact-items">
+                                <div class="contact-item mb-4 p-3 bg-light rounded-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="contact-item-icon bg-primary rounded-circle p-2 me-3 mt-1">
+                                            <i class="fas fa-map-marker-alt text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-2 text-primary">Địa chỉ</h6>
+                                            <p class="text-muted mb-0">
+                                                123 Đường ABC, Quận Ba Đình<br>
+                                                Hà Nội, Việt Nam
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="contact-item mb-4 p-3 bg-light rounded-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="contact-item-icon bg-success rounded-circle p-2 me-3 mt-1">
+                                            <i class="fas fa-phone text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-2 text-success">Điện thoại</h6>
+                                            <p class="text-muted mb-1">
+                                                <a href="tel:+84241234567" class="text-decoration-none text-dark">
+                                                    <i class="fas fa-phone-alt me-2"></i>(024) 123-4567
+                                                </a>
+                                            </p>
+                                            <p class="text-muted mb-0">
+                                                <a href="tel:+84987654321" class="text-decoration-none text-dark">
+                                                    <i class="fas fa-mobile-alt me-2"></i>(098) 765-4321
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="contact-item mb-4 p-3 bg-light rounded-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="contact-item-icon bg-warning rounded-circle p-2 me-3 mt-1">
+                                            <i class="fas fa-envelope text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-2 text-warning">Email</h6>
+                                            <p class="text-muted mb-1">
+                                                <a href="mailto:info@mediappointment.com" class="text-decoration-none">
+                                                    info@mediappointment.com
+                                                </a>
+                                            </p>
+                                            <p class="text-muted mb-0">
+                                                <a href="mailto:support@mediappointment.com" class="text-decoration-none">
+                                                    support@mediappointment.com
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="contact-item mb-4 p-3 bg-light rounded-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="contact-item-icon bg-info rounded-circle p-2 me-3 mt-1">
+                                            <i class="fas fa-clock text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-2 text-info">Giờ làm việc</h6>
+                                            <p class="text-muted mb-1">Thứ 2 - Thứ 6: 8:00 - 18:00</p>
+                                            <p class="text-muted mb-1">Thứ 7: 8:00 - 12:00</p>
+                                            <p class="text-muted mb-0">Chủ nhật: Nghỉ</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="contact-item p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25">
+                                    <div class="d-flex align-items-start">
+                                        <div class="contact-item-icon bg-danger rounded-circle p-2 me-3 mt-1">
+                                            <i class="fas fa-headset text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-2 text-danger">Hỗ trợ khẩn cấp</h6>
+                                            <p class="text-muted mb-0">
+                                                Hotline 24/7: 
+                                                <a href="tel:+84911234567" class="text-danger text-decoration-none fw-bold">
+                                                    (091) 123-4567
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Form -->
+                    <div class="col-lg-8">
+                        <div class="contact-form-card bg-white rounded-4 shadow-lg p-5">
+                            <div class="form-header text-center mb-5">
+                                <div class="form-icon bg-primary-gradient rounded-circle p-4 mx-auto mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-paper-plane text-white fs-3"></i>
+                                </div>
+                                <h3 class="text-primary fw-bold mb-2">Gửi tin nhắn cho chúng tôi</h3>
+                                <p class="text-muted">Điền thông tin vào form bên dưới và chúng tôi sẽ phản hồi trong vòng 24 giờ</p>
+                            </div>
+                            
+                            <form id="contactForm" class="needs-validation" novalidate>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control form-control-lg" id="firstName" 
+                                                   placeholder="Họ và tên" required>
+                                            <label for="firstName">
+                                                <i class="fas fa-user me-2 text-primary"></i>Họ và tên *
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                Vui lòng nhập họ và tên của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="email" class="form-control form-control-lg" id="email" 
+                                                   placeholder="Email" required>
+                                            <label for="email">
+                                                <i class="fas fa-envelope me-2 text-primary"></i>Email *
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                Vui lòng nhập địa chỉ email hợp lệ.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="tel" class="form-control form-control-lg" id="phone" 
+                                                   placeholder="Số điện thoại">
+                                            <label for="phone">
+                                                <i class="fas fa-phone me-2 text-success"></i>Số điện thoại
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select form-select-lg" id="subject" required>
+                                                <option value="">Chọn chủ đề</option>
+                                                <option value="support">Hỗ trợ kỹ thuật</option>
+                                                <option value="booking">Đặt lịch hẹn</option>
+                                                <option value="complaint">Khiếu nại</option>
+                                                <option value="suggestion">Góp ý</option>
+                                                <option value="other">Khác</option>
+                                            </select>
+                                            <label for="subject">
+                                                <i class="fas fa-tag me-2 text-warning"></i>Chủ đề *
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                Vui lòng chọn chủ đề cho tin nhắn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="message" style="height: 150px" 
+                                                  placeholder="Tin nhắn" required></textarea>
+                                        <label for="message">
+                                            <i class="fas fa-comment me-2 text-info"></i>Tin nhắn *
+                                        </label>
+                                        <div class="invalid-feedback">
+                                            Vui lòng nhập nội dung tin nhắn.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="form-check form-check-lg">
+                                        <input type="checkbox" class="form-check-input" id="agree" required>
+                                        <label class="form-check-label text-muted" for="agree">
+                                            Tôi đồng ý với 
+                                            <a href="#" class="text-primary text-decoration-none">điều khoản sử dụng</a> 
+                                            và <a href="#" class="text-primary text-decoration-none">chính sách bảo mật</a> *
+                                        </label>
+                                        <div class="invalid-feedback">
+                                            Vui lòng đồng ý với điều khoản để tiếp tục.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5 py-3">
+                                        <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
+                                        <div class="btn-shine"></div>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section class="faq-section py-5 bg-light rounded-4 my-5">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <span class="badge bg-primary-gradient text-white px-3 py-2 rounded-pill mb-3">
+                            <i class="fas fa-question-circle me-2"></i>FAQ
+                        </span>
+                        <h2 class="h1 text-primary fw-bold mb-4">Câu hỏi thường gặp</h2>
+                        <p class="lead text-muted">Tìm câu trả lời nhanh chóng cho những thắc mắc phổ biến</p>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="faq-card bg-white rounded-4 shadow-sm p-4 h-100">
+                                <div class="faq-icon bg-primary-gradient rounded-circle p-3 mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-calendar-plus text-white"></i>
+                                </div>
+                                <h5 class="text-primary fw-bold mb-3">Làm thế nào để đặt lịch hẹn?</h5>
+                                <p class="text-muted mb-3">
+                                    Bạn cần đăng ký tài khoản, sau đó chọn bác sĩ, ngày và giờ khám phù hợp. 
+                                    Hệ thống sẽ tự động xác nhận lịch hẹn và gửi thông báo nhắc nhở qua email và SMS.
+                                </p>
+                                <a href="#" class="btn btn-outline-primary btn-sm">
+                                    Hướng dẫn chi tiết <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="faq-card bg-white rounded-4 shadow-sm p-4 h-100">
+                                <div class="faq-icon bg-success-gradient rounded-circle p-3 mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-times-circle text-white"></i>
+                                </div>
+                                <h5 class="text-success fw-bold mb-3">Có thể hủy lịch hẹn không?</h5>
+                                <p class="text-muted mb-3">
+                                    Có, bạn có thể hủy lịch hẹn trước 24 giờ mà không mất phí. 
+                                    Vui lòng liên hệ hotline hoặc hủy trực tiếp trong tài khoản của bạn.
+                                </p>
+                                <a href="#" class="btn btn-outline-success btn-sm">
+                                    Chính sách hủy lịch <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="faq-card bg-white rounded-4 shadow-sm p-4 h-100">
+                                <div class="faq-icon bg-warning-gradient rounded-circle p-3 mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-money-bill-wave text-white"></i>
+                                </div>
+                                <h5 class="text-warning fw-bold mb-3">Chi phí khám bệnh như thế nào?</h5>
+                                <p class="text-muted mb-3">
+                                    Chi phí khám bệnh phụ thuộc vào chuyên khoa và bác sĩ. 
+                                    Bạn có thể xem chi tiết khi đặt lịch và thanh toán online hoặc tại phòng khám.
+                                </p>
+                                <a href="#" class="btn btn-outline-warning btn-sm">
+                                    Bảng giá dịch vụ <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="faq-card bg-white rounded-4 shadow-sm p-4 h-100">
+                                <div class="faq-icon bg-info-gradient rounded-circle p-3 mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-shield-alt text-white"></i>
+                                </div>
+                                <h5 class="text-info fw-bold mb-3">Thông tin cá nhân có được bảo mật?</h5>
+                                <p class="text-muted mb-3">
+                                    Chúng tôi cam kết bảo mật tuyệt đối thông tin cá nhân và y tế của bạn 
+                                    theo tiêu chuẩn quốc tế HIPAA và tuân thủ luật bảo vệ dữ liệu cá nhân.
+                                </p>
+                                <a href="#" class="btn btn-outline-info btn-sm">
+                                    Chính sách bảo mật <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Section -->
+            <section class="map-section py-5">
+                <div class="text-center mb-5">
+                    <span class="badge bg-primary-gradient text-white px-3 py-2 rounded-pill mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>Vị trí
+                    </span>
+                    <h2 class="h1 text-primary fw-bold mb-4">Vị trí của chúng tôi</h2>
+                    <p class="lead text-muted">Dễ dàng tìm đến phòng khám với vị trí thuận tiện tại trung tâm Hà Nội</p>
+                </div>
+                <div class="map-container rounded-4 overflow-hidden shadow-lg">
+                    <div class="map-placeholder bg-light d-flex align-items-center justify-content-center position-relative" style="height: 400px;">
+                        <div class="map-overlay position-absolute top-0 start-0 w-100 h-100 bg-primary bg-opacity-10"></div>
+                        <div class="text-center text-muted position-relative z-index-1">
+                            <div class="map-icon bg-primary-gradient rounded-circle p-4 mx-auto mb-3" style="width: 100px; height: 100px;">
+                                <i class="fas fa-map-marked-alt text-white" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="text-primary fw-bold">Bản đồ tương tác</h4>
+                            <p class="mb-3">Bản đồ Google Maps sẽ được tích hợp tại đây</p>
+                            <div class="location-info bg-white rounded-3 p-3 d-inline-block shadow-sm">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                    <strong class="text-dark">123 Đường ABC, Quận Ba Đình, Hà Nội</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick directions -->
+                <div class="quick-directions mt-4">
+                    <div class="row g-3">
+                        <div class="col-md-4 text-center">
+                            <div class="direction-item bg-white rounded-3 p-3 shadow-sm">
+                                <i class="fas fa-subway text-primary mb-2" style="font-size: 1.5rem;"></i>
+                                <h6 class="fw-bold">Metro</h6>
+                                <small class="text-muted">Ga Ba Đình - 300m</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="direction-item bg-white rounded-3 p-3 shadow-sm">
+                                <i class="fas fa-bus text-success mb-2" style="font-size: 1.5rem;"></i>
+                                <h6 class="fw-bold">Xe buýt</h6>
+                                <small class="text-muted">Tuyến 09, 18, 33</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="direction-item bg-white rounded-3 p-3 shadow-sm">
+                                <i class="fas fa-car text-warning mb-2" style="font-size: 1.5rem;"></i>
+                                <h6 class="fw-bold">Ô tô</h6>
+                                <small class="text-muted">Bãi đỗ xe miễn phí</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        /* Hero Section */
+        .contact-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 50vh;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+        
+        .hero-overlay {
+            background: rgba(0,0,0,0.2);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        .min-vh-40 {
+            min-height: 40vh;
+        }
+        
+        .feature-badge {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* Gradients */
+        .bg-primary-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .bg-success-gradient {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+        }
+        
+        .bg-warning-gradient {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%) !important;
+        }
+        
+        .bg-info-gradient {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+        
+        /* Animations */
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Contact Cards */
+        .contact-info-card,
+        .contact-form-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .contact-info-card:hover,
+        .contact-form-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .contact-item {
+            transition: all 0.3s ease;
+        }
+        
+        .contact-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .contact-item-icon {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .contact-icon,
+        .form-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Form Styling */
+        .form-floating > .form-control:focus,
+        .form-floating > .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .form-floating > label {
+            color: #6c757d;
+        }
+        
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-select:focus ~ label {
+            color: #667eea;
+        }
+        
+        /* Button Effects */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn-shine {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover .btn-shine {
+            left: 100%;
+        }
+        
+        /* FAQ Cards */
+        .faq-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .faq-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+        }
+        
+        .faq-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Map Section */
+        .map-container {
+            position: relative;
+        }
+        
+        .map-placeholder {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .map-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .direction-item {
+            transition: all 0.3s ease;
+        }
+        
+        .direction-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Success Message */
+        .success-message {
+            animation: slideDown 0.5s ease-out;
+        }
+        
+        @@keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .contact-hero {
+                min-height: 40vh;
+            }
+            
+            .contact-info-card,
+            .contact-form-card {
+                margin-bottom: 2rem;
+            }
+            
+            .contact-item:hover {
+                transform: none;
+            }
+            
+            .feature-badge {
+                margin: 0.5rem;
+            }
+        }
+    </style>
+}
 
 @section Scripts {
     <script>
         $(document).ready(function() {
-            $('form').on('submit', function(e) {
+            // Form validation
+            const form = document.getElementById('contactForm');
+            
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                // Show success message
-                $('<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">' +
-                  '<i class="fas fa-check-circle me-2"></i>Tin nhắn của bạn đã được gửi thành công! ' +
-                  'Chúng tôi sẽ phản hồi trong vòng 24 giờ.' +
-                  '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-                  '</div>').insertAfter(this);
+                if (!form.checkValidity()) {
+                    e.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
+                }
                 
-                // Reset form
-                this.reset();
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+                submitBtn.disabled = true;
                 
-                // Scroll to success message
-                $('html, body').animate({
-                    scrollTop: $('.alert-success').offset().top - 100
-                }, 500);
+                // Simulate form submission
+                setTimeout(() => {
+                    // Show success message
+                    const successHtml = `
+                        <div class="alert alert-success alert-dismissible fade show success-message mt-4" role="alert">
+                            <div class="d-flex align-items-center">
+                                <div class="alert-icon bg-success rounded-circle p-2 me-3">
+                                    <i class="fas fa-check text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="alert-heading mb-1">Tin nhắn đã được gửi thành công!</h6>
+                                    <p class="mb-0">Chúng tôi sẽ phản hồi trong vòng 24 giờ. Cảm ơn bạn đã liên hệ!</p>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $(successHtml).insertAfter(form);
+                    
+                    // Reset form
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    
+                    // Scroll to success message
+                    $('html, body').animate({
+                        scrollTop: $('.success-message').offset().top - 100
+                    }, 500);
+                    
+                    // Auto hide success message after 5 seconds
+                    setTimeout(() => {
+                        $('.success-message').fadeOut(500);
+                    }, 5000);
+                    
+                }, 2000);
             });
+            
+            // Real-time validation feedback
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.checkValidity()) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.classList.contains('is-invalid') && this.checkValidity()) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    }
+                });
+            });
+            
+            // Phone number formatting
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    let value = this.value.replace(/\D/g, '');
+                    if (value.length > 0) {
+                        if (value.length <= 3) {
+                            value = value;
+                        } else if (value.length <= 6) {
+                            value = value.substring(0, 3) + ' ' + value.substring(3);
+                        } else {
+                            value = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6, 10);
+                        }
+                    }
+                    this.value = value;
+                });
+            }
+            
+            // Smooth scrolling for anchor links
+            $('a[href^="#"]').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this.getAttribute('href'));
+                if (target.length) {
+                    $('html, body').animate({
+                        scrollTop: target.offset().top - 80
+                    }, 800);
+                }
+            });
+            
+            // Add hover effects to contact items
+            $('.contact-item').hover(
+                function() {
+                    $(this).addClass('shadow-sm');
+                },
+                function() {
+                    $(this).removeClass('shadow-sm');
+                }
+            );
         });
     </script>
 }

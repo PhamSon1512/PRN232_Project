@@ -1,3 +1,5 @@
+using MediAppointment.Client.Models.MedicalRecord;
+
 namespace MediAppointment.Client.Models.Patient
 {
     public class PatientViewModel
@@ -13,5 +15,7 @@ namespace MediAppointment.Client.Models.Patient
         public string? BHYT { get; set; }
         public int Age { get; set; }
         public string GenderDisplay => Gender ? "Nam" : "Nữ";
+        public List<MedicalRecordViewModel>? MedicalRecords { get; set; } = new();
+
     }
 }
