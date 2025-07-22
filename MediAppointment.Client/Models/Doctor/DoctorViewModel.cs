@@ -9,7 +9,7 @@ namespace MediAppointment.Client.Models.Doctor
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string GenderDisplay => Gender ? "Nam" : "Nữ";
-        public List<string> Departments { get; set; } = new();
+        public List<string> Departments { get; set; } = new List<string>();
         public List<ScheduleViewModel> Schedules { get; set; } = new();
     }
 
@@ -25,6 +25,7 @@ namespace MediAppointment.Client.Models.Doctor
         public DateTime? DateOfBirth { get; set; }
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+        public List<Guid> Departments { get; set; } = new List<Guid>();
     }
 
     public class DoctorUpdateModel
@@ -32,6 +33,7 @@ namespace MediAppointment.Client.Models.Doctor
         public int Status { get; set; }
         public string? FullName { get; set; }
         public string? PhoneNumber { get; set; }
+        public List<Guid> Departments { get; set; } = new List<Guid>();
     }
 
     public class DoctorUpdateProfile

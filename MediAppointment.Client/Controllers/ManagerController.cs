@@ -69,7 +69,7 @@ namespace MediAppointment.Client.Controllers
         public async Task<IActionResult> EditDoctor(Guid doctorId)
         {
             var result = await _managerService.GetDoctorByIdAsync(doctorId);
-            // var deptResult = await _departmentService.GetDepartmentsAsync();
+            var deptResult = await _departmentService.GetDepartmentsAsync();
             if (result.Success && result.Data != null)
             {
                 var model = new DoctorUpdateModel
@@ -77,16 +77,15 @@ namespace MediAppointment.Client.Controllers
                     FullName = result.Data.FullName,
                     PhoneNumber = result.Data.PhoneNumber,
                     Status = (result.Data as DoctorStatusModel)?.Status ?? 1,
-                    // Departments = deptResult.Success && deptResult.Data != null 
-                    //     ? result.Data.Departments
-                    //         .Select(d => deptResult.Data.FirstOrDefault(dep => dep.Name == d)?.Id ?? Guid.Empty)
-                    //         .Where(id => id != Guid.Empty)
-                    //         .ToList() 
-                    //     : new List<Guid>()
+                    Departments = result.Data.Departments
+                        .Select(d => deptResult.Data.FirstOrDefault(dep => dep.Name == d)?.Id ?? Guid.Empty)
+                        .Where(id => id != Guid.Empty)
+                        .ToList()
                 };
-                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
-                //     ? deptResult.Data 
-                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                ViewBag.Departments = deptResult.Success && deptResult.Data != null
+                    ? deptResult.Data
+                    : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                ViewBag.DoctorId = doctorId;
                 return View("~/Views/Manager/EditDoctor.cshtml", model);
             }
 
@@ -108,34 +107,56 @@ namespace MediAppointment.Client.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View("EditDoctor", dto);
+                var deptResult = await _departmentService.GetDepartmentsAsync();
+                ViewBag.Departments = deptResult.Success ? deptResult.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                ViewBag.DoctorId = doctorId;
+                return View("~/Views/Manager/EditDoctor.cshtml", dto);
             }
 
-            var resultUpdate = await _managerService.UpdateDoctorProfileAsync(doctorId, dto);
-            if (resultUpdate.Success && resultUpdate.Data != null)
+            try
             {
-                TempData["SuccessMessage"] = "Cập nhật hồ sơ bác sĩ thành công!";
-                return RedirectToAction("DoctorDetails", new { doctorId });
-            }
+                var resultUpdate = await _managerService.UpdateDoctorProfileAsync(doctorId, dto);
+                if (resultUpdate.Success && resultUpdate.Data != null)
+                {
+                    TempData["SuccessMessage"] = "Cập nhật hồ sơ bác sĩ thành công!";
+                    return RedirectToAction("DoctorDetails", new { doctorId });
+                }
 
-            TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ bác sĩ thất bại";
-            return View("EditDoctor", dto);
+                TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ bác sĩ thất bại";
+                var deptResult = await _departmentService.GetDepartmentsAsync();
+                ViewBag.Departments = deptResult.Success ? deptResult.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                ViewBag.DoctorId = doctorId;
+                return View("~/Views/Manager/EditDoctor.cshtml", dto);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                var deptResult = await _departmentService.GetDepartmentsAsync();
+                ViewBag.Departments = deptResult.Success ? deptResult.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                ViewBag.DoctorId = doctorId;
+                return View("~/Views/Manager/EditDoctor.cshtml", dto);
+            }
         }
 
         [HttpGet("Manager/Doctors/Create")]
         public async Task<IActionResult> CreateDoctor()
         {
-            // var deptResult = await _departmentService.GetDepartmentsAsync();
-            // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
-            //     ? deptResult.Data 
-            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+            var result = await _departmentService.GetDepartmentsAsync();
+            ViewBag.Departments = result.Success ? result.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
             return View("~/Views/Manager/CreateDoctor.cshtml", new DoctorCreateModel());
         }
 
         [HttpPost("Manager/Doctors/Create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateDoctor(DoctorCreateModel dto)
+        public async Task<IActionResult> CreateDoctor(DoctorCreateModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                var result = await _departmentService.GetDepartmentsAsync();
+                ViewBag.Departments = result.Success ? result.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                return View("~/Views/Manager/CreateDoctor.cshtml", model);
+            }
+
             var managerId = GetManagerIdFromSession();
             if (managerId == null || managerId == Guid.Empty)
             {
@@ -144,20 +165,37 @@ namespace MediAppointment.Client.Controllers
                 return RedirectToAction("DoctorManagement");
             }
 
-            if (!ModelState.IsValid)
+            try
             {
-                return View("CreateDoctor", dto);
-            }
+                var dto = new DoctorCreateModel
+                {
+                    FullName = model.FullName,
+                    Gender = model.Gender,
+                    DateOfBirth = model.DateOfBirth,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    Departments = model.Departments ?? new List<Guid>()
+                };
 
-            var result = await _managerService.CreateDoctorAsync(dto);
-            if (result.Success)
-            {
+                var doctorId = await _managerService.CreateDoctorAsync(dto);
                 TempData["SuccessMessage"] = "Tạo bác sĩ thành công!";
                 return RedirectToAction("DoctorManagement");
             }
-
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "Tạo bác sĩ thất bại";
-            return View("CreateDoctor", dto);
+            catch (Exception ex)
+            {
+                if (ex.Message == "Email is already taken.")
+                {
+                    TempData["ErrorMessage"] = "Email đã tồn tại.";
+                    return RedirectToAction("DoctorManagement");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = ex.Message;
+                    var result = await _departmentService.GetDepartmentsAsync();
+                    ViewBag.Departments = result.Success ? result.Data : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
+                    return View("~/Views/Manager/CreateDoctor.cshtml", model);
+                }
+            }
         }
 
         [HttpPost("Manager/Doctors/{doctorId:guid}/Delete")]
@@ -377,12 +415,12 @@ namespace MediAppointment.Client.Controllers
                 // Load departments
                 var departmentsResult = await _departmentService.GetDepartmentsAsync();
                 model.Departments = departmentsResult.Success && departmentsResult.Data != null
-                    ? departmentsResult.Data.Select(d => new Models.Manager.DepartmentOption
+                    ? departmentsResult.Data.Select(d => new Models.Appointment.DepartmentOption
                     {
                         Id = d.Id,
                         Name = d.Name
                     }).ToList()
-                    : new List<Models.Manager.DepartmentOption>();
+                    : new List<Models.Appointment.DepartmentOption>();
 
                 // Load rooms for selected department
                 if (model.DepartmentId.HasValue && model.DepartmentId != Guid.Empty)
@@ -413,7 +451,7 @@ namespace MediAppointment.Client.Controllers
             }
             catch (Exception)
             {
-                model.Departments = new List<Models.Manager.DepartmentOption>();
+                model.Departments = new List<Models.Appointment.DepartmentOption>();
                 model.Rooms = new List<Models.Manager.RoomOption>();
                 model.Doctors = new List<Models.Manager.DoctorOption>();
             }

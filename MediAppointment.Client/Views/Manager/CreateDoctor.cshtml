@@ -23,31 +23,48 @@
         <div class="card-body">
             <form asp-action="CreateDoctor" asp-controller="Manager" method="post" id="createDoctorForm">
                 <div class="mb-3">
-                    <label for="FullName" class="form-label">Họ và Tên</label>
-                    <input name="FullName" class="form-control" placeholder="Nhập họ và tên" required />
-                    <span class="text-danger" data-valmsg-for="FullName"></span>
+                    <label asp-for="FullName" class="form-label">Họ và Tên</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" required />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="Email" class="form-label">Email</label>
-                    <input name="Email" class="form-control" type="email" placeholder="Nhập email" required />
-                    <span class="text-danger" data-valmsg-for="Email"></span>
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" placeholder="Nhập email" required />
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="PhoneNumber" class="form-label">Số điện thoại</label>
-                    <input name="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" required />
-                    <span class="text-danger" data-valmsg-for="PhoneNumber"></span>
+                    <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" required />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="Gender" class="form-label">Giới tính</label>
-                    <select name="Gender" class="form-control">
+                    <label asp-for="Gender" class="form-label">Giới tính</label>
+                    <select asp-for="Gender" class="form-control">
                         <option value="">Chọn giới tính</option>
                         <option value="true">Nam</option>
                         <option value="false">Nữ</option>
                     </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="DateOfBirth" class="form-label">Ngày sinh</label>
-                    <input name="DateOfBirth" class="form-control" type="date" />
+                    <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Departments" class="form-label">Khoa</label>
+                    <div class="row">
+                        @foreach (var dept in ViewBag.Departments as List<MediAppointment.Client.Models.Appointment.DepartmentOption>)
+                        {
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="Departments" value="@dept.Id" id="dept-@dept.Id" />
+                                    <label class="form-check-label" for="dept-@dept.Id">@dept.Name</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="Departments" class="text-danger"></span>
                 </div>
                 <button type="submit" class="btn btn-primary">Tạo bác sĩ</button>
                 <a asp-action="DoctorManagement" asp-controller="Manager" class="btn btn-secondary ms-2">Hủy</a>

@@ -1,11 +1,11 @@
 ﻿@model MediAppointment.Client.Models.Doctor.DoctorUpdateModel
 @{
-    ViewData["Title"] = "Chỉnh sửa Hồ sơ Bác sĩ";
+    ViewData["Title"] = "Chỉnh sửa Bác sĩ";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Chỉnh sửa Hồ sơ Bác sĩ</h2>
+    <h2 class="mb-4">Chỉnh sửa Bác sĩ</h2>
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success" role="alert">
@@ -21,36 +21,35 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form asp-action="UpdateDoctor" asp-controller="Manager" asp-route-doctorId="@ViewContext.RouteData.Values["doctorId"]" method="post" id="updateDoctorForm">
+            <form asp-action="UpdateDoctor" asp-controller="Manager" asp-route-doctorId="@ViewBag.DoctorId" method="post" id="editDoctorForm">
+                <input type="hidden" asp-for="Status" />
                 <div class="mb-3">
-                    <label for="FullName" class="form-label">Họ và Tên <span class="text-danger">*</span></label>
-                    <input name="FullName" class="form-control" placeholder="Nhập họ và tên (để trống để giữ nguyên)" value="@Model.FullName" />
-                    <span class="text-danger" data-valmsg-for="FullName"></span>
+                    <label asp-for="FullName" class="form-label">Họ và Tên <span class="text-danger">*</span></label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" required />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                    <input name="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại (để trống để giữ nguyên)" value="@Model.PhoneNumber" />
-                    <span class="text-danger" data-valmsg-for="PhoneNumber"></span>
+                    <label asp-for="PhoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" required />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="Status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                    <select name="Status" class="form-control">
-                        <option value="0" selected="@(Model.Status == 0)">Inactive</option>
-                        <option value="1" selected="@(Model.Status == 1)">Active</option>
-                    </select>
-                </div>
-                @* <div class="mb-3">
-                    <label for="Departments" class="form-label">Khoa</label>
-                    <select name="Departments" class="form-control" multiple>
-                        @foreach (var dept in ViewBag.Departments as List<MediAppointment.Client.Models.Appointment.DepartmentOption> ?? new List<MediAppointment.Client.Models.Appointment.DepartmentOption>())
+                    <label asp-for="Departments" class="form-label">Khoa <span class="text-danger">*</span></label>
+                    <div class="row">
+                        @foreach (var dept in ViewBag.Departments as List<MediAppointment.Client.Models.Appointment.DepartmentOption>)
                         {
-                            <option value="@dept.Id" selected="@(Model.Departments.Contains(dept.Id))">@dept.Name</option>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="Departments" value="@dept.Id" id="dept-@dept.Id" @(Model.Departments.Contains(dept.Id) ? "checked" : "") />
+                                    <label class="form-check-label" for="dept-@dept.Id">@dept.Name</label>
+                                </div>
+                            </div>
                         }
-                    </select>
-                    <span class="text-danger" data-valmsg-for="Departments"></span>
-                </div> *@
-                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                <a asp-action="DoctorManagement" asp-controller="Manager" asp-route-doctorId="@ViewContext.RouteData.Values["doctorId"]" class="btn btn-secondary ms-2">Hủy</a>
+                    </div>
+                    <span asp-validation-for="Departments" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Cập nhật</button>
+                <a asp-action="DoctorManagement" asp-controller="Manager" asp-route-doctorId="@ViewBag.DoctorId" class="btn btn-secondary ms-2">Hủy</a>
             </form>
         </div>
     </div>
@@ -60,35 +59,4 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $("#updateDoctorForm").on("submit", function (event) {
-                var fullName = $("#FullName").val().trim();
-                var phoneNumber = $("#PhoneNumber").val().trim();
-                // var departments = $("#Departments").val();
-                var isValid = true;
-
-                $(".text-danger").text("");
-
-                if (fullName && !/^[a-zA-ZÀ-ỹ\s]+$/.test(fullName)) {
-                    $("[data-valmsg-for='FullName']").text("Họ và tên chỉ được chứa chữ cái và khoảng trắng");
-                    isValid = false;
-                }
-
-                if (phoneNumber && (!/^\d+$/.test(phoneNumber) || phoneNumber.length > 11)) {
-                    $("[data-valmsg-for='PhoneNumber']").text("Số điện thoại phải là số và có độ dài tối đa 11 ký tự");
-                    isValid = false;
-                }
-
-                // if (!departments || departments.length === 0) {
-                //     $("[data-valmsg-for='Departments']").text("Vui lòng chọn ít nhất một khoa");
-                //     isValid = false;
-                // }
-
-                if (!isValid) {
-                    event.preventDefault();
-                }
-            });
-        });
-    </script>
 }

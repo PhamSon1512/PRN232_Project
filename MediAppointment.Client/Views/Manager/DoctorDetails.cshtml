@@ -36,6 +36,22 @@
             <p><strong>Giới tính:</strong> @Model.GenderDisplay</p>
             <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
             <p><strong>Trạng thái hoạt động:</strong> @GetStatusDisplay(Model.Status)</p>
+            <p>
+                <strong>Khoa đang hoạt động:</strong>
+                @if (Model.Departments != null && Model.Departments.Any())
+                {
+                    <ul>
+                        @foreach (var department in Model.Departments)
+                        {
+                            <li>@department</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <span>Chưa được gán khoa</span>
+                }
+            </p>
             <a asp-action="EditDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
             <form asp-action="DeleteDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa bác sĩ này?');">
                 @Html.AntiForgeryToken()

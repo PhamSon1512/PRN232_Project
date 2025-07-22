@@ -8,7 +8,7 @@ namespace MediAppointment.Domain.Entities
         public Doctor? Doctor { get; set; }
 
         public Guid DepartmentId { get; set; }
-        public Department? Department { get; set; }
+        public Department Department { get; set; }
     }
 }
 

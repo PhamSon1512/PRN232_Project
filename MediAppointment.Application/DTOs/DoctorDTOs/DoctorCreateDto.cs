@@ -7,6 +7,6 @@ namespace MediAppointment.Application.DTOs
         public DateTime? DateOfBirth { get; set; }
         public string Email { get; set; } = default!;   
         public string PhoneNumber { get; set; } = default!;
-        //public List<Guid> Departments { get; set; } = new List<Guid>();
+        public List<Guid> Departments { get; set; } = new List<Guid>();
     }
 }
