@@ -17,6 +17,7 @@ namespace MediAppointment.Client.Services
         Task<ApiResponse<bool>> DeleteDoctorAsync(Guid doctorId);
         Task<ApiResponse<ManagerViewModel>> GetManagerProfileAsync();
         Task<ApiResponse<bool>> UpdateManagerProfileAsync(ManagerUpdateProfile dto);
+        Task<Dictionary<DateTime, List<ManagerScheduleSlot>>> GetWeeklyScheduleAsync(Guid? departmentId, Guid? roomId, Guid? doctorId, int year, int week);
     }
 
     public class ManagerService : IManagerService
@@ -416,6 +417,38 @@ namespace MediAppointment.Client.Services
             {
                 Console.WriteLine($"Error getting ManagerId from session: {ex.Message}");
                 return null;
+            }
+        }
+
+        public async Task<Dictionary<DateTime, List<ManagerScheduleSlot>>> GetWeeklyScheduleAsync(Guid? departmentId, Guid? roomId, Guid? doctorId, int year, int week)
+        {
+            try
+            {
+                SetAuthHeader();
+                var query = $"?year={year}&week={week}";
+                if (departmentId.HasValue && departmentId != Guid.Empty) query += $"&departmentId={departmentId}";
+                if (roomId.HasValue && roomId != Guid.Empty) query += $"&roomId={roomId}";
+                if (doctorId.HasValue && doctorId != Guid.Empty) query += $"&doctorId={doctorId}";
+
+                var response = await _httpClient.GetAsync($"/api/Manager/WeeklySchedule{query}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var schedule = JsonSerializer.Deserialize<Dictionary<DateTime, List<ManagerScheduleSlot>>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    return schedule ?? new Dictionary<DateTime, List<ManagerScheduleSlot>>();
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Không thể lấy lịch làm việc: {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi trong GetWeeklyScheduleAsync: {ex.Message}");
+                throw new Exception($"Lỗi khi lấy lịch làm việc: {ex.Message}", ex);
             }
         }
     }

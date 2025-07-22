@@ -123,5 +123,19 @@ namespace MediAppointment.API.Controllers
             await _managerService.DeleteDoctorAsync(doctorId);
             return Ok(new { Message = "Doctor deleted successfully." });
         }
+
+        [HttpGet("WeeklySchedule")]
+        public async Task<IActionResult> GetWeeklySchedule([FromQuery] Guid? departmentId, [FromQuery] Guid? roomId, [FromQuery] Guid? doctorId, [FromQuery] int year, [FromQuery] int week)
+        {
+            try
+            {
+                var schedule = await _managerService.GetWeeklyScheduleAsync(departmentId, roomId, doctorId, year, week);
+                return Ok(schedule);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Lỗi khi lấy lịch hàng tuần: {ex.Message}" });
+            }
+        }
     }
 }
