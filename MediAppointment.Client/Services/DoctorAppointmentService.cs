@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Client.Models;
+using MediAppointment.Client.Models.Appointment;
 using MediAppointment.Client.Models.Doctor;
 using MediAppointment.Client.Models.MedicalRecord;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +14,8 @@ namespace MediAppointment.Client.Services
         Task<Doctor_SlotAppointmentViewModel?> GetAppointmentsBySlotAsync(Guid roomTimeSlotId);
         Task<Doctor_PatientDetailViewModel?> GetPatientDetailAsync(Guid patientId);
         Task<bool> CreateMedicalRecordAsync(CreateMedicalRecordRequest request);
+        Task<IEnumerable<BookingDoctorView>> GetBookingsByDoctorAsync();
+        Task<bool> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request);
 
     }
 
@@ -103,6 +106,29 @@ namespace MediAppointment.Client.Services
             return response.IsSuccessStatusCode;
         }
 
+
+        // 3. Lấy danh sách các booking của bác sĩ
+        public async Task<IEnumerable<BookingDoctorView>> GetBookingsByDoctorAsync()
+        {
+            SetAuthHeader();
+            var response = await _httpClient.GetAsync($"{_baseUrl}/my-bookings");
+
+            if (!response.IsSuccessStatusCode)
+                return new List<BookingDoctorView>();
+
+            return await response.Content.ReadFromJsonAsync<IEnumerable<BookingDoctorView>>()
+                   ?? new List<BookingDoctorView>();
+        }
+
+
+        // 4. Từ chối lịch hẹn kèm lý do
+        public async Task<bool> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request)
+        {
+            SetAuthHeader();
+            var content = JsonContent.Create(request);
+            var response = await _httpClient.PostAsync($"{_baseUrl}/update-booking-status/{appointmentId}", content);
+            return response.IsSuccessStatusCode;
+        }
 
     }
 }
