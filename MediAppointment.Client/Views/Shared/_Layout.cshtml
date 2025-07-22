@@ -1,109 +1,71 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-100">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MediAppointment</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MediAppointment.Client.styles.css" asp-append-version="true" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="d-flex flex-column h-100">
+<body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand fw-bold text-primary" href="/">
                     <i class="fas fa-heartbeat me-2"></i>MediAppointment
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
-                                <i class="fas fa-home me-1"></i>Trang chủ
-                            </a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Doctor" asp-action="Index">
-                                <i class="fas fa-user-md me-1"></i>Bác sĩ
-                            </a>
+                            <a class="nav-link" asp-controller="Doctor" asp-action="Index">Bác sĩ</a>
                         </li>
-                        
-                        @* Menu cho Patient *@
                         @if (Context.Session.GetString("UserRole") == "Patient")
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Appointment" asp-action="Index">
-                                    <i class="fas fa-calendar-alt me-1"></i>Lịch hẹn của tôi
-                                </a>
+                                <a class="nav-link" asp-controller="Appointment" asp-action="Index">Lịch hẹn của tôi</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Booking" asp-action="Index">
-                                    <i class="fas fa-calendar-plus me-1"></i>Đặt lịch khám
-                                </a>
+                                <a class="nav-link" asp-controller="Booking" asp-action="Index">Đặt lịch khám</a>
                             </li>
                         }
-                        
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">
-                                <i class="fas fa-info-circle me-1"></i>Giới thiệu
-                            </a>
+                            <a class="nav-link" asp-controller="Home" asp-action="About">Giới thiệu</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">
-                                <i class="fas fa-phone me-1"></i>Liên hệ
-                            </a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Contact">Liên hệ</a>
                         </li>
-                    </ul>
-                    <ul class="navbar-nav">
                         @if (ViewBag.IsAuthenticated == true || Context.Session.GetString("IsAuthenticated") == "true")
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user me-1"></i>Tài khoản
+                                <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Tài khoản
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li class="dropdown-header">
-                                        <i class="fas fa-id-badge me-1"></i>Role: @Context.Session.GetString("UserRole")
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                                    <li><span class="dropdown-item-text">Role: @Context.Session.GetString("UserRole")</span></li>
                                     @if (Context.Session.GetString("UserRole") == "Patient")
                                     {
-                                        <li><a class="dropdown-item" asp-controller="Appointment" asp-action="Index">
-                                            <i class="fas fa-calendar me-1"></i>Lịch hẹn của tôi
-                                        </a></li>
-                                        <li><a class="dropdown-item" asp-controller="Patient" asp-action="Profile">
-                                            <i class="fas fa-user-edit me-1"></i>Thông tin cá nhân
-                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Appointment" asp-action="Index">Lịch hẹn của tôi</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Thông tin cá nhân</a></li>
                                     }
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
-                                            </button>
-                                        </form>
-                                    </li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Auth" asp-action="Logout">Đăng xuất</a></li>
                                 </ul>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Auth" asp-action="Login">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
-                                </a>
+                                <a class="nav-link" asp-controller="Auth" asp-action="Login">Đăng nhập</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Auth" asp-action="Register">
-                                    <i class="fas fa-user-plus me-1"></i>Đăng ký
-                                </a>
+                                <a class="nav-link btn btn-primary text-white ms-2" asp-controller="Auth" asp-action="Register">Đăng ký</a>
                             </li>
                         }
                     </ul>
@@ -112,61 +74,61 @@
         </nav>
     </header>
 
-    <!-- Alert Messages -->
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["InfoMessage"] != null)
-    {
-        <div class="alert alert-info alert-dismissible fade show m-3" role="alert">
-            <i class="fas fa-info-circle me-2"></i>@TempData["InfoMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+    <main>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show container mt-3" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show container mt-3" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show container mt-3" role="alert">
+                @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
 
-    <div class="container flex-grow-1">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+        @RenderBody()
+    </main>
 
-    <footer class="bg-dark text-light py-4 mt-auto">
+    <footer class="bg-dark text-white py-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <h5><i class="fas fa-heartbeat me-2"></i>MediAppointment</h5>
-                    <p>Hệ thống đặt lịch khám bệnh trực tuyến</p>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold">MediAppointment</h5>
+                    <p class="text-muted">Hệ thống đặt lịch khám bệnh trực tuyến</p>
                 </div>
-                <div class="col-md-6">
-                    <h6>Liên hệ</h6>
-                    <p>
-                        <i class="fas fa-phone me-2"></i>(024) 123-4567<br>
-                        <i class="fas fa-envelope me-2"></i>info@mediappointment.com<br>
-                        <i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Hà Nội
-                    </p>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold">Liên hệ</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone me-2"></i>(024) 123-4567</li>
+                        <li><i class="fas fa-envelope me-2"></i>info@mediappointment.com</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Hà Nội</li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold">Liên kết nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Điều khoản sử dụng</a></li>
+                    </ul>
                 </div>
             </div>
-            <hr>
-            <div class="text-center">
-                &copy; 2025 - MediAppointment - <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-light">Chính sách bảo mật</a>
-            </div>
+            <hr class="bg-light">
+            <p class="text-center text-muted mb-0">&copy; 2025 - MediAppointment</p>
         </div>
     </footer>
-    
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

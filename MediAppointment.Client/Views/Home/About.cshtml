@@ -2,124 +2,454 @@
     ViewData["Title"] = "Giới thiệu";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="text-primary">Về MediAppointment</h1>
-                <p class="lead text-muted">Hệ thống đặt lịch khám bệnh trực tuyến hàng đầu Việt Nam</p>
-            </div>
-
-            <!-- Mission Section -->
-            <div class="row mb-5">
-                <div class="col-md-6">
-                    <h3 class="text-primary mb-3">Sứ mệnh của chúng tôi</h3>
-                    <p class="text-muted">
-                        MediAppointment ra đời với sứ mệnh cải thiện trải nghiệm khám chữa bệnh của người dân Việt Nam. 
-                        Chúng tôi tin rằng việc tiếp cận dịch vụ y tế chất lượng không nên phức tạp hay tốn thời gian.
+<div class="container-fluid px-0">
+    <!-- Hero Section -->
+    <section class="hero-section position-relative overflow-hidden">
+        <div class="hero-background">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="row align-items-center min-vh-50">
+                <div class="col-lg-6 text-white">
+                    <h1 class="display-4 fw-bold mb-4 animate-fade-in">Về MediAppointment</h1>
+                    <p class="lead mb-4 animate-fade-in" style="animation-delay: 0.2s;">
+                        Hệ thống đặt lịch khám bệnh trực tuyến hàng đầu Việt Nam, 
+                        mang đến trải nghiệm chăm sóc sức khỏe hiện đại và tiện lợi
                     </p>
-                    <p class="text-muted">
-                        Thông qua công nghệ hiện đại, chúng tôi kết nối bệnh nhân với các bác sĩ chuyên nghiệp, 
-                        giúp tiết kiệm thời gian và nâng cao chất lượng dịch vụ chăm sóc sức khỏe.
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <div class="bg-light p-4 rounded">
-                        <h4 class="text-primary mb-3">Giá trị cốt lõi</h4>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Tiện lợi và dễ sử dụng</li>
-                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Chất lượng dịch vụ cao</li>
-                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Bảo mật thông tin tuyệt đối</li>
-                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Đội ngũ y tế chuyên nghiệp</li>
-                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hỗ trợ khách hàng 24/7</li>
-                        </ul>
+                    <div class="d-flex gap-3 animate-fade-in" style="animation-delay: 0.4s;">
+                        <a asp-controller="Auth" asp-action="Register" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-user-plus me-2"></i>Đăng ký ngay
+                        </a>
+                        <a href="#mission" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-arrow-down me-2"></i>Tìm hiểu thêm
+                        </a>
                     </div>
                 </div>
-            </div>
-
-            <!-- Features Section -->
-            <div class="mb-5">
-                <h3 class="text-primary text-center mb-4">Tính năng nổi bật</h3>
-                <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-calendar-plus text-primary mb-3" style="font-size: 2.5rem;"></i>
-                                <h5>Đặt lịch dễ dàng</h5>
-                                <p class="text-muted">Đặt lịch khám bệnh chỉ với vài cú click, không cần gọi điện hay xếp hàng</p>
-                            </div>
-                        </div>
+                <div class="col-lg-6 text-center animate-slide-right">
+                    <div class="hero-image-container">
+                        <i class="fas fa-heartbeat text-white" style="font-size: 15rem; opacity: 0.8;"></i>
                     </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-user-md text-success mb-3" style="font-size: 2.5rem;"></i>
-                                <h5>Bác sĩ uy tín</h5>
-                                <p class="text-muted">Hệ thống bác sĩ được tuyển chọn kỹ lưỡng, giàu kinh nghiệm</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-mobile-alt text-warning mb-3" style="font-size: 2.5rem;"></i>
-                                <h5>Sử dụng mọi lúc</h5>
-                                <p class="text-muted">Truy cập từ máy tính, điện thoại, tablet bất cứ lúc nào</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Team Section -->
-            <div class="mb-5">
-                <h3 class="text-primary text-center mb-4">Đội ngũ phát triển</h3>
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <p class="text-center text-muted">
-                            MediAppointment được phát triển bởi đội ngũ kỹ sư công nghệ thông tin và các chuyên gia y tế hàng đầu. 
-                            Chúng tôi không ngừng cải tiến để mang đến trải nghiệm tốt nhất cho người dùng.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Section -->
-            <div class="bg-primary text-white p-5 rounded mb-5">
-                <div class="row text-center">
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <h2 class="fw-bold">1000+</h2>
-                        <p>Bệnh nhân tin tưởng</p>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <h2 class="fw-bold">50+</h2>
-                        <p>Bác sĩ chuyên nghiệp</p>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <h2 class="fw-bold">15+</h2>
-                        <p>Chuyên khoa</p>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <h2 class="fw-bold">98%</h2>
-                        <p>Khách hàng hài lòng</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact CTA -->
-            <div class="text-center">
-                <h3 class="text-primary mb-3">Sẵn sàng bắt đầu?</h3>
-                <p class="text-muted mb-4">Tham gia cùng hàng nghìn người dùng đã tin tưởng sử dụng MediAppointment</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a asp-controller="Auth" asp-action="Register" class="btn btn-primary btn-lg">
-                        <i class="fas fa-user-plus me-2"></i>Đăng ký ngay
-                    </a>
-                    <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg">
-                        <i class="fas fa-phone me-2"></i>Liên hệ
-                    </a>
                 </div>
             </div>
         </div>
+    </section>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-11">
+
+            <!-- Mission Section -->
+            <section id="mission" class="py-5">
+                <div class="row align-items-center mb-5">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <div class="mission-content">
+                            <span class="badge bg-primary-gradient text-white px-3 py-2 rounded-pill mb-3">
+                                <i class="fas fa-target me-2"></i>Sứ mệnh
+                            </span>
+                            <h2 class="h1 text-primary mb-4 fw-bold">Sứ mệnh của chúng tôi</h2>
+                            <p class="text-muted fs-5 mb-4 lh-lg">
+                                MediAppointment ra đời với sứ mệnh cải thiện trải nghiệm khám chữa bệnh của người dân Việt Nam. 
+                                Chúng tôi tin rằng việc tiếp cận dịch vụ y tế chất lượng không nên phức tạp hay tốn thời gian.
+                            </p>
+                            <p class="text-muted fs-5 mb-4 lh-lg">
+                                Thông qua công nghệ hiện đại, chúng tôi kết nối bệnh nhân với các bác sĩ chuyên nghiệp, 
+                                giúp tiết kiệm thời gian và nâng cao chất lượng dịch vụ chăm sóc sức khỏe.
+                            </p>
+                            <div class="mission-stats d-flex gap-4 mt-4">
+                                <div class="stat-item">
+                                    <div class="h3 text-primary mb-0 fw-bold">24/7</div>
+                                    <small class="text-muted">Hỗ trợ</small>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="h3 text-success mb-0 fw-bold">98%</div>
+                                    <small class="text-muted">Hài lòng</small>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="h3 text-warning mb-0 fw-bold">1000+</div>
+                                    <small class="text-muted">Bệnh nhân</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="values-card bg-gradient-light p-5 rounded-4 shadow-lg">
+                            <h4 class="text-primary mb-4 fw-bold">
+                                <i class="fas fa-gem me-2"></i>Giá trị cốt lõi
+                            </h4>
+                            <div class="values-list">
+                                <div class="value-item d-flex align-items-center mb-3 p-3 bg-white rounded-3 shadow-sm">
+                                    <div class="value-icon bg-success rounded-circle p-3 me-3">
+                                        <i class="fas fa-mouse-pointer text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Tiện lợi và dễ sử dụng</h6>
+                                        <small class="text-muted">Giao diện thân thiện, thao tác đơn giản</small>
+                                    </div>
+                                </div>
+                                <div class="value-item d-flex align-items-center mb-3 p-3 bg-white rounded-3 shadow-sm">
+                                    <div class="value-icon bg-primary rounded-circle p-3 me-3">
+                                        <i class="fas fa-award text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Chất lượng dịch vụ cao</h6>
+                                        <small class="text-muted">Đội ngũ y tế chuyên nghiệp</small>
+                                    </div>
+                                </div>
+                                <div class="value-item d-flex align-items-center mb-3 p-3 bg-white rounded-3 shadow-sm">
+                                    <div class="value-icon bg-warning rounded-circle p-3 me-3">
+                                        <i class="fas fa-shield-alt text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Bảo mật thông tin tuyệt đối</h6>
+                                        <small class="text-muted">Tuân thủ tiêu chuẩn quốc tế</small>
+                                    </div>
+                                </div>
+                                <div class="value-item d-flex align-items-center mb-3 p-3 bg-white rounded-3 shadow-sm">
+                                    <div class="value-icon bg-info rounded-circle p-3 me-3">
+                                        <i class="fas fa-user-md text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Đội ngũ y tế chuyên nghiệp</h6>
+                                        <small class="text-muted">Bác sĩ giàu kinh nghiệm</small>
+                                    </div>
+                                </div>
+                                <div class="value-item d-flex align-items-center p-3 bg-white rounded-3 shadow-sm">
+                                    <div class="value-icon bg-danger rounded-circle p-3 me-3">
+                                        <i class="fas fa-headset text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Hỗ trợ khách hàng 24/7</h6>
+                                        <small class="text-muted">Luôn sẵn sàng hỗ trợ bạn</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="features-section py-5">
+                <div class="text-center mb-5">
+                    <span class="badge bg-primary-gradient text-white px-3 py-2 rounded-pill mb-3">
+                        <i class="fas fa-star me-2"></i>Tính năng
+                    </span>
+                    <h2 class="h1 text-primary fw-bold mb-4">Tính năng nổi bật</h2>
+                    <p class="lead text-muted">Khám phá những tính năng hiện đại giúp bạn quản lý sức khỏe dễ dàng</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100 p-4 rounded-4 shadow-hover">
+                            <div class="feature-icon-wrapper mb-4">
+                                <div class="feature-icon bg-primary-gradient rounded-4 p-4 text-center">
+                                    <i class="fas fa-calendar-plus text-white" style="font-size: 2.5rem;"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">Đặt lịch dễ dàng</h5>
+                            <p class="text-muted mb-4">
+                                Đặt lịch khám bệnh chỉ với vài cú click, không cần gọi điện hay xếp hàng. 
+                                Hệ thống tự động xác nhận và gửi thông báo nhắc nhở.
+                            </p>
+                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                Tìm hiểu thêm <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100 p-4 rounded-4 shadow-hover">
+                            <div class="feature-icon-wrapper mb-4">
+                                <div class="feature-icon bg-success-gradient rounded-4 p-4 text-center">
+                                    <i class="fas fa-user-md text-white" style="font-size: 2.5rem;"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">Bác sĩ uy tín</h5>
+                            <p class="text-muted mb-4">
+                                Hệ thống bác sĩ được tuyển chọn kỹ lưỡng, giàu kinh nghiệm với các chuyên khoa đa dạng. 
+                                Xem thông tin chi tiết và đánh giá từ bệnh nhân.
+                            </p>
+                            <a href="#" class="btn btn-outline-success btn-sm">
+                                Xem bác sĩ <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100 p-4 rounded-4 shadow-hover">
+                            <div class="feature-icon-wrapper mb-4">
+                                <div class="feature-icon bg-warning-gradient rounded-4 p-4 text-center">
+                                    <i class="fas fa-mobile-alt text-white" style="font-size: 2.5rem;"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold mb-3">Sử dụng mọi lúc</h5>
+                            <p class="text-muted mb-4">
+                                Truy cập từ máy tính, điện thoại, tablet bất cứ lúc nào. 
+                                Giao diện responsive thích ứng mọi thiết bị.
+                            </p>
+                            <a href="#" class="btn btn-outline-warning btn-sm">
+                                Thử ngay <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section py-5 my-5">
+                <div class="stats-container bg-primary-gradient rounded-4 p-5 text-white position-relative overflow-hidden">
+                    <div class="stats-pattern position-absolute top-0 start-0 w-100 h-100 opacity-25">
+                        <i class="fas fa-plus position-absolute" style="top: 10%; left: 10%; font-size: 2rem;"></i>
+                        <i class="fas fa-heart position-absolute" style="top: 20%; right: 15%; font-size: 1.5rem;"></i>
+                        <i class="fas fa-stethoscope position-absolute" style="bottom: 15%; left: 20%; font-size: 1.8rem;"></i>
+                        <i class="fas fa-pills position-absolute" style="bottom: 25%; right: 10%; font-size: 1.3rem;"></i>
+                    </div>
+                    <div class="row text-center position-relative">
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="stat-item">
+                                <div class="stat-number display-4 fw-bold mb-2">1000+</div>
+                                <div class="stat-label">
+                                    <h6 class="mb-1">Bệnh nhân tin tưởng</h6>
+                                    <small class="opacity-75">Đã sử dụng dịch vụ</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="stat-item">
+                                <div class="stat-number display-4 fw-bold mb-2">50+</div>
+                                <div class="stat-label">
+                                    <h6 class="mb-1">Bác sĩ chuyên nghiệp</h6>
+                                    <small class="opacity-75">Kinh nghiệm cao</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                            <div class="stat-item">
+                                <div class="stat-number display-4 fw-bold mb-2">15+</div>
+                                <div class="stat-label">
+                                    <h6 class="mb-1">Chuyên khoa</h6>
+                                    <small class="opacity-75">Đa dạng lĩnh vực</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-item">
+                                <div class="stat-number display-4 fw-bold mb-2">98%</div>
+                                <div class="stat-label">
+                                    <h6 class="mb-1">Khách hàng hài lòng</h6>
+                                    <small class="opacity-75">Đánh giá tích cực</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact CTA -->
+            <section class="cta-section text-center py-5">
+                <div class="cta-container bg-light rounded-4 p-5">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <div class="cta-icon mb-4">
+                                <i class="fas fa-rocket text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            <h2 class="h1 text-primary fw-bold mb-4">Sẵn sàng bắt đầu?</h2>
+                            <p class="lead text-muted mb-5">
+                                Tham gia cùng hàng nghìn người dùng đã tin tưởng sử dụng MediAppointment. 
+                                Trải nghiệm dịch vụ chăm sóc sức khỏe hiện đại ngay hôm nay!
+                            </p>
+                            <div class="cta-buttons d-flex flex-column flex-md-row justify-content-center gap-3">
+                                <a asp-controller="Auth" asp-action="Register" class="btn btn-primary btn-lg px-5 py-3">
+                                    <i class="fas fa-user-plus me-2"></i>Đăng ký ngay
+                                    <small class="d-block mt-1">Miễn phí hoàn toàn</small>
+                                </a>
+                                <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg px-5 py-3">
+                                    <i class="fas fa-phone me-2"></i>Liên hệ tư vấn
+                                    <small class="d-block mt-1">Hỗ trợ 24/7</small>
+                                </a>
+                            </div>
+                            <div class="cta-features mt-4 d-flex flex-wrap justify-content-center gap-4 text-muted">
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    <small>Không phí ẩn</small>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    <small>Bảo mật tuyệt đối</small>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    <small>Hỗ trợ 24/7</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 70vh;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="25" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="25" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+        
+        .hero-overlay {
+            background: rgba(0,0,0,0.2);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        .min-vh-50 {
+            min-height: 50vh;
+        }
+        
+        /* Gradients */
+        .bg-primary-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .bg-success-gradient {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+        }
+        
+        .bg-warning-gradient {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%) !important;
+        }
+        
+        .bg-info-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .bg-gradient-light {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+        }
+        
+        /* Animations */
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .animate-slide-right {
+            animation: slideInRight 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @@keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Cards */
+        .feature-card {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+        }
+        
+        .shadow-hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .feature-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Value items */
+        .value-item {
+            transition: all 0.3s ease;
+        }
+        
+        .value-item:hover {
+            transform: translateX(10px);
+        }
+        
+        .value-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Stats section */
+        .stats-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-pattern i {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .stats-pattern i:nth-child(2) {
+            animation-delay: 1s;
+        }
+        
+        .stats-pattern i:nth-child(3) {
+            animation-delay: 2s;
+        }
+        
+        .stats-pattern i:nth-child(4) {
+            animation-delay: 3s;
+        }
+        
+        @@keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* CTA Section */
+        .cta-buttons .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .cta-buttons .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .hero-section {
+                min-height: 60vh;
+            }
+            
+            .feature-card {
+                margin-bottom: 2rem;
+            }
+            
+            .value-item:hover {
+                transform: none;
+            }
+        }
+    </style>
+}
