@@ -9,7 +9,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-lg">
-                <div class="card-header bg-gradient-primary text-white">
+                <div class="card-header bg-gradient-custom text-white">
                     <h3 class="mb-0">
                         <i class="bi bi-calendar-plus me-2"></i>
                         Đặt lịch khám bệnh
@@ -271,8 +271,7 @@
                                         data-time-range="${slot.timeRange}"
                                         ${disabled}>
                                     <div class="fw-bold">${slot.timeRange}</div>
-                                    <small class="d-block">${availText}</small>
-                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Available' : 'Booked'}</small>
+                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Còn chỗ' : 'Hết chỗ'}</small>
                                 </button>
                             </div>
                         `;
@@ -298,8 +297,7 @@
                                         data-time-range="${slot.timeRange}"
                                         ${disabled}>
                                     <div class="fw-bold">${slot.timeRange}</div>
-                                    <small class="d-block">${availText}</small>
-                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Available' : 'Booked'}</small>
+                                    <small class="text-muted">Status: ${slot.isAvailable ? 'Còn chỗ' : 'Hết chỗ'}</small>
                                 </button>
                             </div>
                         `;
@@ -366,6 +364,10 @@
         
         .bg-gradient-primary {
             background: linear-gradient(45deg, #007bff, #0056b3);
+        }
+        
+        .bg-gradient-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
         .card {
