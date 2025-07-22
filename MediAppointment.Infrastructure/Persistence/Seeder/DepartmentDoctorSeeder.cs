@@ -15,47 +15,48 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
         public static async Task SeedAsync(IServiceProvider serviceProvider)
         {
             var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            var random = new Random();
 
-            var departmentId = Guid.Parse("46DFF497-0A45-4D22-AFBF-13B417B62F54");
-            var email = "doctor@mediappointment.com";
+            var departments = await dbContext.Departments.ToListAsync();
+            var doctors = await dbContext.Doctors.ToListAsync();
 
-            // Tìm Doctor theo email
-            var doctor = await dbContext.Doctors
-                                        .Include(d => d.DoctorDepartments)
-                                        .FirstOrDefaultAsync(d => d.Email == email);
-
-            if (doctor == null)
+            if (!doctors.Any() || !departments.Any())
             {
-                Console.WriteLine("Not Found: " + email);
+                Console.WriteLine("⚠️ Không có Doctor hoặc Department để seed.");
                 return;
             }
 
-            var department = await dbContext.Departments.FirstOrDefaultAsync(d => d.Id == departmentId);
-            if (department == null)
+            foreach (var doctor in doctors)
             {
-                Console.WriteLine("NotFound Department with ID: " + departmentId);
-                return;
-            }
+                // Random 2-3 Department cho mỗi Doctor
+                var randomDepartments = departments
+                    .OrderBy(_ => random.Next())
+                    .Take(random.Next(2, 4));
 
- 
-            var isAlreadyAssigned = await dbContext.DoctorDepartments
-                .AnyAsync(dd => dd.DoctorId == doctor.Id && dd.DepartmentId == departmentId);
-
-            if (!isAlreadyAssigned)
-            {
-                dbContext.DoctorDepartments.Add(new DoctorDepartment
+                foreach (var department in randomDepartments)
                 {
-                    DoctorId = doctor.Id,             
-                    DepartmentId = department.Id
-                });
+                    bool alreadyAssigned = await dbContext.DoctorDepartments
+                        .AnyAsync(dd => dd.DoctorId == doctor.Id && dd.DepartmentId == department.Id);
 
-                await dbContext.SaveChangesAsync();
-                Console.WriteLine(" Success.");
+                    if (!alreadyAssigned)
+                    {
+                        dbContext.DoctorDepartments.Add(new DoctorDepartment
+                        {
+                            DoctorId = doctor.Id,
+                            DepartmentId = department.Id
+                        });
+                        Console.WriteLine($"✅ Assigned Doctor ({doctor.FullName}) to Department ({department.DepartmentName})");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ℹ️ Doctor ({doctor.FullName}) already assigned to Department ({department.DepartmentName})");
+                    }
+                }
             }
-            else
-            {
-                Console.WriteLine("Error Doctor in already in Department.");
-            }
+
+            await dbContext.SaveChangesAsync();
+            Console.WriteLine("🎉 Completed seeding Doctor-Department relationships.");
         }
     }
 }
+

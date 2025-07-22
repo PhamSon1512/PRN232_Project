@@ -17,39 +17,29 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
 
             if (!dbContext.Room.Any())
             {
-                var rooms = new List<Room>
+                var rooms = new List<Room>();
+
+                // Lấy tất cả Department từ database
+                var departments = dbContext.Departments.ToList();
+
+                int roomNumber = 101;
+
+                foreach (var department in departments)
                 {
-                    new Room
+                    // Mỗi Department có 2 phòng
+                    rooms.Add(new Room
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Room 101",
-                        DepartmentId = Guid.Parse("0A438320-EEFE-4DB7-9DCA-51A17AB9AEE5")
-                    },
-                    new Room
+                        Name = $"Room {roomNumber++}",
+                        DepartmentId = department.Id
+                    });
+                    rooms.Add(new Room
                     {
                         Id = Guid.NewGuid(),
-                        Name = "Room 102",
-                        DepartmentId = Guid.Parse("0A438320-EEFE-4DB7-9DCA-51A17AB9AEE5")
-                    },
-                    new Room
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Room 201",
-                        DepartmentId = Guid.Parse("4D484610-3623-465D-82C2-55C0337A5A11")
-                    },
-                    new Room
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Room 202",
-                        DepartmentId = Guid.Parse("4D484610-3623-465D-82C2-55C0337A5A11")
-                    },
-                    new Room
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = "Room 301",
-                        DepartmentId = Guid.Parse("E053F9BF-3195-4A42-904A-E99A615BE701")
-                    }
-                };
+                        Name = $"Room {roomNumber++}",
+                        DepartmentId = department.Id
+                    });
+                }
 
                 dbContext.Room.AddRange(rooms);
                 await dbContext.SaveChangesAsync();
