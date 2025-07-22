@@ -21,6 +21,234 @@
         .logout-btn:hover {
             background-color: #f8f9fa;
         }
+        
+        /* Footer Styles */
+        .footer-custom {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+        }
+        
+        .footer-custom::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .footer-section {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .footer-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-description {
+            color: #bdc3c7;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-heading {
+            color: #ecf0f1;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        .footer-heading::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1px;
+        }
+        
+        .footer-link {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            padding-left: 0.5rem;
+            margin-left: -0.5rem;
+        }
+        
+        .footer-link:hover {
+            color: #667eea;
+            background-color: rgba(102, 126, 234, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .footer-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+            color: #667eea;
+        }
+        
+        .contact-item {
+            color: #bdc3c7;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-item:hover {
+            color: #ecf0f1;
+            transform: translateX(3px);
+        }
+        
+        .contact-item i {
+            width: 20px;
+            margin-right: 1rem;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .footer-bottom {
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        
+        .footer-bottom-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .footer-bottom-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-bottom-link {
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-bottom-link:hover {
+            color: #667eea;
+        }
+        
+        .newsletter-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .newsletter-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+        
+        .newsletter-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .newsletter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+        }
+        
+        .newsletter-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .newsletter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        @@media (max-width: 768px) {
+            .footer-bottom-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-bottom-links {
+                justify-content: center;
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -120,31 +348,120 @@
         @RenderBody()
     </main>
 
-    <footer class="bg-dark text-white py-5">
-        <div class="container">
+    <footer class="footer-custom text-white">
+        <div class="container py-5">
             <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="fw-bold">MediAppointment</h5>
-                    <p class="text-muted">Hệ thống đặt lịch khám bệnh trực tuyến</p>
+                <!-- Brand Section -->
+                <div class="col-lg-4 col-md-6 mb-4 footer-section">
+                    <div class="footer-brand">
+                        <i class="fas fa-heartbeat me-2"></i>MediAppointment
+                    </div>
+                    <p class="footer-description">
+                        Hệ thống đặt lịch khám bệnh trực tuyến hiện đại, 
+                        giúp bạn dễ dàng kết nối với các bác sĩ chuyên khoa 
+                        và quản lý lịch hẹn một cách thuận tiện.
+                    </p>
+                    
+                    <!-- Social Links -->
+                    <div class="social-links">
+                        <a href="#" class="social-link" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-link" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="fw-bold">Liên hệ</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-phone me-2"></i>(024) 123-4567</li>
-                        <li><i class="fas fa-envelope me-2"></i>info@mediappointment.com</li>
-                        <li><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Hà Nội</li>
-                    </ul>
+
+                <!-- Contact Info -->
+                <div class="col-lg-3 col-md-6 mb-4 footer-section">
+                    <h5 class="footer-heading">Thông tin liên hệ</h5>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>123 Đường Láng, Đống Đa, Hà Nội</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>(024) 3456-7890</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>support@mediappointment.vn</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>24/7 - Hỗ trợ liên tục</span>
+                    </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="fw-bold">Liên kết nhanh</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white text-decoration-none">Chính sách bảo mật</a></li>
-                        <li><a href="#" class="text-white text-decoration-none">Điều khoản sử dụng</a></li>
-                    </ul>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 footer-section">
+                    <h5 class="footer-heading">Liên kết nhanh</h5>
+                    <div>
+                        <a href="/" class="footer-link">
+                            <i class="fas fa-home"></i>
+                            <span>Trang chủ</span>
+                        </a>
+                        <a href="/Doctor" class="footer-link">
+                            <i class="fas fa-user-md"></i>
+                            <span>Đội ngũ bác sĩ</span>
+                        </a>
+                        <a href="/Booking" class="footer-link">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Đặt lịch khám</span>
+                        </a>
+                        <a href="/Home/About" class="footer-link">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Giới thiệu</span>
+                        </a>
+                        <a href="/Home/Contact" class="footer-link">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>Liên hệ</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="col-lg-3 col-md-6 mb-4 footer-section">
+                    <h5 class="footer-heading">Nhận thông tin</h5>
+                    <p class="footer-description mb-3">
+                        Đăng ký để nhận thông tin về các dịch vụ y tế và 
+                        chương trình khuyến mãi mới nhất.
+                    </p>
+                    <form class="newsletter-form">
+                        <input type="email" class="newsletter-input" placeholder="Email của bạn" required>
+                        <button type="submit" class="newsletter-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    <small class="text-muted mt-2 d-block">
+                        Chúng tôi cam kết bảo mật thông tin của bạn
+                    </small>
                 </div>
             </div>
-            <hr class="bg-light">
-            <p class="text-center text-muted mb-0">&copy; 2025 - MediAppointment</p>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-bottom-content">
+                    <div class="text-muted">
+                        © 2025 MediAppointment. Tất cả quyền được bảo lưu.
+                    </div>
+                    <div class="footer-bottom-links">
+                        <a href="#" class="footer-bottom-link">Chính sách bảo mật</a>
+                        <a href="#" class="footer-bottom-link">Điều khoản sử dụng</a>
+                        <a href="#" class="footer-bottom-link">Hỗ trợ khách hàng</a>
+                        <a href="#" class="footer-bottom-link">Sitemap</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
 

@@ -3,50 +3,294 @@
     ViewData["Title"] = "Lịch hẹn của tôi";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-alt me-2"></i>Lịch hẹn của tôi</h2>
-    <a asp-controller="Booking" asp-action="Index" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>Đặt lịch mới
-    </a>
+<style>
+    .appointment-card {
+        border: none;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    }
+    
+    .appointment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 1.25rem;
+        border: none;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-scheduled {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .status-completed {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .status-cancelled {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-icon {
+        color: #667eea;
+        width: 20px;
+        margin-right: 10px;
+    }
+    
+    .btn-action {
+        border-radius: 20px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .empty-state {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .appointment-date {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .note-section {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    
+    .main-container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    @@media (max-width: 768px) {
+        .main-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+    
+    @@media (max-width: 576px) {
+        .main-container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+</style>
+
+<div class="main-container">
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-1"><i class="fas fa-calendar-alt me-3"></i>Lịch hẹn của tôi</h1>
+            <p class="mb-0 opacity-75">Quản lý và theo dõi các cuộc hẹn khám bệnh</p>
+        </div>
+        <a asp-controller="Booking" asp-action="Index" class="btn btn-light btn-lg">
+            <i class="fas fa-plus me-2"></i>Đặt lịch mới
+        </a>
+    </div>
 </div>
 
 @if (Model.Any())
 {
-    <div class="row">
+    <!-- Statistics Section -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>@Model.Count</h3>
+                <p class="mb-0">Tổng lịch hẹn</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>@Model.Count(a => a.Status == "Scheduled")</h3>
+                <p class="mb-0">Đã xác nhận</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>@Model.Count(a => a.Status == "Pending")</h3>
+                <p class="mb-0">Chờ xác nhận</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>@Model.Count(a => a.Status == "Completed")</h3>
+                <p class="mb-0">Đã hoàn thành</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Lọc theo trạng thái:</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Scheduled">Đã xác nhận</option>
+                    <option value="Pending">Chờ xác nhận</option>
+                    <option value="Completed">Đã hoàn thành</option>
+                    <option value="Cancelled">Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Sắp xếp theo:</label>
+                <select class="form-select" id="sortFilter">
+                    <option value="date-desc">Ngày mới nhất</option>
+                    <option value="date-asc">Ngày cũ nhất</option>
+                    <option value="status">Trạng thái</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Tìm kiếm:</label>
+                <input type="text" class="form-control" id="searchFilter" placeholder="Tìm theo khoa, phòng...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Grid -->
+
+    <!-- Appointments Grid -->
+    <div class="row" id="appointmentsContainer">
         @foreach (var appointment in Model)
         {
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">
-                            <i class="fas fa-calendar me-1"></i>
-                            @appointment.AppointmentDate.ToString("dd/MM/yyyy")
-                        </span>
-                        <span class="@appointment.StatusClass">@appointment.StatusDisplay</span>
+            <div class="col-md-6 col-lg-4 mb-4 appointment-item" 
+                 data-status="@appointment.Status" 
+                 data-department="@appointment.Department" 
+                 data-room="@appointment.RoomName"
+                 data-date="@appointment.AppointmentDate.ToString("yyyy-MM-dd")">
+                <div class="card appointment-card h-100">
+                    <div class="card-header card-header-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="appointment-date">
+                                <i class="fas fa-calendar me-2"></i>
+                                @appointment.AppointmentDate.ToString("dd/MM/yyyy")
+                            </div>
+                            <span class="status-badge status-@appointment.Status.ToLower()">
+                                @appointment.StatusDisplay
+                            </span>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            <i class="fas fa-building me-1"></i>@appointment.Department<br>
-                            <i class="fas fa-door-open me-1"></i>@appointment.RoomName<br>
-                            <i class="fas fa-clock me-1"></i>@appointment.TimeSlot
-                        </p>
+                    <div class="card-body p-4">
+                        <div class="info-item">
+                            <i class="fas fa-building info-icon"></i>
+                            <div>
+                                <strong>Khoa:</strong> @appointment.Department
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-door-open info-icon"></i>
+                            <div>
+                                <strong>Phòng:</strong> @appointment.RoomName
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock info-icon"></i>
+                            <div>
+                                <strong>Giờ khám:</strong> @appointment.TimeSlot
+                            </div>
+                        </div>
+                        
                         @if (!string.IsNullOrEmpty(appointment.Note))
                         {
-                            <p class="card-text text-muted">
-                                <i class="fas fa-sticky-note me-1"></i>@appointment.Note
-                            </p>
+                            <div class="note-section">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-sticky-note text-warning me-2 mt-1"></i>
+                                    <div>
+                                        <strong>Ghi chú:</strong>
+                                        <p class="mb-0 mt-1">@appointment.Note</p>
+                                    </div>
+                                </div>
+                            </div>
                         }
                     </div>
-                    <div class="card-footer bg-white">
-                        <div class="d-flex justify-content-between">
-                            <a asp-action="Details" asp-route-id="@appointment.Id" class="btn btn-outline-primary btn-sm">
+                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                        <div class="d-flex justify-content-between gap-2">
+                            <a asp-action="Details" asp-route-id="@appointment.Id" 
+                               class="btn btn-outline-primary btn-action flex-fill">
                                 <i class="fas fa-eye me-1"></i>Chi tiết
                             </a>
                             @if (appointment.Status == "Scheduled" || appointment.Status == "Pending")
                             {
-                                <form asp-action="Cancel" asp-route-id="@appointment.Id" method="post" class="d-inline" 
+                                <form asp-action="Cancel" asp-route-id="@appointment.Id" method="post" class="flex-fill" 
                                       onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <button type="submit" class="btn btn-outline-danger btn-action w-100">
                                         <i class="fas fa-times me-1"></i>Hủy
                                     </button>
                                 </form>
@@ -58,19 +302,154 @@
         }
     </div>
 
-    <!-- Pagination could be added here -->
-    <nav aria-label="Appointment pagination" class="mt-4">
-        <!-- Pagination controls -->
+    <!-- No Results Message -->
+    <div id="noResults" class="text-center py-5" style="display: none;">
+        <i class="fas fa-search text-muted" style="font-size: 3rem;"></i>
+        <h4 class="mt-3 text-muted">Không tìm thấy kết quả phù hợp</h4>
+        <p class="text-muted">Vui lòng thử lại với từ khóa khác</p>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Appointment pagination" class="mt-5">
+        <div class="d-flex justify-content-center">
+            <!-- Pagination controls can be implemented here -->
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary">« Trước</button>
+                <button type="button" class="btn btn-primary">1</button>
+                <button type="button" class="btn btn-outline-primary">2</button>
+                <button type="button" class="btn btn-outline-primary">3</button>
+                <button type="button" class="btn btn-outline-primary">Sau »</button>
+            </div>
+        </div>
     </nav>
 }
 else
 {
-    <div class="text-center py-5">
-        <i class="fas fa-calendar-times text-muted" style="font-size: 4rem;"></i>
-        <h4 class="mt-3 text-muted">Bạn chưa có lịch hẹn nào</h4>
-        <p class="text-muted">Đặt lịch hẹn đầu tiên của bạn ngay bây giờ!</p>
-        <a asp-controller="Booking" asp-action="Index" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>Đặt lịch ngay
-        </a>
+    <div class="empty-state text-center">
+        <div class="mb-4">
+            <i class="fas fa-calendar-times text-primary" style="font-size: 5rem; opacity: 0.7;"></i>
+        </div>
+        <h3 class="text-primary mb-3">Bạn chưa có lịch hẹn nào</h3>
+        <p class="text-muted mb-4 lead">
+            Hãy đặt lịch hẹn đầu tiên của bạn để bắt đầu chăm sóc sức khỏe!
+        </p>
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+            <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Đặt lịch ngay
+            </a>
+            <a href="#" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-info-circle me-2"></i>Tìm hiểu thêm
+            </a>
+        </div>
     </div>
+}
+
+</div> <!-- Close main-container -->
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusFilter = document.getElementById('statusFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const searchFilter = document.getElementById('searchFilter');
+    const appointmentsContainer = document.getElementById('appointmentsContainer');
+    const noResults = document.getElementById('noResults');
+    
+    function filterAndSort() {
+        const statusValue = statusFilter?.value.toLowerCase() || '';
+        const searchValue = searchFilter?.value.toLowerCase() || '';
+        const sortValue = sortFilter?.value || 'date-desc';
+        
+        let appointments = Array.from(document.querySelectorAll('.appointment-item'));
+        let visibleCount = 0;
+        
+        // Filter appointments
+        appointments.forEach(item => {
+            const status = item.dataset.status?.toLowerCase() || '';
+            const department = item.dataset.department?.toLowerCase() || '';
+            const room = item.dataset.room?.toLowerCase() || '';
+            
+            const statusMatch = !statusValue || status === statusValue;
+            const searchMatch = !searchValue || 
+                department.includes(searchValue) || 
+                room.includes(searchValue);
+            
+            if (statusMatch && searchMatch) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        if (noResults && appointmentsContainer) {
+            if (visibleCount === 0 && appointments.length > 0) {
+                noResults.style.display = 'block';
+                appointmentsContainer.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                appointmentsContainer.style.display = 'flex';
+            }
+        }
+        
+        // Sort appointments
+        const visibleAppointments = appointments.filter(item => item.style.display !== 'none');
+        
+        visibleAppointments.sort((a, b) => {
+            switch(sortValue) {
+                case 'date-asc':
+                    return new Date(a.dataset.date) - new Date(b.dataset.date);
+                case 'date-desc':
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                case 'status':
+                    return a.dataset.status.localeCompare(b.dataset.status);
+                default:
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+            }
+        });
+        
+        // Reorder DOM elements
+        if (appointmentsContainer) {
+            visibleAppointments.forEach(item => {
+                appointmentsContainer.appendChild(item);
+            });
+        }
+    }
+    
+    // Add event listeners
+    if (statusFilter) statusFilter.addEventListener('change', filterAndSort);
+    if (sortFilter) sortFilter.addEventListener('change', filterAndSort);
+    if (searchFilter) searchFilter.addEventListener('input', filterAndSort);
+    
+    // Add smooth transitions for cards
+    const cards = document.querySelectorAll('.appointment-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Add loading animation for buttons
+    const actionButtons = document.querySelectorAll('.btn-action');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (!this.classList.contains('btn-outline-danger')) {
+                const originalHtml = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tải...';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHtml;
+                    this.disabled = false;
+                }, 1000);
+            }
+        });
+    });
+});
+</script>
 }

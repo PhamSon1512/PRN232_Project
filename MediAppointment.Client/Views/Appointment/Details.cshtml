@@ -3,113 +3,399 @@
     ViewData["Title"] = "Chi tiết lịch hẹn";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-calendar-alt me-2"></i>Chi tiết lịch hẹn
-                </h4>
-                <span class="@Model.StatusClass">@Model.StatusDisplay</span>
+<style>
+    .detail-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    }
+    
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        position: relative;
+    }
+    
+    .detail-header::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m0 20c20 0 20-20 40-20s20 20 40 20 20-20 40-20 20 20 40 20v-20h-160z' fill='%23ffffff'/%3E%3C/svg%3E") repeat-x;
+        background-size: 100px 20px;
+    }
+    
+    .status-badge-custom {
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: 2px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
+    }
+    
+    .status-scheduled {
+        background-color: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+    
+    .status-pending {
+        background-color: rgba(255, 193, 7, 0.9);
+        color: #212529;
+    }
+    
+    .status-completed {
+        background-color: rgba(23, 162, 184, 0.9);
+        color: white;
+    }
+    
+    .status-cancelled {
+        background-color: rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+    
+    .info-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border-left: 5px solid #667eea;
+    }
+    
+    .info-item-custom {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .info-item-custom:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .info-icon-custom {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .section-title {
+        color: #667eea;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+        position: relative;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .note-section-custom {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #f0d074;
+        border-radius: 15px;
+        padding: 1.5rem;
+        position: relative;
+        margin-top: 2rem;
+    }
+    
+    .note-section-custom::before {
+        content: '💡';
+        position: absolute;
+        top: -15px;
+        left: 20px;
+        background: white;
+        padding: 0 10px;
+        font-size: 1.5rem;
+    }
+    
+    .alert-custom {
+        border-radius: 15px;
+        border: none;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .alert-custom::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        background: currentColor;
+    }
+    
+    .btn-custom {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-secondary-custom {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-danger-custom {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .container-custom {
+        padding: 2rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    @@media (max-width: 768px) {
+        .container-custom {
+            padding: 1rem;
+        }
+        
+        .detail-header {
+            padding: 1.5rem;
+        }
+        
+        .info-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="container-custom">
+    <div class="detail-card">
+        <div class="detail-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="fas fa-calendar-check me-3"></i>
+                        Chi tiết lịch hẹn
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        Thông tin đầy đủ về cuộc hẹn khám bệnh của bạn
+                    </p>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <span class="status-badge-custom status-@Model.Status.ToLower()">
+                        @Model.StatusDisplay
+                    </span>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="text-primary">
-                            <i class="fas fa-info-circle me-2"></i>Thông tin lịch hẹn
-                        </h5>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="fw-bold"><i class="fas fa-calendar me-1"></i>Ngày khám:</td>
-                                <td>@Model.AppointmentDate.ToString("dd/MM/yyyy")</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold"><i class="fas fa-door-open me-1"></i>Phòng khám:</td>
-                                <td>@Model.RoomName</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold"><i class="fas fa-clock me-1"></i>Khung giờ:</td>
-                                <td>@Model.TimeSlot</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold"><i class="fas fa-calendar-plus me-1"></i>Ngày đặt:</td>
-                                <td>@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
-                            </tr>
-                            @if (Model.UpdatedDate.HasValue)
-                            {
-                                <tr>
-                                    <td class="fw-bold"><i class="fas fa-edit me-1"></i>Cập nhật:</td>
-                                    <td>@Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</td>
-                                </tr>
-                            }
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h5 class="text-primary">
-                            <i class="fas fa-building me-2"></i>Thông tin khoa khám
-                        </h5>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="fw-bold"><i class="fas fa-building me-1"></i>Khoa:</td>
-                                <td>@Model.Department</td>
-                            </tr>
-                        </table>
+        </div>
+        
+        <div class="p-4">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="info-section">
+                        <h4 class="section-title">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Thông tin lịch hẹn
+                        </h4>
+                        
+                        <div class="info-item-custom">
+                            <div class="info-icon-custom">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div>
+                                <strong>Ngày khám</strong>
+                                <div class="text-muted">@Model.AppointmentDate.ToString("dddd, dd/MM/yyyy")</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item-custom">
+                            <div class="info-icon-custom">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <strong>Khung giờ</strong>
+                                <div class="text-muted">@Model.TimeSlot</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item-custom">
+                            <div class="info-icon-custom">
+                                <i class="fas fa-door-open"></i>
+                            </div>
+                            <div>
+                                <strong>Phòng khám</strong>
+                                <div class="text-muted">@Model.RoomName</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item-custom">
+                            <div class="info-icon-custom">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <div>
+                                <strong>Ngày đặt lịch</strong>
+                                <div class="text-muted">@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                        
+                        @if (Model.UpdatedDate.HasValue)
+                        {
+                            <div class="info-item-custom">
+                                <div class="info-icon-custom">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div>
+                                    <strong>Cập nhật lần cuối</strong>
+                                    <div class="text-muted">@Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
-
-                @if (!string.IsNullOrEmpty(Model.Note))
-                {
-                    <div class="mt-4">
-                        <h5 class="text-primary">
-                            <i class="fas fa-sticky-note me-2"></i>Ghi chú
-                        </h5>
-                        <div class="alert alert-light">
-                            @Model.Note
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="info-section">
+                        <h4 class="section-title">
+                            <i class="fas fa-building me-2"></i>
+                            Thông tin khoa khám
+                        </h4>
+                        
+                        <div class="info-item-custom">
+                            <div class="info-icon-custom">
+                                <i class="fas fa-hospital"></i>
+                            </div>
+                            <div>
+                                <strong>Khoa</strong>
+                                <div class="text-muted">@Model.Department</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Instructions -->
+                        <div class="mt-4">
+                            <div class="alert alert-info alert-custom">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Hướng dẫn cho bệnh nhân:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Có mặt trước giờ hẹn 15-20 phút</li>
+                                    <li>Mang theo giấy tờ tùy thân</li>
+                                    <li>Chuẩn bị thẻ bảo hiểm y tế (nếu có)</li>
+                                    <li>Liệt kê các triệu chứng và thuốc đang dùng</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                }
-
-                @if (Model.Status == "Scheduled" || Model.Status == "Pending")
-                {
-                    <div class="alert alert-info mt-4">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Lưu ý:</strong> Vui lòng có mặt tại phòng khám trước giờ hẹn ít nhất 15 phút để làm thủ tục.
-                    </div>
-                }
-                else if (Model.Status == "Completed")
-                {
-                    <div class="alert alert-success mt-4">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>Hoàn thành:</strong> Cuộc hẹn đã được thực hiện thành công.
-                    </div>
-                }
-                else if (Model.Status == "Cancelled")
-                {
-                    <div class="alert alert-danger mt-4">
-                        <i class="fas fa-times-circle me-2"></i>
-                        <strong>Đã hủy:</strong> Cuộc hẹn này đã bị hủy.
-                    </div>
-                }
+                </div>
             </div>
-            <div class="card-footer bg-white">
-                <div class="d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
-                    </a>
-                    <div>
-                        @if (Model.Status == "Scheduled" || Model.Status == "Pending")
-                        {
-                            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline" 
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-times me-1"></i>Hủy lịch hẹn
-                                </button>
-                            </form>
-                        }
-                        <button onclick="window.print()" class="btn btn-outline-primary ms-2">
-                            <i class="fas fa-print me-1"></i>In
-                        </button>
-                    </div>
+
+            @if (!string.IsNullOrEmpty(Model.Note))
+            {
+                <div class="note-section-custom">
+                    <h5 class="text-warning mb-3">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        Ghi chú của bạn
+                    </h5>
+                    <p class="mb-0 lead">@Model.Note</p>
+                </div>
+            }
+
+            @if (Model.Status == "Scheduled" || Model.Status == "Pending")
+            {
+                <div class="alert alert-success alert-custom">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Lịch hẹn đang hoạt động</strong>
+                    <p class="mb-0 mt-2">
+                        Vui lòng có mặt tại phòng khám trước giờ hẹn ít nhất 15 phút để làm thủ tục. 
+                        Mang theo giấy tờ tùy thân và thẻ bảo hiểm y tế (nếu có).
+                    </p>
+                </div>
+            }
+            else if (Model.Status == "Completed")
+            {
+                <div class="alert alert-info alert-custom">
+                    <i class="fas fa-check-double me-2"></i>
+                    <strong>Cuộc hẹn đã hoàn thành</strong>
+                    <p class="mb-0 mt-2">
+                        Cám ơn bạn đã sử dụng dịch vụ của chúng tôi. 
+                        Hãy theo dõi sức khỏe và tuân thủ lời khuyên của bác sĩ.
+                    </p>
+                </div>
+            }
+            else if (Model.Status == "Cancelled")
+            {
+                <div class="alert alert-danger alert-custom">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <strong>Lịch hẹn đã bị hủy</strong>
+                    <p class="mb-0 mt-2">
+                        Cuộc hẹn này đã bị hủy. Bạn có thể đặt lịch hẹn mới nếu cần thiết.
+                    </p>
+                </div>
+            }
+            
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-4 border-top">
+                <a asp-action="Index" class="btn btn-secondary-custom btn-custom">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Quay lại danh sách
+                </a>
+                
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (Model.Status == "Scheduled" || Model.Status == "Pending")
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline" 
+                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này? Hành động này không thể hoàn tác.')">
+                            <button type="submit" class="btn btn-danger-custom btn-custom">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy lịch hẹn
+                            </button>
+                        </form>
+                    }
+                    
+                    <button onclick="window.print()" class="btn btn-primary-custom btn-custom">
+                        <i class="fas fa-print me-2"></i>
+                        In phiếu hẹn
+                    </button>
+                    
+                    <button onclick="shareAppointment()" class="btn btn-primary-custom btn-custom">
+                        <i class="fas fa-share me-2"></i>
+                        Chia sẻ
+                    </button>
                 </div>
             </div>
         </div>
@@ -121,12 +407,49 @@
         // Print styles
         const printStyles = `
             @@media print {
-                .btn, .card-footer, nav, footer, header { display: none !important; }
-                .card { border: none !important; box-shadow: none !important; }
-                .card-header { background: white !important; color: black !important; }
+                .btn, .container-custom .d-flex:last-child, nav, footer, header { display: none !important; }
+                .detail-card { border: none !important; box-shadow: none !important; }
+                .detail-header { background: white !important; color: black !important; }
+                .detail-header::before { display: none !important; }
+                .info-section { box-shadow: none !important; }
+                .alert-custom { page-break-inside: avoid; }
+                body { font-size: 12pt; }
+                .section-title { color: black !important; }
+                .info-icon-custom { background: #f8f9fa !important; color: black !important; }
             }
         `;
         
         $('<style>').prop('type', 'text/css').html(printStyles).appendTo('head');
+        
+        // Share appointment function
+        function shareAppointment() {
+            const appointmentDetails = {
+                date: '@Model.AppointmentDate.ToString("dd/MM/yyyy")',
+                time: '@Model.TimeSlot',
+                department: '@Model.Department',
+                room: '@Model.RoomName'
+            };
+            
+            const shareText = `Lịch hẹn khám bệnh:\n📅 Ngày: ${appointmentDetails.date}\n⏰ Giờ: ${appointmentDetails.time}\n🏥 Khoa: ${appointmentDetails.department}\n🚪 Phòng: ${appointmentDetails.room}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Chi tiết lịch hẹn',
+                    text: shareText
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Đã sao chép thông tin lịch hẹn vào clipboard!');
+                });
+            }
+        }
+        
+        // Add animation on page load
+        $(document).ready(function() {
+            $('.info-item-custom').each(function(index) {
+                $(this).delay(index * 100).fadeIn(500);
+            });
+        });
     </script>
 }
