@@ -601,7 +601,10 @@ namespace MediAppointment.Infrastructure.Services
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
                 return new LoginResultDto { Success = false, ErrorMessage = "Sai mật khẩu." };
-
+            if (!user.EmailConfirmed)
+            {
+                return new LoginResultDto { Success = false, ErrorMessage = "Tài khoản chưa được xác nhận, vui lòng xác nhận trong email" };
+            }
             // Tìm domain user (Doctor/Patient) theo UserIdentityId
             var userId = Guid.Empty;
             var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => EF.Property<Guid?>(d, "UserIdentityId") == user.Id);

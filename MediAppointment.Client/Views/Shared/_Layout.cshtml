@@ -275,6 +275,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Booking" asp-action="Index">Đặt lịch khám</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="BookingDoctor" asp-action="Index">
+                                    <i class="bi bi-clipboard2-pulse-fill"></i> Đặt lịch với bác sĩ
+                                </a>
+                            </li>
                         }
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="About">Giới thiệu</a>
@@ -292,9 +297,23 @@
                                     <li><span class="dropdown-item-text">Role: @Context.Session.GetString("UserRole")</span></li>
                                     @if (Context.Session.GetString("UserRole") == "Patient")
                                     {
-                                        <li><a class="dropdown-item" asp-controller="Appointment" asp-action="Index">Lịch hẹn của tôi</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Thông tin cá nhân</a></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Appointment" asp-action="Index">
+                                                <i class="fas fa-calendar me-1"></i>Lịch hẹn của tôi
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="PatientBookingDoctor" asp-action="Index">
+                                                <i class="fas fa-calendar me-1"></i>Lịch hẹn riêng với bác sĩ
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Patient" asp-action="Profile">
+                                                <i class="fas fa-user-edit me-1"></i>Thông tin cá nhân
+                                            </a>
+                                        </li>
                                     }
+
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Auth" asp-action="Logout" method="post" style="display: inline;">

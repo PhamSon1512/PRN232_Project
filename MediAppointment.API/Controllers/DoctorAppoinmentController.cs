@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.DTOs;
+using MediAppointment.Application.DTOs.BookingDoctorDTOs;
 using MediAppointment.Application.DTOs.MedicalRecordDtos;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Infrastructure.Services;
@@ -17,18 +18,21 @@ namespace MediAppointment.API.Controllers
         private readonly IRoomTimeSlotService _roomTimeSlotService;
         private readonly IMedicalRecordService _medicalRecordService;
         private readonly IPatientService _patientService;
+        private readonly IAppointmentBookingDoctor _bookingDoctorService;
 
         public DoctorAppoinmentController(
             IRoomTimeSlotService roomTimeSlotService,
             IPatientService patientService,
-            IMedicalRecordService medicalRecordService)
+            IMedicalRecordService medicalRecordService,
+            IAppointmentBookingDoctor bookingDoctorService)
         {
             _roomTimeSlotService = roomTimeSlotService;
             _patientService = patientService;
             _medicalRecordService = medicalRecordService;
+            _bookingDoctorService = bookingDoctorService;
         }
 
-  
+
         [HttpGet("assigned-slots")]
         public async Task<IActionResult> GetAssignedSlots([FromQuery] int? year, [FromQuery] int? week)
         {
@@ -86,5 +90,40 @@ namespace MediAppointment.API.Controllers
             }
 
         }
+
+        [HttpGet("my-bookings")]
+        public async Task<IActionResult> GetBookingsByDoctor()
+        {
+            var doctorIdClaim = User.FindFirst("UserId");
+            if (doctorIdClaim == null)
+                return Unauthorized("Missing UserId claim.");
+
+            Guid doctorId = Guid.Parse(doctorIdClaim.Value);
+
+            var bookings = await _bookingDoctorService.GetByDoctorAsync(doctorId);
+            return Ok(bookings);
+        }
+
+
+        [HttpPost("update-booking-status/{appointmentId:guid}")]
+        public async Task<IActionResult> UpdateBookingStatus(Guid appointmentId, [FromBody] BookingDoctorStatusUpdate request)
+        {
+            var doctorIdClaim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(doctorIdClaim))
+                return Unauthorized("Missing UserId claim.");
+
+            Guid doctorId = Guid.Parse(doctorIdClaim);
+
+            try
+            {
+                await _bookingDoctorService.UpdateStatusAsync(appointmentId, doctorId, request);
+                return Ok(new { Message = "Cập nhật trạng thái lịch hẹn thành công." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Cập nhật trạng thái lịch hẹn thất bại.", Details = ex.Message });
+            }
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MediAppointment.Application.DTOs.AppointmentDTOs;
+using MediAppointment.Application.DTOs.BookingDoctorDTOs;
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,8 +13,12 @@ namespace MediAppointment.API.Controllers
     public class AppointmentController : ControllerBase
     {
         protected readonly IAppointmentService _appointmentService;
-        public AppointmentController(IAppointmentService appointmentService) {
+        private readonly IAppointmentBookingDoctor _bookingDoctorService;
+
+        public AppointmentController(IAppointmentService appointmentService, IAppointmentBookingDoctor bookingDoctorService)
+        {
             _appointmentService = appointmentService;
+            _bookingDoctorService = bookingDoctorService;
         }
         [HttpPost]
         public async Task<IActionResult> CreateAppoinment([FromBody] CreateAppointmentRequest request)
@@ -97,5 +102,68 @@ namespace MediAppointment.API.Controllers
                 return BadRequest(new { error = ex.Message, success = false });
             }
         }
+
+        [HttpPost("BookAppointmentWithDoctor")]
+        public async Task<IActionResult> BookAppointmentWithDoctor([FromBody] BookingDoctorCreate request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { error = "User ID claim is missing. Please login again." });
+                }
+
+                request.PatientId = Guid.Parse(userIdClaim);
+                await _bookingDoctorService.CreateAsync(request);
+
+                return Ok(new { message = "Đặt lịch hẹn với bác sĩ thành công!", success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, success = false });
+            }
+        }
+
+        [HttpDelete("CancelBookingDoctor/{appointmentId:guid}")]
+        public async Task<IActionResult> CancelBookingDoctor(Guid appointmentId)
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("User ID claim is missing.");
+
+            Guid patientId = Guid.Parse(userIdClaim);
+
+            try
+            {
+                await _bookingDoctorService.CancelAsync(appointmentId, patientId);
+                return Ok(new { message = "Hủy lịch thành công", success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, success = false });
+            }
+        }
+
+        [HttpGet("MyDoctorBookings")]
+        public async Task<IActionResult> MyDoctorBookings()
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("User ID claim is missing.");
+
+            Guid patientUserId = Guid.Parse(userIdClaim);
+
+            try
+            {
+                var bookings = await _bookingDoctorService.GetByPatientAsync(patientUserId);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 }

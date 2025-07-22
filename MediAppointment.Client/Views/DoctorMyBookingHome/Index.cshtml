@@ -1,0 +1,100 @@
+﻿@model IEnumerable<MediAppointment.Client.Models.Appointment.BookingDoctorView>
+
+@{
+    ViewData["Title"] = "Lịch hẹn của tôi";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+
+    string TranslateStatus(string status) => status switch
+    {
+        "Approved" => "Đã chấp nhận",
+        "Pending" => "Chờ xác nhận",
+        "Rejected" => "Đã từ chối",
+        "Canceled" => "Đã hủy",
+        _ => "Không rõ"
+    };
+}
+
+<h2 class="text-center my-4">Danh sách lịch hẹn với bệnh nhân</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">Không có lịch hẹn nào.</div>
+}
+else
+{
+    <table class="table table-bordered text-center align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>Ngày hẹn</th>
+                <th>Bệnh nhân</th>
+                <th>Khoa</th>
+                <th>Ghi chú</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderByDescending(b => b.AppointmentDate))
+            {
+                var formId = $"form-reject-{item.Id}";
+                <tr>
+                    <td>@item.AppointmentDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</td>
+                    <td>@item.PatientName</td>
+                    <td>@item.DepartmentName</td>
+                    <td>@item.Note</td>
+                    <td>
+                        @{
+                            var badgeClass = item.Status switch
+                            {
+                                "Approved" => "badge bg-success",
+                                "Pending" => "badge bg-warning text-dark",
+                                "Rejected" => "badge bg-danger",
+                                "Canceled" => "badge bg-secondary",
+                                _ => "badge bg-info"
+                            };
+                        }
+                        <span class="@badgeClass">@TranslateStatus(item.Status)</span>
+                    </td>
+                    <td>
+                        @if (item.Status == "Pending")
+                        {
+                            <form asp-action="Approve" asp-controller="DoctorMyBookingHome" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Chấp nhận
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-danger btn-sm ms-1" onclick="toggleRejectForm('@formId')">
+                                <i class="fas fa-times"></i> Từ chối
+                            </button>
+
+                            <form asp-action="Reject" asp-controller="DoctorMyBookingHome" method="post" class="mt-2 d-none" id="@formId">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <div class="input-group mt-2">
+                                    <input type="text" name="note" class="form-control" placeholder="Lý do từ chối..." required />
+                                    <button type="submit" class="btn btn-outline-danger">Gửi</button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <script>
+        function toggleRejectForm(id) {
+            var form = document.getElementById(id);
+            if (form) {
+                form.classList.toggle("d-none");
+            }
+        }
+    </script>
+}

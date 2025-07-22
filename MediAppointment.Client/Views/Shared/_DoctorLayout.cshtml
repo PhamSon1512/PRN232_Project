@@ -2,6 +2,7 @@
     Layout = null;
     var logoTitle = ViewBag.LogoTitle ?? "MediAppointment";
     var menuItems = ViewBag.MenuItems as List<dynamic> ?? new List<dynamic> {
+        new { Title = "Lịch hẹn với bệnh nhân", Icon = "bi-people", Controller = "DoctorMyBookingHome", Action = "Index", Url = "/DoctorMyBookingHome", Active = (Context.Request.Path == "/DoctorMyBookingHome") },
         new { Title = "Lịch làm trong tuần", Icon = "bi-house-door", Controller = "DoctorHome", Action = "Index", Url = "/DoctorHome", Active = (Context.Request.Path == "/DoctorHome") },
         new { Title = "Đăng ký lịch làm việc", Icon = "bi-calendar-plus", Controller = "DoctorSchedule", Action = "Manage", Url = "/DoctorSchedule/Manage", Active = (Context.Request.Path == "/DoctorSchedule/Manage") }
     };

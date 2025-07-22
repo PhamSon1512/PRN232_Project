@@ -1,0 +1,104 @@
+﻿@model List<MediAppointment.Client.Models.Appointment.BookingDoctorView>
+@{
+    ViewData["Title"] = "Lịch hẹn với bác sĩ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2><i class="fas fa-user-md me-2"></i>Lịch hẹn với bác sĩ</h2>
+    <a asp-controller="BookingDoctor" asp-action="Index" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Đặt lịch bác sĩ
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+else if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+else if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["InfoMessage"]</div>
+}
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var appointment in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">
+                            <i class="fas fa-calendar me-1"></i>
+                            @appointment.AppointmentDate.ToString("dd/MM/yyyy")
+                        </span>
+                        @* Thống nhất trạng thái với phía bác sĩ *@
+                        @{
+                            var statusClass = appointment.Status switch
+                            {
+                                "Approved" => "badge bg-success",
+                                "Pending" => "badge bg-warning text-dark",
+                                "Rejected" => "badge bg-danger",
+                                "Canceled" => "badge bg-secondary",
+                                _ => "badge bg-light text-dark"
+                            };
+
+                            var statusDisplay = appointment.Status switch
+                            {
+                                "Approved" => "Đã chấp nhận",
+                                "Pending" => "Đang chờ",
+                                "Rejected" => "Bị từ chối",
+                                "Canceled" => "Đã hủy",
+                                _ => "Không rõ"
+                            };
+                        }
+                        <span class="@statusClass">@statusDisplay</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <i class="fas fa-user-md me-1"></i>@appointment.DoctorName<br />
+                            <i class="fas fa-building me-1"></i>@appointment.DepartmentName<br />
+                            <i class="fas fa-clock me-1"></i>@appointment.CreatedAt.ToString("dd/MM/yyyy HH:mm")<br />
+                        </p>
+                        @if (!string.IsNullOrEmpty(appointment.Note))
+                        {
+                            <p class="card-text text-muted">
+                                <i class="fas fa-sticky-note me-1"></i>@appointment.Note
+                            </p>
+                        }
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-outline-secondary btn-sm" disabled title="Chức năng đang phát triển">
+                                <i class="fas fa-eye me-1"></i>Chi tiết
+                            </button>
+                            @if (appointment.Status == "Approved" || appointment.Status == "Pending")
+                            {
+                                <form asp-action="Cancel" asp-route-id="@appointment.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-times me-1"></i>Hủy
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">Bạn chưa có lịch hẹn nào</h4>
+        <p class="text-muted">Hãy đặt lịch với bác sĩ ngay hôm nay.</p>
+        <a asp-controller="BookingDoctor" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Đặt lịch với bác sĩ
+        </a>
+    </div>
+}

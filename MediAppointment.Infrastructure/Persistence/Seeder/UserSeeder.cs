@@ -53,7 +53,43 @@ namespace MediAppointment.Infrastructure.Persistence.Seeder
                     dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = doctorUser.Id;
                     await dbContext.SaveChangesAsync();
                 }
+
             }
+
+            // 2. Seed another Doctor UserIdentity + Doctor domain
+            var anotherDoctorEmail = "doctor2@mediappointment.com";
+            var anotherDoctorUser = await userManager.Users.FirstOrDefaultAsync(u => u.Email == anotherDoctorEmail);
+            if (anotherDoctorUser == null)
+            {
+                anotherDoctorUser = new UserIdentity
+                {
+                    UserName = anotherDoctorEmail,
+                    Email = anotherDoctorEmail,
+                    FullName = "Second Doctor",
+                    PhoneNumber = "0911222333",
+                    EmailConfirmed = true,
+                    RefreshToken = string.Empty,
+                };
+                var result = await userManager.CreateAsync(anotherDoctorUser, "Doctor@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(anotherDoctorUser, "Doctor");
+
+                    var anotherDoctor = new Doctor
+                    {
+                        Id = Guid.NewGuid(),
+                        FullName = anotherDoctorUser.FullName ?? "",
+                        Gender = false,
+                        DateOfBirth = new DateTime(1985, 5, 10),
+                        Email = anotherDoctorUser.Email ?? "",
+                        PhoneNumber = anotherDoctorUser.PhoneNumber ?? ""
+                    };
+                    dbContext.Doctors.Add(anotherDoctor);
+                    dbContext.Entry(anotherDoctor).Property("UserIdentityId").CurrentValue = anotherDoctorUser.Id;
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+
 
             // 2. Seed Patient UserIdentity + Patient domain
             var patientEmail = "patient@mediappointment.com";
