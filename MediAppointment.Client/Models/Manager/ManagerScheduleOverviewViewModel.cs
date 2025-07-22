@@ -8,7 +8,7 @@ namespace MediAppointment.Client.Models.Manager
         public Guid? RoomId { get; set; }
         public Guid? DoctorId { get; set; }
         public int Year { get; set; }
-        public int Week { get; set; }
+        public int Week { get; set; }       
         
         public List<DepartmentOption> Departments { get; set; } = new();
         public List<RoomOption> Rooms { get; set; } = new();
@@ -16,12 +16,6 @@ namespace MediAppointment.Client.Models.Manager
         public List<int> AvailableYears { get; set; } = new();
         public List<int> AvailableWeeks { get; set; } = new();
         public Dictionary<DateTime, List<ManagerScheduleSlot>> WeeklySchedule { get; set; } = new();
-    }
-
-    public class DepartmentOption
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
     }
 
     public class DoctorOption

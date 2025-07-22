@@ -9,7 +9,7 @@
         public string Role { get; set; } = string.Empty;
         public string ErrorMessage { get; set; }
     }
-    public class ManagerUpdateProfile
+    public class ManagerUpdateProfile   
     {
         public Guid? ManagerId { get; set; }
         public string FullName { get; set; } = string.Empty;

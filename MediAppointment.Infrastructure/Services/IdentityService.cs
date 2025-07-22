@@ -151,25 +151,26 @@ namespace MediAppointment.Infrastructure.Services
                 _dbContext.Set<User>().Add(doctor);
                 _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
 
-                //if (dto.Departments?.Any() == true)
-                //{
-                //    var validDepartmentIds = await _dbContext.Departments
-                //        .Where(d => dto.Departments.Contains(d.Id))
-                //        .Select(d => d.Id)
-                //        .ToListAsync();
+                if (dto.Departments?.Any() == true)
+                {
+                    var validDepartmentIds = await _dbContext.Departments
+                        .Where(d => dto.Departments.Contains(d.Id))
+                        .Select(d => d.Id)
+                        .ToListAsync();
 
-                //    if (validDepartmentIds.Count != dto.Departments.Count)
-                //        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", dto.Departments.Except(validDepartmentIds))}");
+                    if (validDepartmentIds.Count != dto.Departments.Count)
+                        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", dto.Departments.Except(validDepartmentIds))}");
 
-                //    foreach (var deptId in validDepartmentIds)
-                //    {
-                //        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
-                //        {
-                //            DoctorId = doctor.Id,
-                //            DepartmentId = deptId
-                //        });
-                //    }
-                //}
+                    foreach (var deptId in validDepartmentIds)
+                    {
+                        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
+                        {
+                            DoctorId = doctor.Id,
+                            DepartmentId = deptId
+                        });
+                        Console.WriteLine($"Assigned Doctor ({doctor.FullName}) to Department ID: {deptId}");
+                    }
+                }
 
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
