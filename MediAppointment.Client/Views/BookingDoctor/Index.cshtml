@@ -36,7 +36,7 @@
                     <label class="form-label fw-bold">
                         <i class="bi bi-hospital me-1"></i> Khoa khám <span class="text-danger">*</span>
                     </label>
-                    <select class="form-select" asp-for="RoomId" id="departmentSelect">
+                    <select class="form-select" asp-for="RoomId" id="departmentSelect" disabled>
                         <option value="">-- Chọn khoa --</option>
                         @foreach (var dept in Model.Departments)
                         {
