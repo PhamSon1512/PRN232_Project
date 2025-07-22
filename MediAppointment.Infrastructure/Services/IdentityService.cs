@@ -198,18 +198,23 @@ namespace MediAppointment.Infrastructure.Services
             var doctor = await _dbContext.Set<User>().OfType<Doctor>()
                 .Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department)
                 .FirstOrDefaultAsync(d => d.Id == doctorId)
-                ?? throw new ArgumentException($"Doctor with ID {doctorId} not found.");
+                ?? throw new ArgumentException($"Bác sĩ với ID {doctorId} không tồn tại.");
 
             var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue
-                ?? throw new ArgumentException($"UserIdentityId not found for Doctor {doctorId}");
+                ?? throw new ArgumentException($"UserIdentityId không tìm thấy cho bác sĩ {doctorId}");
 
             var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
-                ?? throw new ArgumentException($"UserIdentity with ID {userIdentityId} not found.");
+                ?? throw new ArgumentException($"UserIdentity với ID {userIdentityId} không tồn tại.");
 
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 bool hasChanges = false;
+
+                // Khởi tạo DoctorDepartments nếu null
+                if (doctor.DoctorDepartments == null)
+                {
+                    doctor.DoctorDepartments = new List<DoctorDepartment>();
+                }
 
                 // Cập nhật FullName nếu được cung cấp
                 if (!string.IsNullOrWhiteSpace(dto.FullName) && dto.FullName != doctor.FullName)
@@ -222,11 +227,10 @@ namespace MediAppointment.Infrastructure.Services
                 // Cập nhật PhoneNumber nếu được cung cấp
                 if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
                 {
-                    // Kiểm tra PhoneNumber đã tồn tại chưa
                     var existingUserWithPhone = await _userManager.Users
                         .FirstOrDefaultAsync(u => u.PhoneNumber == dto.PhoneNumber && u.Id != userIdentityId);
                     if (existingUserWithPhone != null)
-                        throw new ArgumentException($"Phone number {dto.PhoneNumber} is already in use by another user.");
+                        throw new ArgumentException($"Số điện thoại {dto.PhoneNumber} đã được sử dụng bởi người dùng khác.");
 
                     doctor.PhoneNumber = dto.PhoneNumber;
                     userIdentity.PhoneNumber = dto.PhoneNumber;
@@ -241,23 +245,56 @@ namespace MediAppointment.Infrastructure.Services
                     hasChanges = true;
                 }
 
-                if (hasChanges)
+                // Cập nhật Departments nếu được cung cấp
+                if (dto.Departments != null)
                 {
-                    // Cập nhật UserIdentity
-                    var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
-                    if (!updateIdentityResult.Succeeded)
+                    // Lấy danh sách ID khoa hiện tại, xử lý trường hợp null
+                    var currentDepartmentIds = doctor.DoctorDepartments?.Select(dd => dd.DepartmentId).ToList() ?? new List<Guid>();
+                    var newDepartmentIds = dto.Departments ?? new List<Guid>();
+
+                    // Xóa các quan hệ DoctorDepartment cũ không còn trong danh sách mới
+                    var departmentsToRemove = doctor.DoctorDepartments
+                        .Where(dd => !newDepartmentIds.Contains(dd.DepartmentId))
+                        .ToList();
+                    foreach (var dd in departmentsToRemove)
                     {
-                        throw new Exception($"Failed to update UserIdentity: {string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description))}");
+                        _dbContext.Set<DoctorDepartment>().Remove(dd);
                     }
 
-                    // Cập nhật Doctor
+                    // Thêm các quan hệ DoctorDepartment mới
+                    var departmentsToAdd = newDepartmentIds
+                        .Where(id => !currentDepartmentIds.Contains(id))
+                        .ToList();
+                    var validDepartmentIds = await _dbContext.Departments
+                        .Where(d => departmentsToAdd.Contains(d.Id))
+                        .Select(d => d.Id)
+                        .ToListAsync();
+
+                    if (departmentsToAdd.Any() && validDepartmentIds.Count != departmentsToAdd.Count)
+                        throw new ArgumentException($"Một số ID khoa không hợp lệ: {string.Join(", ", departmentsToAdd.Except(validDepartmentIds))}");
+
+                    foreach (var deptId in validDepartmentIds)
+                    {
+                        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
+                        {
+                            DoctorId = doctor.Id,
+                            DepartmentId = deptId
+                        });
+                        Console.WriteLine($"Gán bác sĩ ({doctor.FullName}) vào khoa ID: {deptId}");
+                    }
+
+                    hasChanges = hasChanges || departmentsToRemove.Any() || departmentsToAdd.Any();
+                }
+
+                if (hasChanges)
+                {
+                    // Cập nhật UserIdentity và Doctor trong cùng một context
+                    _dbContext.Update(userIdentity);
                     await _dbContext.SaveChangesAsync();
                 }
 
-                await transaction.CommitAsync();
-                Console.WriteLine($"Doctor {doctorId} updated successfully. FullName: {doctor.FullName}, PhoneNumber: {doctor.PhoneNumber}, Status: {doctor.Status}");
+                Console.WriteLine($"Cập nhật bác sĩ {doctorId} thành công. Họ tên: {doctor.FullName}, Số điện thoại: {doctor.PhoneNumber}, Trạng thái: {doctor.Status}, Danh sách khoa: {string.Join(", ", doctor.DoctorDepartments?.Select(dd => dd.DepartmentId) ?? new List<Guid>())}");
 
-                // Trả về DoctorDto
                 return new DoctorDto
                 {
                     Id = doctor.Id,
@@ -266,15 +303,18 @@ namespace MediAppointment.Infrastructure.Services
                     DateOfBirth = doctor.DateOfBirth,
                     Email = doctor.Email,
                     PhoneNumber = doctor.PhoneNumber,
-                    Departments = doctor.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+                    Departments = doctor.DoctorDepartments
+                        ?.Where(dd => dd.Department != null)
+                        .Select(dd => dd.Department.DepartmentName)
+                        .ToList() ?? new List<string>(),
+
                     Status = (int)doctor.Status
                 };
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                Console.WriteLine($"Error in ManagerUpdateDoctorAsync: {ex.Message}");
-                throw;
+                Console.WriteLine($"Lỗi trong ManagerUpdateDoctorAsync: {ex.Message}, StackTrace: {ex.StackTrace}");
+                throw new Exception($"Cập nhật hồ sơ bác sĩ thất bại: {ex.Message}", ex);
             }
         }
 
@@ -323,7 +363,7 @@ namespace MediAppointment.Infrastructure.Services
 
             if (!await _userManager.IsInRoleAsync(userIdentity, "Manager"))
                 throw new ArgumentException("Người dùng không phải là Manager");
-                
+
             var roles = await _userManager.GetRolesAsync(userIdentity);
             var role = roles.FirstOrDefault() ?? "Không xác định";
 
