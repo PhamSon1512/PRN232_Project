@@ -2,6 +2,7 @@
 using MediAppointment.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MediAppointment.API.Controllers
@@ -11,16 +12,21 @@ namespace MediAppointment.API.Controllers
     public class EWalletController : ControllerBase
     {
         private readonly IWalletService _walletService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public EWalletController(IWalletService walletService)
+
+        public EWalletController(IWalletService walletService, IHttpContextAccessor httpContextAccessor)
         {
             _walletService = walletService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("balance")]
         public async Task<IActionResult> GetBalance()
         {
-            var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            //var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (!Guid.TryParse(userIdString, out var userId))
             {
                 return Unauthorized(new { message = "UserId không hợp lệ" });
@@ -33,7 +39,9 @@ namespace MediAppointment.API.Controllers
         [HttpGet("transactions")]
         public async Task<IActionResult> GetTransactions()
         {
-            var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            //var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (!Guid.TryParse(userIdString, out var userId))
             {
                 return Unauthorized(new { message = "UserId không hợp lệ" });
@@ -46,7 +54,9 @@ namespace MediAppointment.API.Controllers
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositRequest request)
         {
-            var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            //var userIdString = User.FindFirst(c => c.Type == "UserId")?.Value;
+            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (!Guid.TryParse(userIdString, out var userId))
             {
                 return Unauthorized(new { message = "UserId không hợp lệ" });
