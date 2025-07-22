@@ -47,7 +47,7 @@ namespace MediAppointment.Infrastructure.Services
             return await _identityService.GetDoctorByIdAsync(doctorId);
         }
 
-        public async Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
+        public async Task<DoctorDto> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
         {
             return await _identityService.ManagerUpdateDoctorAsync(doctorId, dto);
         }

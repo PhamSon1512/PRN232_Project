@@ -12,7 +12,7 @@ namespace MediAppointment.Application.Interfaces
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
         Task DeleteDoctorAsync(Guid doctorId);
         Task<DoctorDto> GetDoctorByIdAsync(Guid doctorId);
-        Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
+        Task<DoctorDto> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
         Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId);
         Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto);
     }

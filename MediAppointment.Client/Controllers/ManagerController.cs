@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Security.Claims;
 using MediAppointment.Client.Models.Doctor;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MediAppointment.Client.Controllers
 {
@@ -97,21 +98,16 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateDoctor(Guid doctorId, DoctorUpdateModel dto)
         {
-            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
-            Console.WriteLine($"UserIdClaim: {userIdClaim}");
-            if (!Guid.TryParse(userIdClaim, out var managerId))
+            var managerId = GetManagerIdFromSession();
+            if (managerId == null || managerId == Guid.Empty)
             {
-                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                TempData["ErrorMessage"] = "Không thể xác định ID quản lý từ token. Vui lòng đăng nhập lại.";
                 Console.WriteLine("Invalid manager ID in token");
                 return RedirectToAction("DoctorManagement");
             }
 
             if (!ModelState.IsValid)
             {
-                // var deptResult = await _departmentService.GetDepartmentsAsync();
-                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
-                //     ? deptResult.Data 
-                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
                 return View("EditDoctor", dto);
             }
 
@@ -123,10 +119,6 @@ namespace MediAppointment.Client.Controllers
             }
 
             TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ bác sĩ thất bại";
-            // var deptResultError = await _departmentService.GetDepartmentsAsync();
-            // ViewBag.Departments = deptResultError.Success && deptResultError.Data != null 
-            //     ? deptResultError.Data 
-            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
             return View("EditDoctor", dto);
         }
 
@@ -144,19 +136,16 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateDoctor(DoctorCreateModel dto)
         {
-            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
-            if (!Guid.TryParse(userIdClaim, out var managerId))
+            var managerId = GetManagerIdFromSession();
+            if (managerId == null || managerId == Guid.Empty)
             {
-                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                TempData["ErrorMessage"] = "Không thể xác định ID quản lý từ token. Vui lòng đăng nhập lại.";
+                Console.WriteLine("Invalid manager ID in token");
                 return RedirectToAction("DoctorManagement");
             }
 
             if (!ModelState.IsValid)
             {
-                // var deptResult = await _departmentService.GetDepartmentsAsync();
-                // ViewBag.Departments = deptResult.Success && deptResult.Data != null 
-                //     ? deptResult.Data 
-                //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
                 return View("CreateDoctor", dto);
             }
 
@@ -168,10 +157,6 @@ namespace MediAppointment.Client.Controllers
             }
 
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Tạo bác sĩ thất bại";
-            // var deptResultError = await _departmentService.GetDepartmentsAsync();
-            // ViewBag.Departments = deptResultError.Success && deptResultError.Data != null 
-            //     ? deptResultError.Data 
-            //     : new List<MediAppointment.Client.Models.Appointment.DepartmentOption>();
             return View("CreateDoctor", dto);
         }
 
@@ -179,10 +164,11 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteDoctor(Guid doctorId)
         {
-            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
-            if (!Guid.TryParse(userIdClaim, out var managerId))
+            var managerId = GetManagerIdFromSession();
+            if (managerId == null || managerId == Guid.Empty)
             {
-                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
+                TempData["ErrorMessage"] = "Không thể xác định ID quản lý từ token. Vui lòng đăng nhập lại.";
+                Console.WriteLine("Invalid manager ID in token");
                 return RedirectToAction("DoctorManagement");
             }
 
@@ -237,39 +223,44 @@ namespace MediAppointment.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(ManagerUpdateProfile dto)
         {
-            var userIdClaim = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
-            Console.WriteLine($"UserIdClaim: {userIdClaim}");
-            if (!Guid.TryParse(userIdClaim, out var managerId))
+            // Lấy ManagerId từ session
+            var managerId = GetManagerIdFromSession();
+            if (managerId == Guid.Empty)
             {
-                TempData["ErrorMessage"] = "Invalid manager ID in token. Please log in again.";
-                Console.WriteLine("Invalid manager ID in token");
+                TempData["ErrorMessage"] = "Không thể xác định ID quản lý từ session. Vui lòng đăng nhập lại.";
                 return RedirectToAction("ManagerProfile");
             }
-
             dto.ManagerId = managerId;
 
-            // Điền giá trị hiện tại nếu DTO rỗng
+            // Lấy profile hiện tại để điền giá trị nếu DTO rỗng
             var currentProfile = await _managerService.GetManagerProfileAsync();
-            if (string.IsNullOrWhiteSpace(dto.FullName) && currentProfile.Success && currentProfile.Data != null)
-                dto.FullName = currentProfile.Data.FullName;
-            if (string.IsNullOrWhiteSpace(dto.PhoneNumber) && currentProfile.Success && currentProfile.Data != null)
-                dto.PhoneNumber = currentProfile.Data.PhoneNumber;
+            if (currentProfile.Success && currentProfile.Data != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.FullName))
+                    dto.FullName = currentProfile.Data.FullName;
+                if (string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                    dto.PhoneNumber = currentProfile.Data.PhoneNumber;
+            }
 
             if (!ModelState.IsValid)
             {
-                var result = await _managerService.GetManagerProfileAsync();
-                if (result.Success && result.Data != null)
+                if (currentProfile.Success && currentProfile.Data != null)
                 {
                     var model = new ManagerViewModel
                     {
-                        Id = result.Data.Id,
-                        FullName = dto.FullName ?? result.Data.FullName,
-                        Email = result.Data.Email,
-                        PhoneNumber = dto.PhoneNumber ?? result.Data.PhoneNumber,
-                        Role = result.Data.Role
+                        Id = currentProfile.Data.Id,
+                        FullName = dto.FullName ?? currentProfile.Data.FullName,
+                        Email = currentProfile.Data.Email,
+                        PhoneNumber = dto.PhoneNumber ?? currentProfile.Data.PhoneNumber,
+                        Role = currentProfile.Data.Role,
+                        ErrorMessage = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                            .FirstOrDefault()
                     };
                     return View("EditProfile", model);
                 }
+                TempData["ErrorMessage"] = "Không thể tải thông tin hồ sơ của quản lý.";
                 return RedirectToAction("ManagerProfile");
             }
 
@@ -280,21 +271,53 @@ namespace MediAppointment.Client.Controllers
                 return RedirectToAction("ManagerProfile");
             }
 
-            TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ thất bại";
-            var resultProfile = await _managerService.GetManagerProfileAsync();
-            if (resultProfile.Success && resultProfile.Data != null)
+            TempData["ErrorMessage"] = resultUpdate.ErrorMessage ?? "Cập nhật hồ sơ thất bại.";
+            if (currentProfile.Success && currentProfile.Data != null)
             {
-                return View("EditProfile", new ManagerViewModel
+                var model = new ManagerViewModel
                 {
-                    Id = resultProfile.Data.Id,
-                    FullName = dto.FullName ?? resultProfile.Data.FullName,
-                    Email = resultProfile.Data.Email,
-                    PhoneNumber = dto.PhoneNumber ?? resultProfile.Data.PhoneNumber,
-                    Role = resultProfile.Data.Role
-                });
+                    Id = currentProfile.Data.Id,
+                    FullName = dto.FullName ?? currentProfile.Data.FullName,
+                    Email = currentProfile.Data.Email,
+                    PhoneNumber = dto.PhoneNumber ?? currentProfile.Data.PhoneNumber,
+                    Role = currentProfile.Data.Role
+                };
+                return View("EditProfile", model);
             }
             return RedirectToAction("ManagerProfile");
         }
+
+        private Guid? GetManagerIdFromSession()
+        {
+            try
+            {
+                // Lấy token từ session
+                var token = HttpContext.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return null;
+                }
+
+                // Decode JWT token
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+
+                // Lấy UserId từ claims
+                var userIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var adminId))
+                {
+                    return null;
+                }
+
+                return adminId;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         #endregion
 
         #region Schedule Management
@@ -353,11 +376,11 @@ namespace MediAppointment.Client.Controllers
             {
                 // Load departments
                 var departmentsResult = await _departmentService.GetDepartmentsAsync();
-                model.Departments = departmentsResult.Success && departmentsResult.Data != null 
-                    ? departmentsResult.Data.Select(d => new Models.Manager.DepartmentOption 
-                    { 
-                        Id = d.Id, 
-                        Name = d.Name 
+                model.Departments = departmentsResult.Success && departmentsResult.Data != null
+                    ? departmentsResult.Data.Select(d => new Models.Manager.DepartmentOption
+                    {
+                        Id = d.Id,
+                        Name = d.Name
                     }).ToList()
                     : new List<Models.Manager.DepartmentOption>();
 
@@ -366,9 +389,9 @@ namespace MediAppointment.Client.Controllers
                 {
                     var roomsResult = await _departmentService.GetRoomsByDepartmentAsync(model.DepartmentId.Value);
                     model.Rooms = roomsResult.Success && roomsResult.Data != null
-                        ? roomsResult.Data.Select(r => new Models.Manager.RoomOption 
-                        { 
-                            Id = r.Id, 
+                        ? roomsResult.Data.Select(r => new Models.Manager.RoomOption
+                        {
+                            Id = r.Id,
                             Name = r.Name
                         }).ToList()
                         : new List<Models.Manager.RoomOption>();
@@ -381,9 +404,9 @@ namespace MediAppointment.Client.Controllers
                 // Load doctors
                 var doctorsResult = await _doctorService.GetAllDoctorsAsync();
                 model.Doctors = doctorsResult.Success && doctorsResult.Data != null
-                    ? doctorsResult.Data.Select(d => new Models.Manager.DoctorOption 
-                    { 
-                        Id = d.Id, 
+                    ? doctorsResult.Data.Select(d => new Models.Manager.DoctorOption
+                    {
+                        Id = d.Id,
                         Name = d.FullName
                     }).ToList()
                     : new List<Models.Manager.DoctorOption>();

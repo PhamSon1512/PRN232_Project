@@ -30,8 +30,8 @@ namespace MediAppointment.Client.Models.Doctor
     public class DoctorUpdateModel
     {
         public int Status { get; set; }
-        public string FullName { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string? FullName { get; set; }
+        public string? PhoneNumber { get; set; }
     }
 
     public class DoctorUpdateProfile

@@ -67,7 +67,7 @@ namespace MediAppointment.API.Controllers
             }
         }
 
-        [HttpPut("profile")]
+        [HttpPut("UpdateManagerProfile")]
         public async Task<IActionResult> UpdateManagerProfile([FromBody] ManagerUpdateProfileDto dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -91,7 +91,7 @@ namespace MediAppointment.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateDoctor([FromBody] DoctorCreateDto dto)
         {
-            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            var managerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(managerIdClaim, out Guid managerId))
                 return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
 
@@ -102,7 +102,7 @@ namespace MediAppointment.API.Controllers
         [HttpPut("update/{doctorId:guid}")]
         public async Task<IActionResult> UpdateDoctor(Guid doctorId, [FromBody] ManagerDoctorUpdateDTO dto)
         {
-            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            var managerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(managerIdClaim, out Guid managerId))
                 return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
 
@@ -116,7 +116,7 @@ namespace MediAppointment.API.Controllers
         [HttpDelete("{doctorId:guid}")]
         public async Task<IActionResult> DeleteDoctor(Guid doctorId)
         {
-            var managerIdClaim = User.FindFirst("UserId")?.Value;
+            var managerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(managerIdClaim, out Guid managerId))
                 return Unauthorized(new { Message = "Invalid or missing UserId in JWT token." });
 
