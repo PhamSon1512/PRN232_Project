@@ -127,8 +127,8 @@
                         <!-- Submit Button -->
                         <div class="row mt-4">
                             <div class="col-12">
-                                <button type="submit" 
-                                        class="btn btn-success btn-lg" 
+                                <button type="button"
+                                        class="btn btn-success btn-lg"
                                         id="submitBtn"
                                         disabled>
                                     <i class="bi bi-check2-circle me-2"></i>
@@ -146,7 +146,14 @@
         </div>
     </div>
 </div>
-
+@await Html.PartialAsync("_BookingConfirmationModal", new ConfirmationBookingViewModel
+{
+    Department = "", 
+    AppointmentDate = DateTime.Today,
+    TimeRange = "",
+    Note = "",
+    DepositAmount = 200000
+})
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -341,6 +348,8 @@
             });
         });
     </script>
+    <script src="~/js/bookingConfirmation.js"></script>
+
 }
 
 @section Styles {

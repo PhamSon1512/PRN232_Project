@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Transactions;
 
 namespace MediAppointment.Client.Services
 {
@@ -13,6 +14,7 @@ namespace MediAppointment.Client.Services
         Task<List<WalletTransaction>> GetTransactionsAsync();
         Task<string> CreatePaymentUrlAsync(decimal amount);
         Task<bool> DepositAsync(Guid userId, decimal amount, string transactionId);
+        Task<bool> ReductAsync(decimal amount);
 
     }
 
@@ -206,6 +208,44 @@ namespace MediAppointment.Client.Services
             }
         }
 
+        public async Task<bool> ReductAsync(decimal amount)
+        {
+            try
+            {
+                SetAuthHeader();
+
+                var payload = new
+                {
+                    Amount = amount,
+                };
+
+                var content = new StringContent(
+                    JsonSerializer.Serialize(payload),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync("/api/wallet/reduct", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Reduct failed: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP request failed when calling reduct");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error when completing reduct");
+                return false;
+            }
+        }
     }
 
     // DTOs

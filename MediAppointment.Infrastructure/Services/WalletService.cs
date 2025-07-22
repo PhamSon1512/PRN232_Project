@@ -97,5 +97,36 @@ namespace MediAppointment.Infrastructure.Services
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task ReductAsync(Guid userId, decimal amount)
+        {
+            var wallet = await _dbContext.Wallets
+                .Include(w => w.Transactions)
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+
+            if (wallet == null)
+                throw new InvalidOperationException("Wallet not found.");
+            try
+            {
+                wallet.Balance -= amount;
+
+                var transaction = new WalletTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    WalletId = wallet.Id,
+                    Amount = amount,
+                    Date = DateTime.UtcNow,
+                    Type = "DEDUCT", // Nên dùng enum hoặc constant cho thống nhất
+                    Description = $"Deduct via EWallet"
+                };
+
+                _dbContext.WalletTransactions.Add(transaction);
+
+                await _dbContext.SaveChangesAsync();
+
+            } catch(Exception ex)
+            {
+                throw new Exception("Lỗi khi trừ tiền khỏi ví: " + ex.Message, ex);
+            }
+        }
     }
 }

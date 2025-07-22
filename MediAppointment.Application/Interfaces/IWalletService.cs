@@ -11,6 +11,7 @@ namespace MediAppointment.Application.Interfaces
         Task<decimal> GetBalanceAsync(Guid userId);
         Task<List<WalletTransaction>> GetTransactionsAsync(Guid userId);
         Task RefundAsync(Guid userId, decimal amount, string reason, string? relatedTransactionId = null);
+        Task ReductAsync(Guid userId, decimal amount);
 
     }
 }

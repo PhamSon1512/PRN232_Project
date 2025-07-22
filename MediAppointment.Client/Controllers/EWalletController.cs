@@ -1,10 +1,12 @@
-﻿using MediAppointment.Client.Models.EWallet;
+﻿using MediAppointment.Client.Attributes;
+using MediAppointment.Client.Models.EWallet;
 using MediAppointment.Client.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace MediAppointment.Client.Controllers
 {
+    [RequirePatient]
     [Route("Ewallet")]
     public class EWalletController : Controller
     {
@@ -159,6 +161,29 @@ namespace MediAppointment.Client.Controllers
             {
                 _logger.LogError(ex, "Failed to refresh wallet data");
                 return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("check-balance-payment")]
+        public async Task<IActionResult> CheckAndProcessPayment([FromBody] DepositRequest model)
+        {
+            if (model.Amount <= 0)
+            {
+                return Json(new { success = false, message = "Yêu cầu không hợp lệ" });
+            }
+            var balance = await _walletApiService.GetBalanceAsync();
+            if (balance < model.Amount)
+                return Json(new { success = false, message = "Số dư không đủ để thực hiện giao dịch, vui lòng nạp thêm tiền vào ví và thực hiện lại" });
+
+            try
+            {
+                
+                return Json(new { success = await _walletApiService.ReductAsync(model.Amount), message = "Đặt lịch thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi hệ thống: {ex.Message}" });
             }
         }
 
