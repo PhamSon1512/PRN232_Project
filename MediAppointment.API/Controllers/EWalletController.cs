@@ -1,5 +1,7 @@
-﻿using MediAppointment.Application.DTOs.Payments;
+﻿using Azure.Core;
+using MediAppointment.Application.DTOs.Payments;
 using MediAppointment.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MediAppointment.API.Controllers
 {
+    [Authorize(Roles = "Patient")]
     [ApiController]
     [Route("api/wallet")]
     public class EWalletController : ControllerBase
@@ -78,5 +81,32 @@ namespace MediAppointment.API.Controllers
             }
         }
 
+        [HttpPost("reduct")]
+        public async Task<IActionResult> Reduct([FromBody] ReductRequest model)
+        {
+            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized(new { success = false, message = "UserId không hợp lệ" });
+            }
+
+            try
+            {
+                await _walletService.ReductAsync(userId, model.Amount);
+                return Ok(new { success = true, message = "Thanh toán thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
     }
+
+    public class ReductRequest
+    {
+        public decimal Amount { get; set; }
+    }
+
 }

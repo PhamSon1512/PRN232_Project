@@ -1,0 +1,40 @@
+﻿@model MediAppointment.Client.Models.ConfirmationBookingViewModel
+
+<div class="modal fade" id="confirmBookingModal" tabindex="-1" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmBookingModalLabel">
+                    <i class="bi bi-receipt me-2"></i> Xác nhận đặt lịch & Thanh toán tiền cọc
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Khoa khám:</dt>
+                    <dd class="col-sm-8">@Model.Department</dd>
+
+                    <dt class="col-sm-4">Ngày khám:</dt>
+                    <dd class="col-sm-8">@Model.AppointmentDate.ToString("dd/MM/yyyy")</dd>
+
+                    <dt class="col-sm-4">Giờ khám:</dt>
+                    <dd class="col-sm-8">@Model.TimeRange</dd>
+
+                    <dt class="col-sm-4">Ghi chú:</dt>
+                    <dd class="col-sm-8">@Model.Note</dd>
+
+                    <dt class="col-sm-4">Tiền cọc (20%):</dt>
+                    <dd class="col-sm-8 fw-bold text-danger">@Model.DepositAmount.ToString("N0") đ</dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Hủy
+                </button>
+                <button type="submit" class="btn btn-success" id="confirmBookingSubmit">
+                    <i class="bi bi-cash me-1"></i> Xác nhận & Thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
