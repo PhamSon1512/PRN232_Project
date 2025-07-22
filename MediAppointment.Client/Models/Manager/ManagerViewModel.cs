@@ -7,10 +7,11 @@
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
+        public string ErrorMessage { get; set; }
     }
     public class ManagerUpdateProfile
     {
-        public Guid ManagerId { get; set; }
+        public Guid? ManagerId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
     }

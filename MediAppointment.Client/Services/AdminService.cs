@@ -228,7 +228,7 @@ namespace MediAppointment.Client.Services
                     PhoneNumber = dto.PhoneNumber
                 };
 
-                var content = new StringContent(JsonSerializer.Serialize(serverDto), System.Text.Encoding.UTF8, "application/json");
+                var content = new StringContent(JsonSerializer.Serialize(serverDto), Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"{_configuration["ApiBaseUrl"]}/api/admin/UpdateAdminProfile", content);
 
                 if (response.IsSuccessStatusCode)

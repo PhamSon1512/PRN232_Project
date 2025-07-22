@@ -1,7 +1,16 @@
-﻿@model MediAppointment.Client.Models.Doctor.DoctorViewModel
+﻿@model MediAppointment.Client.Models.Doctor.DoctorStatusModel
 @{
     ViewData["Title"] = "Chi tiết Bác sĩ";
     Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+
+    string GetStatusDisplay(int status) => status switch
+    {
+        0 => "Inactive",
+        1 => "Active",
+        2 => "Pending",
+        3 => "Deleted",
+        _ => "Unknown"
+    };
 }
 
 <div class="container mt-4">
@@ -21,11 +30,12 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <h5 class="card-title">@Model.FullName</h5>
+            <h3 class="card-title">@Model.FullName</h3>
             <p><strong>Email:</strong> @Model.Email</p>
             <p><strong>Số điện thoại:</strong> @Model.PhoneNumber</p>
             <p><strong>Giới tính:</strong> @Model.GenderDisplay</p>
             <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
+            <p><strong>Trạng thái hoạt động:</strong> @GetStatusDisplay(Model.Status)</p>
             <a asp-action="EditDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
             <form asp-action="DeleteDoctor" asp-controller="Manager" asp-route-doctorId="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa bác sĩ này?');">
                 @Html.AntiForgeryToken()

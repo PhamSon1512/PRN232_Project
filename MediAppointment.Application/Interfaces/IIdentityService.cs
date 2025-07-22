@@ -14,7 +14,7 @@ namespace MediAppointment.Application.Interfaces
         Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId);
         Task<bool> UpdateManagerProfileAsync(ManagerUpdateProfileDto dto);
         Task<Guid> CreateDoctorAsync(DoctorCreateDto dto);
-        Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
+        Task<DoctorDto> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto);
         Task DeleteDoctorAsync(Guid doctorId);
         #endregion
 

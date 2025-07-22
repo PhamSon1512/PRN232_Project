@@ -64,8 +64,10 @@ namespace MediAppointment.Infrastructure.Services
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 5;
 
-            var listDoctor = _dbContext.Set<User>().OfType<Doctor>().AsQueryable();
-            listDoctor = listDoctor.Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department);
+            var listDoctor = _dbContext.Set<User>().OfType<Doctor>()
+                .Where(d => d.Status == Status.Active || d.Status == Status.Inactive)
+                .Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(text))
             {
@@ -149,25 +151,25 @@ namespace MediAppointment.Infrastructure.Services
                 _dbContext.Set<User>().Add(doctor);
                 _dbContext.Entry(doctor).Property("UserIdentityId").CurrentValue = userIdentity.Id;
 
-                if (dto.Departments?.Any() == true)
-                {
-                    var validDepartmentIds = await _dbContext.Departments
-                        .Where(d => dto.Departments.Contains(d.Id))
-                        .Select(d => d.Id)
-                        .ToListAsync();
+                //if (dto.Departments?.Any() == true)
+                //{
+                //    var validDepartmentIds = await _dbContext.Departments
+                //        .Where(d => dto.Departments.Contains(d.Id))
+                //        .Select(d => d.Id)
+                //        .ToListAsync();
 
-                    if (validDepartmentIds.Count != dto.Departments.Count)
-                        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", dto.Departments.Except(validDepartmentIds))}");
+                //    if (validDepartmentIds.Count != dto.Departments.Count)
+                //        throw new ArgumentException($"Invalid department IDs: {string.Join(", ", dto.Departments.Except(validDepartmentIds))}");
 
-                    foreach (var deptId in validDepartmentIds)
-                    {
-                        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
-                        {
-                            DoctorId = doctor.Id,
-                            DepartmentId = deptId
-                        });
-                    }
-                }
+                //    foreach (var deptId in validDepartmentIds)
+                //    {
+                //        _dbContext.Set<DoctorDepartment>().Add(new DoctorDepartment
+                //        {
+                //            DoctorId = doctor.Id,
+                //            DepartmentId = deptId
+                //        });
+                //    }
+                //}
 
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -190,58 +192,127 @@ namespace MediAppointment.Infrastructure.Services
         }
 
         // UPDATE
-        public async Task<Doctor> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
+        public async Task<DoctorDto> ManagerUpdateDoctorAsync(Guid doctorId, ManagerDoctorUpdateDTO dto)
         {
             var doctor = await _dbContext.Set<User>().OfType<Doctor>()
-                .Include(d => d.DoctorDepartments)
+                .Include(d => d.DoctorDepartments).ThenInclude(dd => dd.Department)
                 .FirstOrDefaultAsync(d => d.Id == doctorId)
                 ?? throw new ArgumentException($"Doctor with ID {doctorId} not found.");
 
-            doctor.Status = dto.Status;
+            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue
+                ?? throw new ArgumentException($"UserIdentityId not found for Doctor {doctorId}");
 
-            var currentDepartmentIds = doctor.DoctorDepartments.Select(dd => dd.DepartmentId).ToList();
-            var newDepartmentIds = dto.Departments ?? new List<Guid>();
+            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
+                ?? throw new ArgumentException($"UserIdentity with ID {userIdentityId} not found.");
 
-            if (newDepartmentIds.Any())
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                var validDepartmentIds = await _dbContext.Departments
-                    .Where(d => newDepartmentIds.Contains(d.Id))
-                    .Select(d => d.Id)
-                    .ToListAsync();
+                bool hasChanges = false;
 
-                if (validDepartmentIds.Count != newDepartmentIds.Count)
+                // Cập nhật FullName nếu được cung cấp
+                if (!string.IsNullOrWhiteSpace(dto.FullName) && dto.FullName != doctor.FullName)
                 {
-                    var invalidIds = newDepartmentIds.Except(validDepartmentIds).ToList();
-                    throw new ArgumentException($"Invalid department IDs: {string.Join(", ", invalidIds)}");
+                    doctor.FullName = dto.FullName;
+                    userIdentity.FullName = dto.FullName;
+                    hasChanges = true;
                 }
-            }
 
-            var departmentsToRemove = doctor.DoctorDepartments.Where(dd => !newDepartmentIds.Contains(dd.DepartmentId)).ToList();
-            foreach (var dept in departmentsToRemove)
-            {
-                _dbContext.Set<DoctorDepartment>().Remove(dept);
-            }
-
-            var departmentsToAdd = newDepartmentIds.Where(id => !currentDepartmentIds.Contains(id))
-                .Select(id => new DoctorDepartment
+                // Cập nhật PhoneNumber nếu được cung cấp
+                if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != doctor.PhoneNumber)
                 {
-                    DoctorId = doctor.Id,
-                    DepartmentId = id
-                }).ToList();
-            _dbContext.Set<DoctorDepartment>().AddRange(departmentsToAdd);
+                    // Kiểm tra PhoneNumber đã tồn tại chưa
+                    var existingUserWithPhone = await _userManager.Users
+                        .FirstOrDefaultAsync(u => u.PhoneNumber == dto.PhoneNumber && u.Id != userIdentityId);
+                    if (existingUserWithPhone != null)
+                        throw new ArgumentException($"Phone number {dto.PhoneNumber} is already in use by another user.");
 
-            await _dbContext.SaveChangesAsync();
-            return doctor;
+                    doctor.PhoneNumber = dto.PhoneNumber;
+                    userIdentity.PhoneNumber = dto.PhoneNumber;
+                    hasChanges = true;
+                }
+
+                // Cập nhật Status nếu thay đổi
+                if (doctor.Status != dto.Status)
+                {
+                    doctor.Status = dto.Status;
+                    userIdentity.Status = dto.Status;
+                    hasChanges = true;
+                }
+
+                if (hasChanges)
+                {
+                    // Cập nhật UserIdentity
+                    var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
+                    if (!updateIdentityResult.Succeeded)
+                    {
+                        throw new Exception($"Failed to update UserIdentity: {string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description))}");
+                    }
+
+                    // Cập nhật Doctor
+                    await _dbContext.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+                Console.WriteLine($"Doctor {doctorId} updated successfully. FullName: {doctor.FullName}, PhoneNumber: {doctor.PhoneNumber}, Status: {doctor.Status}");
+
+                // Trả về DoctorDto
+                return new DoctorDto
+                {
+                    Id = doctor.Id,
+                    FullName = doctor.FullName,
+                    Gender = doctor.Gender,
+                    DateOfBirth = doctor.DateOfBirth,
+                    Email = doctor.Email,
+                    PhoneNumber = doctor.PhoneNumber,
+                    Departments = doctor.DoctorDepartments.Select(dd => dd.Department.DepartmentName).ToList(),
+                    Status = (int)doctor.Status
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                Console.WriteLine($"Error in ManagerUpdateDoctorAsync: {ex.Message}");
+                throw;
+            }
         }
 
         // DELETE
         public async Task DeleteDoctorAsync(Guid doctorId)
         {
-            var doctor = await _dbContext.Set<User>().OfType<Doctor>().FirstOrDefaultAsync(d => d.Id == doctorId)
+            var doctor = await _dbContext.Set<User>().OfType<Doctor>()
+                .FirstOrDefaultAsync(d => d.Id == doctorId)
                 ?? throw new ArgumentException($"Doctor with UserId {doctorId} not found.");
 
-            doctor.Status = Domain.Enums.Status.Deleted;
-            await _dbContext.SaveChangesAsync();
+            var userIdentityId = _dbContext.Entry(doctor).Property<Guid?>("UserIdentityId").CurrentValue
+                ?? throw new ArgumentException($"UserIdentityId not found for Doctor {doctorId}");
+
+            var userIdentity = await _userManager.FindByIdAsync(userIdentityId.ToString())
+                ?? throw new ArgumentException($"UserIdentity with ID {userIdentityId} not found.");
+
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                doctor.Status = Status.Deleted;
+                userIdentity.Status = Status.Deleted;
+
+                var updateIdentityResult = await _userManager.UpdateAsync(userIdentity);
+                if (!updateIdentityResult.Succeeded)
+                {
+                    throw new Exception($"Failed to update UserIdentity: {string.Join("; ", updateIdentityResult.Errors.Select(e => e.Description))}");
+                }
+
+                await _dbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                Console.WriteLine($"Doctor {doctorId} and UserIdentity {userIdentityId} set to Deleted status.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                Console.WriteLine($"Error in DeleteDoctorAsync: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<ManagerProfileDto> GetManagerProfileAsync(Guid userIdentityId)
@@ -583,7 +654,8 @@ namespace MediAppointment.Infrastructure.Services
                 UserName = dto.Email,
                 Email = dto.Email,
                 FullName = dto.FullName,
-                PhoneNumber = dto.PhoneNumber
+                PhoneNumber = dto.PhoneNumber,
+                RefreshToken = ""
             };
             var result = await _userManager.CreateAsync(userIdentity, dto.Password);
             if (!result.Succeeded)
