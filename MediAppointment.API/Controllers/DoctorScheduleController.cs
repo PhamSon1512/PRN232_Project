@@ -255,5 +255,82 @@ namespace MediAppointment.API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet("GetRoomAvailability")]
+        public async Task<IActionResult> GetRoomAvailability(Guid roomId, int year, int week)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest(new { success = false, message = "User ID claim is missing or empty" });
+                }
+
+                if (!Guid.TryParse(userIdClaim, out Guid userId))
+                {
+                    return BadRequest(new { success = false, message = "Invalid User ID format" });
+                }
+
+                // Calculate week start and end dates
+                var jan1 = new DateTime(year, 1, 1);
+                var daysOffset = (int)DayOfWeek.Monday - (int)jan1.DayOfWeek;
+                var firstMonday = jan1.AddDays(daysOffset);
+                var startOfWeek = firstMonday.AddDays((week - 1) * 7);
+                var endOfWeek = startOfWeek.AddDays(6);
+
+                // Get overall room availability (including other doctors)
+                var overallRequest = new DoctorScheduleRequestDTO
+                {
+                    DoctorId = null, // null means get all doctors' schedules for this room
+                    RoomId = roomId,
+                    DateStart = startOfWeek,
+                    DateEnd = endOfWeek
+                };
+
+                // Get current doctor's schedule
+                var currentDoctorRequest = new DoctorScheduleRequestDTO
+                {
+                    DoctorId = userId,
+                    RoomId = roomId,
+                    DateStart = startOfWeek,
+                    DateEnd = endOfWeek
+                };
+
+                var overallAvailability = await _service.GetDoctorSchedule(overallRequest);
+                var currentDoctorSchedule = await _service.GetDoctorSchedule(currentDoctorRequest);
+
+                var result = new List<object>();
+                foreach (var availability in overallAvailability)
+                {
+                    var currentDoctorDay = currentDoctorSchedule.FirstOrDefault(d => d.Date.Date == availability.Date.Date);
+                    
+                    result.Add(new
+                    {
+                        Date = availability.Date,
+                        Morning = new
+                        {
+                            IsOccupiedByOthers = !string.IsNullOrEmpty(availability.DoctorNameMorning),
+                            OccupiedByDoctor = availability.DoctorNameMorning,
+                            IsRegisteredByCurrentDoctor = !string.IsNullOrEmpty(currentDoctorDay?.RoomMorning),
+                            CanRegister = string.IsNullOrEmpty(availability.DoctorNameMorning)
+                        },
+                        Afternoon = new
+                        {
+                            IsOccupiedByOthers = !string.IsNullOrEmpty(availability.DoctorNameAfternoon),
+                            OccupiedByDoctor = availability.DoctorNameAfternoon,
+                            IsRegisteredByCurrentDoctor = !string.IsNullOrEmpty(currentDoctorDay?.RoomAfternoon),
+                            CanRegister = string.IsNullOrEmpty(availability.DoctorNameAfternoon)
+                        }
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

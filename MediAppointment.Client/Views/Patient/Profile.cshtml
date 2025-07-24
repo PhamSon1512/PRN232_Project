@@ -1,149 +1,350 @@
 ﻿@model MediAppointment.Client.Models.Patient.PatientViewModel
 @{
     ViewData["Title"] = "Hồ sơ bệnh nhân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Thông tin hồ sơ bệnh nhân</h2>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header mb-4">
+                <h2 class="page-title">
+                    <i class="bi bi-person-lines-fill me-3"></i>
+                    Hồ sơ bệnh nhân
+                </h2>
+                <p class="page-subtitle">Quản lý thông tin cá nhân và hồ sơ bệnh án</p>
+            </div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
 
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">Thông tin cá nhân</div>
-    <div class="card-body">
-        <p><strong>Họ tên:</strong> @Model.FullName</p>
-        <p><strong>Email:</strong> @Model.Email</p>
-        <p><strong>Số điện thoại:</strong> @Model.PhoneNumber</p>
-        <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
-        <p><strong>Giới tính:</strong> @Model.GenderDisplay</p>
-        <p><strong>Địa chỉ:</strong> @Model.Address</p>
-        <p><strong>BHYT:</strong> @Model.BHYT</p>
-        <p><strong>CCCD:</strong> @Model.CCCD</p>
-        <p><strong>Tuổi:</strong> @Model.Age</p>
-    </div>
-</div>
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-gradient-custom text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        Thông tin cá nhân
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-person-fill info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Họ tên</label>
+                                    <p class="info-value">@Model.FullName</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-envelope-fill info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Email</label>
+                                    <p class="info-value">@Model.Email</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-telephone-fill info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Số điện thoại</label>
+                                    <p class="info-value">@Model.PhoneNumber</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-calendar-date info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Ngày sinh</label>
+                                    <p class="info-value">@Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-gender-ambiguous info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Giới tính</label>
+                                    <p class="info-value">@Model.GenderDisplay</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-geo-alt-fill info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">Địa chỉ</label>
+                                    <p class="info-value">@Model.Address</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-shield-fill-check info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">BHYT</label>
+                                    <p class="info-value">@Model.BHYT</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="bi bi-credit-card-fill info-icon"></i>
+                                <div class="info-content">
+                                    <label class="info-label">CCCD</label>
+                                    <p class="info-value">@Model.CCCD</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<div class="card mb-4">
-    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-        <span>Danh sách hồ sơ bệnh án</span>
-        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addRecordModal">+ Thêm hồ sơ</button>
-    </div>
-    <div class="card-body">
-        @if (Model.MedicalRecords != null && Model.MedicalRecords.Any())
-        {
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Ngày cập nhật</th>
-                        <th>Chẩn đoán</th>
-                        <th>Triệu chứng</th>
-                        <th>Kết quả</th>
-                        <th>Bác sĩ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var record in Model.MedicalRecords)
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Danh sách hồ sơ bệnh án
+                    </h4>
+                    <button class="btn btn-light btn-add-record" data-bs-toggle="modal" data-bs-target="#addRecordModal">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Thêm hồ sơ
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.MedicalRecords != null && Model.MedicalRecords.Any())
                     {
-                        <tr>
-                            <td>@record.LastUpdated</td>
-                            <td>@record.Diagnosis</td>
-                            <td>@record.Symptoms</td>
-                            <td>@record.MedicalResult</td>
-                            <td>@record.DoctorName</td>
-                        </tr>
+                        <div class="table-responsive">
+                            <table class="table table-hover medical-records-table">
+                                <thead class="table-header">
+                                    <tr>
+                                        <th><i class="bi bi-calendar-event me-1"></i>Ngày cập nhật</th>
+                                        <th><i class="bi bi-clipboard-data me-1"></i>Chẩn đoán</th>
+                                        <th><i class="bi bi-thermometer me-1"></i>Triệu chứng</th>
+                                        <th><i class="bi bi-check-circle me-1"></i>Kết quả</th>
+                                        <th><i class="bi bi-person-badge me-1"></i>Bác sĩ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var record in Model.MedicalRecords)
+                                    {
+                                        <tr class="record-row">
+                                            <td>
+                                                <span class="date-badge">@record.LastUpdated</span>
+                                            </td>
+                                            <td>
+                                                <div class="diagnosis-text">@record.Diagnosis</div>
+                                            </td>
+                                            <td>
+                                                <div class="symptoms-text">@record.Symptoms</div>
+                                            </td>
+                                            <td>
+                                                <div class="result-text">@record.MedicalResult</div>
+                                            </td>
+                                            <td>
+                                                <div class="doctor-info">
+                                                    <i class="bi bi-person-check me-1"></i>
+                                                    @record.DoctorName
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <p class="text-muted">Chưa có hồ sơ bệnh án nào.</p>
-        }
+                    else
+                    {
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-clipboard-x"></i>
+                            </div>
+                            <h5 class="empty-title">Chưa có hồ sơ bệnh án</h5>
+                            <p class="empty-description">Bạn chưa có hồ sơ bệnh án nào. Hãy thêm hồ sơ đầu tiên!</p>
+                            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addRecordModal">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Thêm hồ sơ đầu tiên
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Modal Thêm Hồ Sơ -->
 <div class="modal fade" id="addRecordModal" tabindex="-1" aria-labelledby="addRecordModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content shadow-lg">
             <form asp-action="AddMedicalRecord" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addRecordModalLabel">Thêm hồ sơ bệnh án</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <div class="modal-header bg-gradient-custom text-white">
+                    <h5 class="modal-title" id="addRecordModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Thêm hồ sơ bệnh án
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <input type="hidden" asp-for="Id" name="PatientId" />
 
                     <div class="row">
+                        <div class="col-12 mb-4">
+                            <h6 class="section-title">
+                                <i class="bi bi-body-text me-2"></i>
+                                Thông tin cơ bản
+                            </h6>
+                            <hr class="section-divider">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-arrows-vertical me-1"></i>
+                                Chiều cao (cm) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" name="Height" placeholder="Nhập chiều cao" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-speedometer me-1"></i>
+                                Cân nặng (kg) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" name="Weight" placeholder="Nhập cân nặng" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-droplet-fill me-1"></i>
+                                Nhóm máu
+                            </label>
+                            <select class="form-select" name="BloodType">
+                                <option value="">-- Chọn nhóm máu --</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="AB">AB</option>
+                                <option value="O">O</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-4 mt-3">
+                            <h6 class="section-title">
+                                <i class="bi bi-clipboard-data me-2"></i>
+                                Thông tin y tế
+                            </h6>
+                            <hr class="section-divider">
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Chiều cao (cm)</label>
-                            <input type="number" class="form-control" name="Height" required />
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-activity me-1"></i>
+                                Dấu hiệu sinh tồn
+                            </label>
+                            <input type="text" class="form-control" name="VitalSigns" placeholder="Ví dụ: Huyết áp 120/80, Mạch 72..." />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Cân nặng (kg)</label>
-                            <input type="number" class="form-control" name="Weight" required />
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-heart-pulse me-1"></i>
+                                Bệnh mãn tính
+                            </label>
+                            <textarea class="form-control" name="Chronic" rows="2" placeholder="Nhập các bệnh mãn tính (nếu có)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-thermometer me-1"></i>
+                                Triệu chứng
+                            </label>
+                            <textarea class="form-control" name="Symptoms" rows="3" placeholder="Mô tả các triệu chứng hiện tại"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-clipboard-data me-1"></i>
+                                Chẩn đoán
+                            </label>
+                            <textarea class="form-control" name="Diagnosis" rows="3" placeholder="Chẩn đoán của bác sĩ"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-4 mt-3">
+                            <h6 class="section-title">
+                                <i class="bi bi-person-check me-2"></i>
+                                Thông tin điều trị
+                            </h6>
+                            <hr class="section-divider">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person-badge me-1"></i>
+                                Bác sĩ điều trị
+                            </label>
+                            <input type="text" class="form-control" name="DoctorName" placeholder="Tên bác sĩ" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-calendar-plus me-1"></i>
+                                Lịch tái khám
+                            </label>
+                            <input type="date" class="form-control" name="NextAppointmentDate" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Kết quả khám
+                            </label>
+                            <textarea class="form-control" name="MedicalResult" rows="3" placeholder="Kết quả khám bệnh"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-medical me-1"></i>
+                                Phác đồ điều trị
+                            </label>
+                            <textarea class="form-control" name="TreatmentPlan" rows="3" placeholder="Kế hoạch điều trị"></textarea>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Nhóm máu</label>
-                        <input type="text" class="form-control" name="BloodType" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Bệnh mãn tính</label>
-                        <textarea class="form-control" name="Chronic"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Triệu chứng</label>
-                        <textarea class="form-control" name="Symptoms"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Chẩn đoán</label>
-                        <textarea class="form-control" name="Diagnosis"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Bác sĩ</label>
-                        <input type="text" class="form-control" name="DoctorName" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Kết quả khám</label>
-                        <textarea class="form-control" name="MedicalResult"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Lịch tái khám</label>
-                        <input type="date" class="form-control" name="NextAppointmentDate" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Phác đồ điều trị</label>
-                        <textarea class="form-control" name="TreatmentPlan"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Thuốc được kê</label>
-                        <textarea class="form-control" name="Medications"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Dấu hiệu sinh tồn</label>
-                        <input type="text" class="form-control" name="VitalSigns" />
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-capsule me-1"></i>
+                            Thuốc được kê
+                        </label>
+                        <textarea class="form-control" name="Medications" rows="3" placeholder="Danh sách thuốc được kê đơn"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Lưu</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <div class="modal-footer bg-light">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check2-circle me-2"></i>
+                        Lưu hồ sơ
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Hủy bỏ
+                    </button>
                 </div>
             </form>
         </div>
@@ -152,4 +353,297 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+}
+
+@section Styles {
+    <style>
+        /* Main Layout Styles */
+        .bg-gradient-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+
+        /* Page Header Styles */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .page-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        /* Personal Info Styles */
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .info-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .info-icon {
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-right: 1rem;
+            margin-top: 0.2rem;
+            min-width: 20px;
+        }
+        
+        .info-content {
+            flex: 1;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+            font-size: 1rem;
+            color: #2c3e50;
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        .age-badge-container {
+            text-align: center;
+        }
+        
+        .age-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Medical Records Table Styles */
+        .medical-records-table {
+            margin: 0;
+        }
+        
+        .table-header th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .table-header th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        
+        .table-header th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        
+        .record-row {
+            transition: all 0.2s ease;
+        }
+        
+        .record-row:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+        
+        .record-row td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+        
+        .date-badge {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .diagnosis-text, .symptoms-text, .result-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        
+        .doctor-info {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        /* Empty State Styles */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-title {
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-description {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Button Styles */
+        .btn-add-record {
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-add-record:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+        }
+
+        /* Modal Styles */
+        .modal-xl {
+            max-width: 90%;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .modal-header {
+            border-radius: 15px 15px 0 0;
+            border: none;
+        }
+        
+        .modal-footer {
+            border: none;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .section-title {
+            color: #495057;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-divider {
+            border: none;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-bottom: 1rem;
+        }
+        
+        .form-label.fw-bold {
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .info-item {
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+            }
+            
+            .modal-xl {
+                max-width: 95%;
+            }
+            
+            .table-responsive {
+                border-radius: 10px;
+            }
+        }
+    </style>
 }

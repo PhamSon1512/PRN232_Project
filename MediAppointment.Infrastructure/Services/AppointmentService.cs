@@ -184,7 +184,7 @@ namespace MediAppointment.Infrastructure.Services
             });
         }
 
-        public async Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request)
+        public async Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request, Guid? userId = null)
         {
             var timeSlots = await _context.TimeSlot
                 .OrderBy(ts => ts.Shift) // Sáng trước, chiều sau
@@ -203,6 +203,21 @@ namespace MediAppointment.Infrastructure.Services
                 {
                     var roomAvailabilities = new List<RoomAvailability>();
                     int availableRoomsCount = 0;
+
+                    // Kiểm tra xem bệnh nhân đã đặt lịch trong cùng khoa và cùng thời gian hay chưa
+                    bool patientAlreadyBooked = false;
+                    if (userId.HasValue)
+                    {
+                        patientAlreadyBooked = await _context.Appointments
+                            .Include(a => a.RoomTimeSlot)
+                                .ThenInclude(rts => rts.Room)
+                            .AnyAsync(a => 
+                                a.PatientId == userId.Value &&
+                                a.RoomTimeSlot.Room.DepartmentId == request.DepartmentId &&
+                                a.RoomTimeSlot.TimeSlotId == timeSlot.Id &&
+                                a.AppointmentDate.Date == date.Date &&
+                                a.Status == AppointmentStatus.Scheduled);
+                    }
 
                     foreach (var room in departmentRooms)
                     {
@@ -240,12 +255,16 @@ namespace MediAppointment.Infrastructure.Services
                     }
 
                     var mappedTimeSlot = _mapper.Map<TimeSlotDTO>(timeSlot);
+                    
+                    // Nếu bệnh nhân đã đặt lịch trong cùng khoa và cùng thời gian, đánh dấu là không available
+                    bool isTimeSlotAvailable = availableRoomsCount > 0 && !patientAlreadyBooked;
+                    
                     result.Add(new TimeSlotAvailabilityResponse
                     {
                         Date = date,
                         TimeSlot = mappedTimeSlot,
-                        IsAvailable = availableRoomsCount > 0,
-                        AvailableRooms = availableRoomsCount,
+                        IsAvailable = isTimeSlotAvailable,
+                        AvailableRooms = patientAlreadyBooked ? 0 : availableRoomsCount, // Hiển thị 0 nếu đã đặt
                         TotalRooms = departmentRooms.Count,
                         RoomDetails = roomAvailabilities
                     });

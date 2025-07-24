@@ -77,7 +77,15 @@ namespace MediAppointment.API.Controllers
         [HttpPost("GetAvailableTimeSlots")]
         public async Task<IActionResult> GetAvailableTimeSlots(GetTimeSlotExistDTO request)
         {
-            var availableSlots = await _appointmentService.GetAvailableTimeSlotsForBooking(request);
+            // Lấy userId từ JWT token để check xem bệnh nhân đã đặt lịch hay chưa
+            Guid? userId = null;
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim))
+            {
+                userId = Guid.Parse(userIdClaim);
+            }
+
+            var availableSlots = await _appointmentService.GetAvailableTimeSlotsForBooking(request, userId);
             return Ok(availableSlots);
         }
 

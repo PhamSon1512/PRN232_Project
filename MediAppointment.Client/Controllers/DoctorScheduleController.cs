@@ -144,6 +144,31 @@ namespace MediAppointment.Client.Controllers
         {
             try
             {
+                // First check if slot is available
+                var availabilityResult = await _scheduleService.GetRoomAvailabilityAsync(roomId, year, week);
+                if (availabilityResult.Success && availabilityResult.Data != null)
+                {
+                    var dayAvailability = availabilityResult.Data.FirstOrDefault(d => d.Date.Date == date.Date);
+                    if (dayAvailability != null)
+                    {
+                        var periodAvailability = period.Equals("morning", StringComparison.OrdinalIgnoreCase) 
+                            ? dayAvailability.Morning 
+                            : dayAvailability.Afternoon;
+
+                        if (periodAvailability.IsOccupiedByOthers)
+                        {
+                            TempData["ErrorMessage"] = $"Ca {(period == "morning" ? "sáng" : "chiều")} ngày {date:dd/MM/yyyy} đã có bác sĩ {periodAvailability.OccupiedByDoctor} đăng ký. Vui lòng chọn ca khác.";
+                            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+                        }
+
+                        if (periodAvailability.IsRegisteredByCurrentDoctor)
+                        {
+                            TempData["InfoMessage"] = $"Bạn đã đăng ký ca {(period == "morning" ? "sáng" : "chiều")} ngày {date:dd/MM/yyyy} rồi.";
+                            return RedirectToAction("Manage", new { departmentId, roomId, year, week });
+                        }
+                    }
+                }
+
                 // Get default time slots for the period
                 var timeSlotsResult = await _timeSlotService.GetTimeSlotsAsync();
                 if (!timeSlotsResult.Success || timeSlotsResult.Data == null)
@@ -545,10 +570,10 @@ namespace MediAppointment.Client.Controllers
         {
             try
             {
-                // Get doctor's existing schedule for the selected room and week
-                var result = await _scheduleService.GetDoctorScheduleAsync(model.RoomId, model.Year, model.Week);
+                // Get room availability (shows all doctors' registrations)
+                var availabilityResult = await _scheduleService.GetRoomAvailabilityAsync(model.RoomId, model.Year, model.Week);
                 
-                if (result.Success && result.Data != null)
+                if (availabilityResult.Success && availabilityResult.Data != null)
                 {
                     // Calculate week dates
                     var jan1 = new DateTime(model.Year, 1, 1);
@@ -557,11 +582,53 @@ namespace MediAppointment.Client.Controllers
                     var startOfWeek = firstMonday.AddDays((model.Week - 1) * 7);
                     var weekDates = Enumerable.Range(0, 7).Select(i => startOfWeek.AddDays(i)).ToList();
 
-                    // Group schedule data by date
+                    // Create schedule slots based on availability data
                     foreach (var date in weekDates)
                     {
-                        var dailySlots = result.Data.Where(s => s.Date.Date == date.Date).ToList();
-                        model.WeeklySchedule[date.Date] = dailySlots;
+                        var dayAvailability = availabilityResult.Data.FirstOrDefault(d => d.Date.Date == date.Date);
+                        var daySlots = new List<ScheduleSlot>();
+
+                        if (dayAvailability != null)
+                        {
+                            // Morning slot
+                            if (dayAvailability.Morning.IsRegisteredByCurrentDoctor)
+                            {
+                                daySlots.Add(new ScheduleSlot
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Date = date,
+                                    Period = "morning",
+                                    TimeRange = "07:00 - 11:00",
+                                    IsSelected = true,
+                                    IsOccupied = true
+                                });
+                            }
+
+                            // Afternoon slot
+                            if (dayAvailability.Afternoon.IsRegisteredByCurrentDoctor)
+                            {
+                                daySlots.Add(new ScheduleSlot
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Date = date,
+                                    Period = "afternoon",
+                                    TimeRange = "13:00 - 17:00",
+                                    IsSelected = true,
+                                    IsOccupied = true
+                                });
+                            }
+                        }
+
+                        model.WeeklySchedule[date.Date] = daySlots;
+                        
+                        // Store availability data for UI
+                        if (dayAvailability != null)
+                        {
+                            if (model.RoomAvailability == null)
+                                model.RoomAvailability = new Dictionary<DateTime, RoomAvailabilitySlot>();
+                            
+                            model.RoomAvailability[date.Date] = dayAvailability;
+                        }
                     }
                 }
                 else
@@ -590,6 +657,26 @@ namespace MediAppointment.Client.Controllers
             foreach (var date in weekDates)
             {
                 model.WeeklySchedule[date.Date] = new List<ScheduleSlot>();
+                
+                // Create default availability (all available)
+                model.RoomAvailability[date.Date] = new RoomAvailabilitySlot
+                {
+                    Date = date,
+                    Morning = new PeriodAvailability
+                    {
+                        IsOccupiedByOthers = false,
+                        OccupiedByDoctor = string.Empty,
+                        IsRegisteredByCurrentDoctor = false,
+                        CanRegister = true
+                    },
+                    Afternoon = new PeriodAvailability
+                    {
+                        IsOccupiedByOthers = false,
+                        OccupiedByDoctor = string.Empty,
+                        IsRegisteredByCurrentDoctor = false,
+                        CanRegister = true
+                    }
+                };
             }
         }
 

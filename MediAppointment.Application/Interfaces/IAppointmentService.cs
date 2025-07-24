@@ -30,7 +30,7 @@ namespace MediAppointment.Application.Interfaces
         Task<IEnumerable<DepartmentResponse>> GetDepartments();
 
         // Lấy thông tin chi tiết về availability của time slots cho booking
-        Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request);
+        Task<IEnumerable<TimeSlotAvailabilityResponse>> GetAvailableTimeSlotsForBooking(GetTimeSlotExistDTO request, Guid? userId = null);
 
         // Book appointment với thông tin chi tiết hơn
         Task BookAppointment(Guid userId, BookAppointmentRequest request);
