@@ -259,9 +259,17 @@
                     morningSlots.forEach(slot => {
                         const btnClass = slot.isAvailable ? 'btn-outline-success' : 'btn-outline-danger';
                         const disabled = !slot.isAvailable ? 'disabled' : '';
-                        const availText = slot.isAvailable ? 
-                            `${slot.availableRooms}/${slot.totalRooms} phòng có sẵn` : 
-                            'Hết chỗ (đã đặt)';
+                        
+                        // Xác định text hiển thị dựa trên trạng thái
+                        let statusText;
+                        if (slot.isAvailable) {
+                            statusText = 'Còn chỗ';
+                        } else if (slot.availableRooms === 0 && slot.totalRooms > 0) {
+                            // Nếu availableRooms = 0 có thể là do bệnh nhân đã đặt hoặc hết chỗ
+                            statusText = 'Đã đặt lịch';
+                        } else {
+                            statusText = 'Hết chỗ';
+                        }
                         
                         html += `
                             <div class="col-md-3 col-sm-6 mb-2">
@@ -271,7 +279,7 @@
                                         data-time-range="${slot.timeRange}"
                                         ${disabled}>
                                     <div class="fw-bold">${slot.timeRange}</div>
-                                    <small class="${slot.isAvailable ? 'text-muted' : 'text-white'}">Status: ${slot.isAvailable ? 'Còn chỗ' : 'Hết chỗ'}</small>
+                                    <small class="${slot.isAvailable ? 'text-muted' : 'text-white'}">Status: ${statusText}</small>
                                 </button>
                             </div>
                         `;
@@ -285,9 +293,17 @@
                     afternoonSlots.forEach(slot => {
                         const btnClass = slot.isAvailable ? 'btn-outline-success' : 'btn-outline-danger';
                         const disabled = !slot.isAvailable ? 'disabled' : '';
-                        const availText = slot.isAvailable ? 
-                            `${slot.availableRooms}/${slot.totalRooms} phòng có sẵn` : 
-                            'Hết chỗ (đã đặt)';
+                        
+                        // Xác định text hiển thị dựa trên trạng thái
+                        let statusText;
+                        if (slot.isAvailable) {
+                            statusText = 'Còn chỗ';
+                        } else if (slot.availableRooms === 0 && slot.totalRooms > 0) {
+                            // Nếu availableRooms = 0 có thể là do bệnh nhân đã đặt hoặc hết chỗ
+                            statusText = 'Đã đặt lịch';
+                        } else {
+                            statusText = 'Hết chỗ';
+                        }
                         
                         html += `
                             <div class="col-md-3 col-sm-6 mb-2">
@@ -297,7 +313,7 @@
                                         data-time-range="${slot.timeRange}"
                                         ${disabled}>
                                     <div class="fw-bold">${slot.timeRange}</div>
-                                    <small class="${slot.isAvailable ? 'text-muted' : 'text-white'}">Status: ${slot.isAvailable ? 'Còn chỗ' : 'Hết chỗ'}</small>
+                                    <small class="${slot.isAvailable ? 'text-muted' : 'text-white'}">Status: ${statusText}</small>
                                 </button>
                             </div>
                         `;

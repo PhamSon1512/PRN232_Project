@@ -22,6 +22,7 @@ namespace MediAppointment.Client.Models.DoctorSchedule
         public List<int> AvailableYears { get; set; } = new();
         public List<int> AvailableWeeks { get; set; } = new();
         public Dictionary<DateTime, List<ScheduleSlot>> WeeklySchedule { get; set; } = new();
+        public Dictionary<DateTime, RoomAvailabilitySlot> RoomAvailability { get; set; } = new();
         public List<ScheduleCreateRequest> SelectedSlots { get; set; } = new();
     }
 
@@ -65,5 +66,20 @@ namespace MediAppointment.Client.Models.DoctorSchedule
     public class BulkDeleteRequest
     {
         public List<ScheduleDeleteRequest> Schedules { get; set; } = new();
+    }
+
+    public class RoomAvailabilitySlot
+    {
+        public DateTime Date { get; set; }
+        public PeriodAvailability Morning { get; set; } = new();
+        public PeriodAvailability Afternoon { get; set; } = new();
+    }
+
+    public class PeriodAvailability
+    {
+        public bool IsOccupiedByOthers { get; set; }
+        public string OccupiedByDoctor { get; set; } = string.Empty;
+        public bool IsRegisteredByCurrentDoctor { get; set; }
+        public bool CanRegister { get; set; }
     }
 }

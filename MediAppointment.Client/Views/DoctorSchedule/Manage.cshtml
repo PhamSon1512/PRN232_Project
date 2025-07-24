@@ -165,11 +165,14 @@
                                                     var morningSlots = Model.WeeklySchedule.TryGetValue(date.Date, out var slotsMorning) 
                                                         ? slotsMorning.Where(s => s.Period == "morning").ToList() 
                                                         : new List<MediAppointment.Client.Models.DoctorSchedule.ScheduleSlot>();
+                                                    
+                                                    var availability = Model.RoomAvailability.TryGetValue(date.Date, out var dayAvail) ? dayAvail : null;
                                                 }
                                                 
                                                 <div class="schedule-cell" data-date="@date.ToString("yyyy-MM-dd")" data-period="morning">
                                                     @if (morningSlots.Any())
                                                     {
+                                                        <!-- Current doctor has registered -->
                                                         <div class="registered-slots">
                                                             <div class="text-center mb-3">
                                                                 <span class="badge bg-success" style="font-size: 1rem; padding: 8px 12px;">
@@ -191,8 +194,23 @@
                                                             </form>
                                                         </div>
                                                     }
+                                                    else if (availability?.Morning.IsOccupiedByOthers == true)
+                                                    {
+                                                        <!-- Another doctor has occupied this slot -->
+                                                        <div class="occupied-slot">
+                                                            <div class="text-center mb-2">
+                                                                <i class="bi bi-person-fill-x text-warning" style="font-size: 1.5rem;"></i>
+                                                                <div class="text-warning small fw-bold">Đã có bác sĩ khác</div>
+                                                                <div class="text-muted small">@availability.Morning.OccupiedByDoctor</div>
+                                                            </div>
+                                                            <div class="alert alert-warning p-2 mb-0 small">
+                                                                <i class="bi bi-exclamation-triangle"></i> Hết chỗ
+                                                            </div>
+                                                        </div>
+                                                    }
                                                     else
                                                     {
+                                                        <!-- Available for registration -->
                                                         <div class="empty-slot">
                                                             <div class="text-center mb-2">
                                                                 <i class="bi bi-calendar-plus text-muted" style="font-size: 1.5rem;"></i>
@@ -230,11 +248,14 @@
                                                     var afternoonSlots = Model.WeeklySchedule.TryGetValue(date.Date, out var slotsAfternoon) 
                                                         ? slotsAfternoon.Where(s => s.Period == "afternoon").ToList() 
                                                         : new List<MediAppointment.Client.Models.DoctorSchedule.ScheduleSlot>();
+                                                    
+                                                    var availability = Model.RoomAvailability.TryGetValue(date.Date, out var dayAvail) ? dayAvail : null;
                                                 }
                                                 
                                                 <div class="schedule-cell" data-date="@date.ToString("yyyy-MM-dd")" data-period="afternoon">
                                                     @if (afternoonSlots.Any())
                                                     {
+                                                        <!-- Current doctor has registered -->
                                                         <div class="registered-slots">
                                                             <div class="text-center mb-3">
                                                                 <span class="badge bg-success" style="font-size: 1rem; padding: 8px 12px;">
@@ -256,8 +277,23 @@
                                                             </form>
                                                         </div>
                                                     }
+                                                    else if (availability?.Afternoon.IsOccupiedByOthers == true)
+                                                    {
+                                                        <!-- Another doctor has occupied this slot -->
+                                                        <div class="occupied-slot">
+                                                            <div class="text-center mb-2">
+                                                                <i class="bi bi-person-fill-x text-warning" style="font-size: 1.5rem;"></i>
+                                                                <div class="text-warning small fw-bold">Đã có bác sĩ khác</div>
+                                                                <div class="text-muted small">@availability.Afternoon.OccupiedByDoctor</div>
+                                                            </div>
+                                                            <div class="alert alert-warning p-2 mb-0 small">
+                                                                <i class="bi bi-exclamation-triangle"></i> Hết chỗ
+                                                            </div>
+                                                        </div>
+                                                    }
                                                     else
                                                     {
+                                                        <!-- Available for registration -->
                                                         <div class="empty-slot">
                                                             <div class="text-center mb-2">
                                                                 <i class="bi bi-calendar-plus text-muted" style="font-size: 1.5rem;"></i>
@@ -393,6 +429,19 @@
     border-color: #2196f3;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(33, 150, 243, 0.15);
+}
+
+.occupied-slot {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #ffc107;
+    text-align: center;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.1);
 }
 
 .time-slot-option {

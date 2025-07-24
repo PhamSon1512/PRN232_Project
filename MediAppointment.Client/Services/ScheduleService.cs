@@ -12,6 +12,7 @@ namespace MediAppointment.Client.Services
         Task<ServiceResult<string>> DeleteDoctorScheduleAsync(ScheduleDeleteRequest request);
         Task<ServiceResult<object>> GetScheduleAsync(object request);
         Task<ServiceResult<List<ScheduleSlot>>> GetDoctorScheduleAsync(Guid roomId, int year, int week);
+        Task<ServiceResult<List<RoomAvailabilitySlot>>> GetRoomAvailabilityAsync(Guid roomId, int year, int week);
     }
 
     public class ScheduleService : IScheduleService
@@ -385,6 +386,65 @@ namespace MediAppointment.Client.Services
                     Success = false,
                     ErrorMessage = ex.Message,
                     Data = new List<ScheduleSlot>()
+                };
+            }
+        }
+
+        public async Task<ServiceResult<List<RoomAvailabilitySlot>>> GetRoomAvailabilityAsync(Guid roomId, int year, int week)
+        {
+            try
+            {
+                // Get JWT token from session
+                var token = GetJwtTokenFromSession();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new ServiceResult<List<RoomAvailabilitySlot>>
+                    {
+                        Success = false,
+                        ErrorMessage = "Vui lòng đăng nhập lại",
+                        Data = new List<RoomAvailabilitySlot>()
+                    };
+                }
+
+                // Add Authorization header
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"api/DoctorSchedule/GetRoomAvailability?roomId={roomId}&year={year}&week={week}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var availabilityData = JsonSerializer.Deserialize<List<RoomAvailabilitySlot>>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return new ServiceResult<List<RoomAvailabilitySlot>>
+                    {
+                        Success = true,
+                        Data = availabilityData ?? new List<RoomAvailabilitySlot>()
+                    };
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("API Error: {StatusCode} - {Content}", response.StatusCode, errorContent);
+
+                return new ServiceResult<List<RoomAvailabilitySlot>>
+                {
+                    Success = false,
+                    ErrorMessage = "Không thể tải thông tin phòng",
+                    Data = new List<RoomAvailabilitySlot>()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting room availability");
+                return new ServiceResult<List<RoomAvailabilitySlot>>
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                    Data = new List<RoomAvailabilitySlot>()
                 };
             }
         }
