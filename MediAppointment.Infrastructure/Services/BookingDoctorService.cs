@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using MediAppointment.Application.DTOs.BookingDoctorDTOs;
 using MediAppointment.Application.Interfaces;
 using MediAppointment.Domain.Entities;
@@ -35,7 +36,7 @@ namespace MediAppointment.Infrastructure.Services
                 AppointmentDate = request.AppointmentDate,
                 Note = request.Note,
                 Status = "Pending", // Gán chuỗi trực tiếp
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.AddHours(7)
             };
 
             _context.AppointmentBookingDoctors.Add(booking);
@@ -56,7 +57,7 @@ namespace MediAppointment.Infrastructure.Services
             booking.AppointmentDate = request.AppointmentDate;
             booking.Note = request.Note;
             booking.Status = request.Status;
-            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedAt = DateTime.UtcNow.AddHours(7);
 
             _context.AppointmentBookingDoctors.Update(booking);
             await _context.SaveChangesAsync();
@@ -71,7 +72,7 @@ namespace MediAppointment.Infrastructure.Services
                 throw new Exception("Không tìm thấy lịch hẹn để hủy.");
 
             booking.Status = "Canceled"; // hoặc BookingStatus.Cancelled.ToString() nếu dùng enum
-            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedAt = DateTime.UtcNow.AddHours(7);
 
             await _context.SaveChangesAsync();
         }
@@ -91,7 +92,7 @@ namespace MediAppointment.Infrastructure.Services
 
         public async Task<IEnumerable<BookingDoctorResponse>> GetByDoctorAsync(Guid userIdentityDoctorId)
         {
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserIdentityId == userIdentityDoctorId);
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.Id == userIdentityDoctorId);
             if (doctor == null)
                 return Enumerable.Empty<BookingDoctorResponse>();
 
@@ -106,13 +107,22 @@ namespace MediAppointment.Infrastructure.Services
                 .ToList();
 
             var patients = await _context.Patients
-                .Where(p => patientUserIds.Contains(p.UserIdentityId.Value))
-                .ToDictionaryAsync(p => p.UserIdentityId, p => p.FullName);
+                .Where(p => patientUserIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id, p => p.FullName);
 
             var departmentIds = bookings.Select(b => b.DepartmentId).Distinct().ToList();
             var departments = await _context.Departments
                 .Where(d => departmentIds.Contains(d.Id))
                 .ToDictionaryAsync(d => d.Id, d => d.DepartmentName);
+
+            var timeSlotIds = bookings.Select(b => b.TimeSlotId).Distinct().ToList();
+            var timeSlots = await _context.TimeSlot
+                .Where(t => timeSlotIds.Contains(t.Id))
+                .ToDictionaryAsync(
+                    t => t.Id,
+                    t => new { t.TimeStart, t.Duration }
+                );
+
 
             var result = bookings.Select(b => new BookingDoctorResponse
             {
@@ -129,7 +139,10 @@ namespace MediAppointment.Infrastructure.Services
 
                 DoctorName = doctor.FullName,
                 DepartmentName = departments.TryGetValue(b.DepartmentId, out var deptName) ? deptName : null,
-                PatientName = patients.TryGetValue(b.PatientId, out var patientName) ? patientName : null
+                PatientName = patients.TryGetValue(b.PatientId, out var patientName) ? patientName : null,
+                TimeRange = timeSlots.TryGetValue(b.TimeSlotId, out var slot)
+                    ? $"{slot.TimeStart.ToString(@"hh\:mm")} - {(slot.TimeStart + slot.Duration).ToString(@"hh\:mm")}"
+                    : string.Empty
             });
 
             return result;
@@ -145,7 +158,7 @@ namespace MediAppointment.Infrastructure.Services
 
         public async Task UpdateBookingStatusAsync(Guid appointmentId, Guid doctorId, BookingDoctorStatusUpdate request)
         {
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserIdentityId == doctorId);
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.Id == doctorId);
             var booking = await _context.AppointmentBookingDoctors
                 .FirstOrDefaultAsync(x => x.Id == appointmentId && x.DoctorId == doctor.Id);
 
@@ -186,8 +199,16 @@ namespace MediAppointment.Infrastructure.Services
 
             // Lấy tên bệnh nhân từ bảng Patients, join bằng UserIdentityId
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.UserIdentityId == patientUserIdentityId);
+                .FirstOrDefaultAsync(p => p.Id == patientUserIdentityId);
             var patientName = patient?.FullName;
+
+            var timeSlotIds = bookings.Select(b => b.TimeSlotId).Distinct().ToList();
+            var timeSlots = await _context.TimeSlot
+                .Where(t => timeSlotIds.Contains(t.Id))
+                .ToDictionaryAsync(
+                    t => t.Id,
+                    t => new { t.TimeStart, t.Duration }
+                );
 
             var result = bookings.Select(b => new BookingDoctorResponse
             {
@@ -204,7 +225,10 @@ namespace MediAppointment.Infrastructure.Services
 
                 DoctorName = doctors.TryGetValue(b.DoctorId, out var docName) ? docName : null,
                 DepartmentName = departments.TryGetValue(b.DepartmentId, out var deptName) ? deptName : null,
-                PatientName = patientName
+                PatientName = patientName,
+                TimeRange = timeSlots.TryGetValue(b.TimeSlotId, out var slot)
+                    ? $"{slot.TimeStart.ToString(@"hh\:mm")} - {(slot.TimeStart + slot.Duration).ToString(@"hh\:mm")}"
+                    : string.Empty
             });
 
             return result;
@@ -213,19 +237,118 @@ namespace MediAppointment.Infrastructure.Services
 
         public async Task UpdateStatusAsync(Guid appointmentId, Guid doctorId, BookingDoctorStatusUpdate request)
         {
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserIdentityId == doctorId);
             var booking = await _context.AppointmentBookingDoctors
-                .FirstOrDefaultAsync(x => x.Id == appointmentId && x.DoctorId == doctor.Id);
+                .FirstOrDefaultAsync(x => x.Id == appointmentId && x.DoctorId == doctorId);
 
             if (booking == null)
                 throw new Exception("Không tìm thấy lịch hẹn.");
 
-            booking.Status = request.Status;
+            if (request.Status == "Rejected")
+            {
+                booking.Status = request.Status;
+                booking.Note = request.Note;
+                booking.UpdatedAt = DateTime.UtcNow.AddHours(7);
+                await _context.SaveChangesAsync();
+                return;
+            }
+
+            var appointmentDate = request.AppointmentDate.Date;
+            var timeSlotId = request.TimeSlotID;
+            var departmentId = request.DepartmentId;
+
+            // Lấy shift từ TimeSlotId
+            var timeSlot = await _context.TimeSlot.FirstOrDefaultAsync(t => t.Id == timeSlotId);
+            if (timeSlot == null)
+                throw new Exception("Không tìm thấy khung giờ làm việc.");
+
+            var shift = timeSlot.Shift;
+
+            // Lấy danh sách tất cả các phòng trong khoa
+            var roomIdsInDepartment = await _context.Room
+                .Where(r => r.DepartmentId == departmentId)
+                .Select(r => r.Id)
+                .ToListAsync();
+
+            if (!roomIdsInDepartment.Any())
+                throw new Exception("Không tìm thấy phòng nào trong khoa được chọn.");
+
+            // Tìm RoomTimeSlot có cùng ngày, cùng TimeSlotId trong các phòng đó
+            var roomTimeSlots = await _context.RoomTimeSlot
+                .Include(r => r.TimeSlot)
+                .Include(r => r.Room)
+                .Where(r =>
+                    roomIdsInDepartment.Contains(r.RoomId) &&
+                    r.TimeSlotId == timeSlotId &&
+                    r.Date == appointmentDate)
+                .ToListAsync();
+
+            if (!roomTimeSlots.Any())
+                throw new Exception("Không tìm thấy ca khám phù hợp trong khoa đã chọn.");
+
+            // Ưu tiên tìm slot đã có bác sĩ hiện tại (tránh gán lại)
+            var existingSlotWithDoctor = roomTimeSlots.FirstOrDefault(r => r.DoctorId == doctorId);
+            if (existingSlotWithDoctor != null)
+            {
+                // Kiểm tra đã có bệnh nhân chưa
+                bool hasPatient = await _context.Appointments.AnyAsync(a => a.RoomTimeSlotId == existingSlotWithDoctor.Id);
+                if (hasPatient)
+                    throw new Exception("Ca khám này đã có bệnh nhân khác đăng ký.");
+
+                await CreateAppointmentAsync(request.PatientID, existingSlotWithDoctor.Id, appointmentDate, request.Note);
+            }
+            else
+            {
+                // Tìm một slot chưa có bác sĩ và chưa có bệnh nhân
+                var availableSlot = roomTimeSlots.FirstOrDefault(r => r.DoctorId == null);
+                if (availableSlot == null)
+                    throw new Exception("Tất cả các phòng trong ca này đều đã có bác sĩ.");
+
+                bool hasPatient = await _context.Appointments.AnyAsync(a => a.RoomTimeSlotId == availableSlot.Id);
+                if (hasPatient)
+                    throw new Exception("Tất cả các phòng trong ca này đều đã có bệnh nhân.");
+
+                // Gán bác sĩ vào tất cả các slot cùng phòng, cùng buổi, cùng ngày
+                var sameRoomSameShiftSlots = await _context.RoomTimeSlot
+                    .Where(r => r.RoomId == availableSlot.RoomId
+                                && r.Date == appointmentDate
+                                && r.TimeSlot.Shift == shift)
+                    .Include(r => r.TimeSlot)
+                    .ToListAsync();
+
+                foreach (var slot in sameRoomSameShiftSlots)
+                {
+                    slot.DoctorId = doctorId;
+                }
+
+                await CreateAppointmentAsync(request.PatientID, availableSlot.Id, appointmentDate, request.Note);
+            }
+
+            booking.Status = "Approved";
             booking.Note = request.Note;
-            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedAt = DateTime.UtcNow.AddHours(7);
 
             await _context.SaveChangesAsync();
         }
+
+
+
+        private async Task CreateAppointmentAsync(Guid patientId, Guid roomTimeSlotId, DateTime date, string? note)
+        {
+            var appointment = new Appointment
+            {
+                Id = Guid.NewGuid(),
+                PatientId = patientId,
+                AppointmentDate = date,
+                Status = 0,
+                Note = note,
+                CreatedDate = DateTime.UtcNow.AddHours(7),
+                UpdatedDate = DateTime.UtcNow.AddHours(7),
+                RoomTimeSlotId = roomTimeSlotId
+            };
+
+            _context.Appointments.Add(appointment);
+        }
+
 
     }
 }

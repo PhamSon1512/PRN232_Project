@@ -110,20 +110,35 @@ namespace MediAppointment.API.Controllers
         {
             var doctorIdClaim = User.FindFirst("UserId")?.Value;
             if (string.IsNullOrEmpty(doctorIdClaim))
-                return Unauthorized("Missing UserId claim.");
+                return Unauthorized(new
+                {
+                    message = "Unauthorized: missing doctor ID.",
+                    details = "Không tìm thấy thông tin định danh bác sĩ (UserId claim)."
+                });
 
             Guid doctorId = Guid.Parse(doctorIdClaim);
 
             try
             {
                 await _bookingDoctorService.UpdateStatusAsync(appointmentId, doctorId, request);
-                return Ok(new { Message = "Cập nhật trạng thái lịch hẹn thành công." });
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    message = "Cập nhật trạng thái lịch hẹn thành công."
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = "Cập nhật trạng thái lịch hẹn thất bại.", Details = ex.Message });
+                return BadRequest(new
+                {
+                    IsSuccess = false,
+                    message = "Cập nhật trạng thái lịch hẹn thất bại.",
+                    details = ex.Message
+                });
             }
         }
+
 
     }
 }

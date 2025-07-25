@@ -1,4 +1,5 @@
 ﻿@model MediAppointment.Client.Models.Doctor.Doctor_AssginedScheduleViewModel
+
 @{
 	ViewData["Title"] = "Lịch làm việc";
 	Layout = "~/Views/Shared/_DoctorLayout.cshtml";
@@ -9,117 +10,142 @@
 		.ToList();
 }
 
-<h2 class="text-center my-4">Lịch làm việc trong tuần</h2>
+<style>
+	.bg-gradient-custom {
+		background: linear-gradient(to right, #007bff, #0056d2);
+		border-top-left-radius: 1rem;
+		border-top-right-radius: 1rem;
+	}
+</style>
 
-<table class="table table-bordered text-center align-middle">
-	<thead>
-		<tr>
-			<th style="background-color: cornflowerblue; color: white; width: 220px; padding: 8px;">
-				<form asp-action="Index" method="get">
-					<div style="display: flex; align-items: center; margin-bottom: 4px;">
-						<label for="yearSelect" style="width: 50px; margin-right: 7px;"><strong>YEAR:</strong></label>
-						<select name="year" id="yearSelect" class="form-select form-select-sm" style="width: 100%;">
-							@foreach (var y in Model.AvailableYears)
+<div class="container-fluid px-0 mt-4">
+	<div class="card shadow-lg border-0 rounded-4">
+
+		<!-- ✅ HEADER -->
+		<div class="card-header bg-gradient-custom text-white d-flex align-items-center">
+			<i class="bi bi-calendar-week-fill me-2 fs-5"></i>
+			<h5 class="mb-0 fw-bold">Lịch làm việc trong tuần</h5>
+		</div>
+
+		<!-- ✅ BODY -->
+		<div class="card-body p-4">
+
+			<div class="table-responsive">
+				<table class="table table-bordered text-center align-middle table-hover">
+					<thead>
+						<tr>
+							<th style="background-color: cornflowerblue; color: white; width: 220px; padding: 8px;">
+								<form asp-action="Index" method="get">
+									<div style="display: flex; align-items: center; margin-bottom: 4px;">
+										<label for="yearSelect" style="width: 50px; margin-right: 7px;" class="text-white fw-semibold">Năm:</label>
+										<select name="year" id="yearSelect" class="form-select form-select-sm" style="width: 100%;">
+											@foreach (var y in Model.AvailableYears)
+											{
+												<option value="@y" selected="@(Model.SelectedYear == y ? "selected" : null)">
+													@y
+												</option>
+											}
+										</select>
+									</div>
+									<div style="display: flex; align-items: center; margin-bottom: 4px;">
+										<label for="weekSelect" style="width: 50px; margin-right: 5px" class="text-white fw-semibold">Tuần:</label>
+										<select name="week" id="weekSelect" class="form-select form-select-sm" style="width: 100%;">
+											@foreach (var w in Model.AvailableWeeks)
+											{
+												<option value="@w" selected="@(Model.SelectedWeek == w ? "selected" : null)">
+													@w
+												</option>
+											}
+										</select>
+									</div>
+								</form>
+							</th>
+
+							@foreach (var date in weekDates)
 							{
-								<option value="@y" selected="@(Model.SelectedYear == y ? "selected" : null)">
-									@y
-								</option>
+								<th style="background-color: cornflowerblue; color: white;">
+									<div>@date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+									<div>@date.ToString("dd/MM")</div>
+								</th>
 							}
-						</select>
-					</div>
-					<div style="display: flex; align-items: center; margin-bottom: 4px;">
-						<label for="weekSelect" style="width: 50px; margin-right: 5px"><strong>WEEK:</strong></label>
-						<select name="week" id="weekSelect" class="form-select form-select-sm" style="width: 100%;">
-							@foreach (var w in Model.AvailableWeeks)
+						</tr>
+					</thead>
+
+					<tbody>
+						<!-- Ca sáng -->
+						<tr>
+							<td><strong>Ca Sáng</strong></td>
+							@foreach (var date in weekDates)
 							{
-								<option value="@w" selected="@(Model.SelectedWeek == w ? "selected" : null)">
-									@w
-								</option>
+								<td>
+									@if (Model.MorningSlots.TryGetValue(date.Date, out var slots) && slots.Any())
+									{
+										var firstSlot = slots.First();
+										<div><strong>@firstSlot.RoomName</strong></div>
+										<div style="color: green">07:00 - 11:00</div>
+										<a asp-controller="DoctorHome"
+										   asp-action="Details"
+										   asp-route-date="@date.ToString("yyyy-MM-dd")"
+										   asp-route-period="morning"
+										   asp-route-week="@Model.SelectedWeek"
+										   asp-route-year="@Model.SelectedYear"
+										   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
+									}
+									else
+									{
+										<div class="text-muted fst-italic">Không có lịch</div>
+									}
+								</td>
 							}
-						</select>
-					</div>
-				</form>
-			</th>
+						</tr>
 
-			@foreach (var date in weekDates)
-			{
-				<th style="background-color: cornflowerblue; color: white;">
-					<div>@date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</div>
-					<div>@date.ToString("dd/MM")</div>
-				</th>
-			}
-		</tr>
-	</thead>
+						<!-- Ca chiều -->
+						<tr>
+							<td><strong>Ca Chiều</strong></td>
+							@foreach (var date in weekDates)
+							{
+								<td>
+									@if (Model.AfternoonSlots.TryGetValue(date.Date, out var slots) && slots.Any())
+									{
+										var firstSlot = slots.First();
+										<div><strong>@firstSlot.RoomName</strong></div>
+										<div style="color: green">13:00 - 17:00</div>
+										<a asp-controller="DoctorHome"
+										   asp-action="Details"
+										   asp-route-date="@date.ToString("yyyy-MM-dd")"
+										   asp-route-period="afternoon"
+										   asp-route-week="@Model.SelectedWeek"
+										   asp-route-year="@Model.SelectedYear"
+										   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
+									}
+									else
+									{
+										<div class="text-muted fst-italic">Không có lịch</div>
+									}
+								</td>
+							}
+						</tr>
+					</tbody>
+				</table>
+			</div>
 
-	<tbody>
-		<!-- Ca sáng -->
-		<tr>
-			<td><strong>Ca Sáng</strong></td>
-			@foreach (var date in weekDates)
-			{
-				<td>
-					@if (Model.MorningSlots.TryGetValue(date.Date, out var slots) && slots.Any())
-					{
-						var firstSlot = slots.First();
-						<div><strong>@firstSlot.RoomName</strong></div>
-						<div style="color: green">07:00 - 11:00</div>
-						<a asp-controller="DoctorHome"
-						   asp-action="Details"
-						   asp-route-date="@date.ToString("yyyy-MM-dd")"
-						   asp-route-period="morning"
-						   asp-route-week="@Model.SelectedWeek"
-						   asp-route-year="@Model.SelectedYear"
-						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
-					}
-					else
-					{
-						<span class="text-muted">Không có lịch</span>
-					}
-				</td>
-			}
-		</tr>
+		</div> <!-- end card-body -->
+	</div> <!-- end card -->
+</div>
 
-		<!-- Ca chiều -->
-		<tr>
-			<td><strong>Ca Chiều</strong></td>
-			@foreach (var date in weekDates)
-			{
-				<td>
-					@if (Model.AfternoonSlots.TryGetValue(date.Date, out var slots) && slots.Any())
-					{
-						var firstSlot = slots.First();
-						<div><strong>@firstSlot.RoomName</strong></div>
-						<div style="color: green">13:00 - 17:00</div>
-						<a asp-controller="DoctorHome"
-						   asp-action="Details"
-						   asp-route-date="@date.ToString("yyyy-MM-dd")"
-						   asp-route-period="afternoon"
-						   asp-route-week="@Model.SelectedWeek"
-						   asp-route-year="@Model.SelectedYear"
-						   class="btn btn-sm btn-outline-primary mt-1">Xem chi tiết</a>
-					}
-					else 
-					{
-						<span class="text-muted">Không có lịch</span>
-					}
-				</td>
-			}
-		</tr>
-	</tbody>
-</table>
+@section Scripts {
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const yearSelect = document.getElementById('yearSelect');
+			const weekSelect = document.getElementById('weekSelect');
 
+			yearSelect.addEventListener('change', function () {
+				this.form.submit();
+			});
 
-<script>
-	document.addEventListener('DOMContentLoaded', function () {
-		const yearSelect = document.getElementById('yearSelect');
-		const weekSelect = document.getElementById('weekSelect');
-
-		yearSelect.addEventListener('change', function () {
-			this.form.submit();
+			weekSelect.addEventListener('change', function () {
+				this.form.submit();
+			});
 		});
-
-		weekSelect.addEventListener('change', function () {
-			this.form.submit();
-		});
-	});
-</script>
+	</script>
+}

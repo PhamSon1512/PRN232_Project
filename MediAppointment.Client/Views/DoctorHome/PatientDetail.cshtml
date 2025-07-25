@@ -1,125 +1,204 @@
 ﻿@model MediAppointment.Client.Models.Doctor.Doctor_PatientInfoViewModel
 
 @{
-	ViewData["Title"] = "Thông tin bệnh nhân";
-	Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Thông tin bệnh nhân";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
 }
 
 <style>
+    .a4-form-container, .medical-form-view {
+        background: #fff;
+        width: 794px;
+        padding: 40px 60px;
+        margin: 30px auto;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        border: 1px solid #d0e7f9;
+    }
 
-	.info-pair-container {
-		display: flex;
-		gap: 20px;
-		margin-bottom: 30px;
-	}
+    .sub-title,
+    .form-section-title {
+        font-size: 24px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 30px;
+        color: #2c3e50;
+        text-transform: uppercase;
+        border-bottom: 2px solid #00BFFF;
+        padding-bottom: 10px;
+    }
 
-	.info-box {
-		flex: 1;
-		background-color: #fff;
-		border: 1px solid #ccc;
-		border-left: 5px solid #0d6efd;
-		padding: 20px;
-		border-radius: 8px;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-	}
+    .info-pair-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
 
-	.sub-title {
-		font-size: 16px;
-		font-weight: bold;
-		color: #0d6efd;
-		margin-bottom: 16px;
-		border-bottom: 1px solid #ccc;
-		padding-bottom: 6px;
-		text-transform: uppercase;
-	}
+    .info-box {
+        flex: 1;
+        min-width: 300px;
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+    }
 
-	.form-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 12px 24px;
-	}
+    .form-grid,
+    .record-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 15px 25px;
+    }
 
-	.form-row {
-		display: flex;
-		flex-wrap: nowrap;
-		align-items: center;
-	}
+    .form-row-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
 
-	.form-label {
-		width: 120px;
-		font-weight: 500;
-		color: #222;
-	}
+    .form-row-info.full-width,
+    .record-row.full-width {
+        grid-column: 1 / -1;
+    }
 
-	.form-value {
-		flex: 1;
-		border-bottom: 1px solid #000;
-		padding-left: 6px;
-		min-height: 20px;
-	}
+    .form-label-info {
+        width: 150px;
+        font-weight: 600;
+        color: #555;
+        margin-right: 12px;
+        white-space: nowrap;
+        font-size: 14px;
+    }
 
-	.form-row.full-width {
-		flex-direction: column;
-		align-items: flex-start;
-		grid-column: span 2;
-	}
-
-		.form-row.full-width .form-label {
-			width: auto;
-			margin-bottom: 4px;
-		}
-
-		.form-row.full-width .form-value {
-			width: 100%;
-		}
-
-
-
-
+    .form-value-info {
+        min-width: 100px; /* tăng từ mặc định lên để dài hơn */
+        width: 135px; /* độ rộng mong muốn */
+        text-align: center;
+        color: #333;
+        font-size: 14px;
+        background: #fefefe;
+        border: 2px solid #87CEEB;
+        border-radius: 6px;
+        padding: 8px 12px;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+    .form-value-info.single-line {
+    min-height: auto;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
 
 
-	.medical-form {
-		border: 1px solid #333;
-		padding: 20px;
-		background-color: #fff;
-		font-size: 14px;
-		line-height: 1.6;
-	}
+    /* ====== Bổ sung căn giữa cho 3 trường ====== */
+    .form-row-info.full-width.center-group {
+        justify-content: center;
+    }
 
-	.form-section-title {
-		text-align: center;
-		font-weight: bold;
-		font-size: 16px;
-		text-transform: uppercase;
-		margin-bottom: 20px;
-		text-decoration: underline;
-	}
+    .form-group-inline {
+        display: flex;
+        gap: 130px;
+        justify-content: center;
+        width: 100%;
+        max-width: 600px;
+    }
 
-	.form-row {
-		display: flex;
-		flex-wrap: wrap;
-		margin-bottom: 10px;
-	}
+    .form-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        min-width: 140px;
+    }
 
-	.form-col {
-		flex: 1 1 50%;
-		padding: 4px 8px;
-	}
+    .form-value-info.single-line {
+        min-height: auto;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
 
-	.form-label {
-		display: inline-block;
-		width: 180px;
-		font-weight: 500;
-	}
+    /* ============ Phần hồ sơ bệnh án giữ nguyên ============ */
+    .record-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
 
-	.form-value {
-		display: inline-block;
-		border-bottom: 1px solid #000;
-		min-width: 120px;
-		padding-left: 4px;
-	}
+    .record-label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
 
+    .record-value {
+        color: #333;
+        font-size: 14px;
+        background: #fefefe;
+        border: 2px solid #87CEEB;
+        border-radius: 6px;
+        padding: 8px 12px;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+
+    .record-scroll-box {
+        max-height: 100px;
+        overflow-y: auto;
+        background: #fafafa;
+        border: 2px solid #87CEEB;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .btn {
+        padding: 8px 22px;
+        font-size: 14px;
+        border-radius: 6px;
+        display: inline-block;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+    }
+
+    .btn-secondary {
+        background-color: #ccc;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background-color: #bbb;
+    }
+
+    .record-row-inline {
+        display: flex;
+        gap: 20px;
+    }
+
+    .record-row-inline > .record-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .text-end {
+        text-align: right;
+        margin-top: 25px;
+    }
 </style>
+
 
 <a class="btn btn-secondary mb-3"
    asp-controller="DoctorHome"
@@ -128,249 +207,268 @@
    asp-route-period="@Model?.Period"
    asp-route-week="@Model?.Week"
    asp-route-year="@Model?.Year">
-	← Quay lại lịch khám
+    ← Quay lại lịch khám
 </a>
 
 @if (Model?.Patient == null || Model?.AppointmentSlot == null)
 {
-	<div class="alert alert-warning text-center">
-		Không có thông tin bệnh nhân cho ca làm việc này.
-	</div>
+    <div class="alert alert-warning text-center">
+        Không có thông tin bệnh nhân cho ca làm việc này.
+    </div>
 }
 else
 {
-	<h3 class="mb-4 text-center">Thông tin bệnh nhân</h3>
+    <h3 style="margin-bottom: 24px; text-align: center;">Thông tin bệnh nhân</h3>
 
-	<div class="info-pair-container">
-		<!-- Thông tin cá nhân -->
-		<div class="info-box">
-			<div class="sub-title">Thông tin cá nhân</div>
-			<div class="form-grid">
-				<div class="form-row">
-					<div class="form-label">Họ tên:</div>
-					<div class="form-value">@Model.Patient.FullName</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Giới tính:</div>
-					<div class="form-value">@(Model.Patient.Gender ? "Nam" : "Nữ")</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Ngày sinh:</div>
-					<div class="form-value">@Model.Patient.DateOfBirth.ToString("dd/MM/yyyy")</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">CCCD:</div>
-					<div class="form-value">@Model.Patient.Cccd</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Số điện thoại:</div>
-					<div class="form-value">@Model.Patient.PhoneNumber</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Email:</div>
-					<div class="form-value">@Model.Patient.Email</div>
-				</div>
-				<div class="form-row full-width">
-					<div class="form-label">Địa chỉ:</div>
-					<div class="form-value">@Model.Patient.Address</div>
-				</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin-bottom: 30px;">
+        <!-- Thông tin cá nhân -->
+        <div style="flex: 1 1 48%; background-color: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+            <div style="font-weight: bold; font-size: 18px; margin-bottom: 16px; color: blue;">Thông tin cá nhân</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Họ tên:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.FullName
+                    </div>
+                </div>
 
-				<div class="form-row full-width">
-					<div class="form-label">Mã BHYT:</div>
-					<div class="form-value">@Model.Patient.Bhyt</div>
-				</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Giới tính:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @(Model.Patient.Gender ? "Nam" : "Nữ")
+                    </div>
+                </div>
 
-			</div>
-		</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Ngày sinh:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.DateOfBirth.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
 
-		<!-- Thông tin lịch hẹn -->
-		<div class="info-box">
-			<div class="sub-title">Thông tin lịch hẹn</div>
-			<div class="form-grid">
-				<div class="form-row">
-					<div class="form-label">Phòng khám:</div>
-					<div class="form-value">@Model.AppointmentSlot.RoomName</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Ca khám:</div>
-					<div class="form-value">@Model.AppointmentSlot.Shift</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Ngày đặt lịch:</div>
-					<div class="form-value">@Model.AppointmentDetail.AppointmentDate.ToString("dd/MM/yyyy")</div>
-				</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">CCCD:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.Cccd
+                    </div>
+                </div>
 
-				<div class="form-row">
-					<div class="form-label">Ngày hẹn:</div>
-					<div class="form-value">@Model.AppointmentSlot.Date.ToString("dd/MM/yyyy")</div>
-				</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Số điện thoại:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.PhoneNumber
+                    </div>
+                </div>
 
-				<div class="form-row">
-					<div class="form-label">Thời gian:</div>
-					<div class="form-value">@Model.AppointmentSlot.TimeStart - @Model.AppointmentSlot.TimeEnd</div>
-				</div>
-				<div class="form-row">
-					<div class="form-label">Thời lượng:</div>
-					<div class="form-value">@Model.AppointmentSlot.Duration</div>
-				</div>
-				<div class="form-row full-width">
-					<div class="form-label">Ghi chú:</div>
-					<div class="form-value">
-						@(string.IsNullOrWhiteSpace(Model.AppointmentDetail?.Note) ? "Không có ghi chú" : Model.AppointmentDetail.Note)
-					</div>
-				</div>
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column;">
+                    <div style="font-weight: 500; color: #444; margin-bottom: 6px;">Email:</div>
+                    <div style="padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.Email
+                    </div>
+                </div>
 
-			</div>
-		</div>
-	</div>
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column;">
+                    <div style="font-weight: 500; color: #444; margin-bottom: 6px;">Địa chỉ:</div>
+                    <div style="padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.Address
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column;">
+                    <div style="font-weight: 500; color: #444; margin-bottom: 6px;">Mã BHYT:</div>
+                    <div style="padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.Patient.Bhyt
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin lịch hẹn -->
+        <div style="flex: 1 1 48%; background-color: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+            <div style="font-weight: bold; font-size: 18px; margin-bottom: 16px; color: blue;">Thông tin lịch hẹn</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Phòng khám:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentSlot.RoomName
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Ca khám:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentSlot.Shift
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Ngày đặt lịch:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentDetail.AppointmentDate.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Ngày hẹn:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentSlot.Date.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Thời gian:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentSlot.TimeStart - @Model.AppointmentSlot.TimeEnd
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 500; min-width: 100px; color: #444;">Thời lượng:</div>
+                    <div style="flex: 1; padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @Model.AppointmentSlot.Duration
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column;">
+                    <div style="font-weight: 500; color: #444; margin-bottom: 6px;">Ghi chú:</div>
+                    <div style="padding: 8px 12px; background: #fff; border: 2px solid #87CEEB; border-radius: 6px;">
+                        @(string.IsNullOrWhiteSpace(Model.AppointmentDetail?.Note) ? "Không có ghi chú" : Model.AppointmentDetail.Note)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-	<a asp-controller="DoctorHome"
-	   asp-action="CreateMedicalRecord"
-	   asp-route-patientId="@Model.Patient.Id"
-	   asp-route-roomTimeSlotId="@Model.AppointmentSlot.Id"
-	   asp-route-week="@Model.Week"
-	   asp-route-year="@Model.Year"
-	   asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
-	   asp-route-period="@Model.Period"
-	   class="btn btn-success mb-3">
-		➕ Thêm hồ sơ bệnh án
-	</a>
+    <a asp-controller="DoctorHome"
+       asp-action="CreateMedicalRecord"
+       asp-route-patientId="@Model.Patient.Id"
+       asp-route-roomTimeSlotId="@Model.AppointmentSlot.Id"
+       asp-route-week="@Model.Week"
+       asp-route-year="@Model.Year"
+       asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+       asp-route-period="@Model.Period"
+       class="btn btn-success mb-3">
+        ➕ Thêm hồ sơ bệnh án
+    </a>
 
-	@if (TempData["Success"] != null)
-	{
-		<div id="successAlert"
-			 style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;"
-			 class="alert alert-success text-center shadow p-4 rounded-3">
-			@TempData["Success"]
-		</div>
+    @if (TempData["Success"] != null)
+    {
+        <div id="successAlert"
+             style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;"
+             class="alert alert-success text-center shadow p-4 rounded-3">
+            @TempData["Success"]
+        </div>
 
-		<script>
-			setTimeout(function () {
-				var alert = document.getElementById("successAlert");
-				if (alert) alert.style.display = "none";
-			}, 1000);
-		</script>
-	}
+        <script>
+            setTimeout(function () {
+                var alert = document.getElementById("successAlert");
+                if (alert) alert.style.display = "none";
+            }, 1000);
+        </script>
+    }
 
+    @if (Model?.Patient?.MedicalRecords != null && Model.Patient.MedicalRecords.Any())
+    {
+        foreach (var record in Model.Patient.MedicalRecords.OrderByDescending(r => r.LastUpdated))
+        {
+            <div class="medical-form-view mb-5">
+                <div class="form-section-title">HỒ SƠ BỆNH ÁN</div>
 
-	@if (Model.Patient.MedicalRecords != null && Model.Patient.MedicalRecords.Any())
-	{
-		@foreach (var record in Model.Patient.MedicalRecords.OrderByDescending(r => r.LastUpdated))
-		{
-			<div class="medical-form mb-5">
-				<div class="form-section-title">HỒ SƠ BỆNH ÁN</div>
+                <div class="record-grid">
+                    <div class="record-row">
+                        <label class="record-label">Họ tên:</label>
+                        <div class="record-value">@Model.Patient.FullName</div>
+                    </div>
+                    <div class="record-row">
+                        <label class="record-label">Ngày sinh:</label>
+                        <div class="record-value">@Model.Patient.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="record-row">
+                        <label class="record-label">Chiều cao:</label>
+                        <div class="record-value">@record.Height cm</div>
+                    </div>
+                    <div class="record-row">
+                        <label class="record-label">Cân nặng:</label>
+                        <div class="record-value">@record.Weight kg</div>
+                    </div>
 
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Họ tên:</span>
-						<span class="form-value">@Model.Patient.FullName</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Giới tính:</span>
-						<span class="form-value">@(Model.Patient.Gender ? "Nam" : "Nữ")</span>
-					</div>
-				</div>
+                    <div class="form-row-info full-width center-group">
+                        <div class="form-group-inline">
+                            <div class="form-item">
+                                <div class="form-label-info">Giới tính:</div>
+                                <div class="form-value-info">@(Model.Patient.Gender ? "Nam" : "Nữ")</div>
+                            </div>
+                            <div class="form-item">
+                                <div class="form-label-info">Nhóm máu:</div>
+                                <div class="form-value-info">@Html.Raw(string.IsNullOrWhiteSpace(record.BloodType) ? "<em>Không có dữ liệu</em>" : record.BloodType)</div>
+                            </div>
+                            <div class="form-item">
+                                <div class="form-label-info">Huyết áp:</div>
+                                <div class="form-value-info">@Html.Raw(string.IsNullOrWhiteSpace(record.VitalSigns) ? "<em>Không có dữ liệu</em>" : record.VitalSigns)</div>
+                            </div>
+                        </div>
+                    </div>
 
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Ngày sinh:</span>
-						<span class="form-value">@Model.Patient.DateOfBirth.ToString("dd/MM/yyyy")</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Nhóm máu:</span>
-						<span class="form-value">@record.BloodType</span>
-					</div>
-				</div>
+                </div>
 
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Chiều cao:</span>
-						<span class="form-value">@record.Height cm</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Cân nặng:</span>
-						<span class="form-value">@record.Weight kg</span>
-					</div>
-				</div>
+                <div class="record-row">
+                    <label class="record-label">Tiền sử bệnh:</label>
+                    <div class="record-scroll-box">@Html.Raw(string.IsNullOrWhiteSpace(record.MedicalHistory) ? "<em>Không có dữ liệu</em>" : record.MedicalHistory)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Triệu chứng:</label>
+                    <div class="record-scroll-box">@Html.Raw(string.IsNullOrWhiteSpace(record.Symptoms) ? "<em>Không có dữ liệu</em>" : record.Symptoms)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Dị ứng:</label>
+                    <div class="record-scroll-box">@Html.Raw(string.IsNullOrWhiteSpace(record.Allergies) ? "<em>Không có dữ liệu</em>" : record.Allergies)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Bệnh mãn tính:</label>
+                    <div class="record-scroll-box">@Html.Raw(string.IsNullOrWhiteSpace(record.Chronic) ? "<em>Không có dữ liệu</em>" : record.Chronic)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Khoa đã khám:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.DepartmentVisited) ? "<em>Không có dữ liệu</em>" : record.DepartmentVisited)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Kết quả khám:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.MedicalResult) ? "<em>Không có dữ liệu</em>" : record.MedicalResult)</div>
+                </div>
+              
+                <div class="record-row">
+                    <label class="record-label">Chẩn đoán:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.Diagnosis) ? "<em>Không có dữ liệu</em>" : record.Diagnosis)</div>
+                </div>
+               
+                <div class="record-row">
+                    <label class="record-label">Đơn thuốc:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.Medications) ? "<em>Không có dữ liệu</em>" : record.Medications)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Kế hoạch điều trị:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.TreatmentPlan) ? "<em>Không có dữ liệu</em>" : record.TreatmentPlan)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Bác sĩ khám:</label>
+                    <div class="record-value">@Html.Raw(string.IsNullOrWhiteSpace(record.DoctorName) ? "<em>Không có dữ liệu</em>" : record.DoctorName)</div>
+                </div>
+                <div class="record-row">
+                    <label class="record-label">Lịch hẹn tái khám:</label>
+                    <div class="record-value" style="text-align:center; padding-right:120px">
+                        @Html.Raw(record.NextAppointmentDate.HasValue ? record.NextAppointmentDate.Value.ToString("dd/MM/yyyy") : "<em>Không có dữ liệu</em>")
+                    </div>
+                </div>
 
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Dị ứng:</span>
-						<span class="form-value">@record.Allergies</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Bệnh mãn tính:</span>
-						<span class="form-value">@record.Chronic</span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Tiền sử bệnh:</span>
-						<span class="form-value">@record.MedicalHistory</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Triệu chứng:</span>
-						<span class="form-value">@record.Symptoms</span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Chẩn đoán:</span>
-						<span class="form-value">@record.Diagnosis</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Kết quả khám:</span>
-						<span class="form-value">@record.MedicalResult</span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Khoa đã khám:</span>
-						<span class="form-value">@record.DepartmentVisited</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Bác sĩ khám:</span>
-						<span class="form-value">@record.DoctorName</span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Đơn thuốc:</span>
-						<span class="form-value">@record.Medications</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Kế hoạch điều trị:</span>
-						<span class="form-value">@record.TreatmentPlan</span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-col">
-						<span class="form-label">Huyết áp:</span>
-						<span class="form-value">@record.VitalSigns</span>
-					</div>
-					<div class="form-col">
-						<span class="form-label">Lịch hẹn tái khám:</span>
-						<span class="form-value">@(record.NextAppointmentDate?.ToString("dd/MM/yyyy") ?? "Không có")</span>
-					</div>
-				</div>
-
-				<div class="text-end mt-3">
-					<em>Cập nhật lần cuối: @record.LastUpdated</em>
-				</div>
-			</div>
-		}
-
-	}
-	else
-	{
-		<div class="alert alert-info text-center">
-			Không có hồ sơ y tế nào.
-		</div>
-	}
+                <div class="text-end">
+                    <em>Cập nhật lần cuối: @record.LastUpdated</em>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">Không có hồ sơ y tế nào.</div>
+    }
 }

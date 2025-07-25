@@ -6,43 +6,142 @@
 }
 
 <style>
+	/* Tổng thể form A4 */
 	.a4-form-container {
-		background: white;
-		width: 794px; /* đúng khổ A4 chiều ngang trên màn hình (210mm * 3.78) */
-		min-height: 1123px; /* đúng chiều dọc A4 (297mm * 3.78) */
+		background: #fff;
+		width: 794px;
+		min-height: 1123px;
 		padding: 40px 60px;
 		margin: 30px auto;
-		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-		border-radius: 10px;
+		box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+		border-radius: 12px;
 		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	}
 
 		.a4-form-container h2 {
-			font-size: 24px;
-			font-weight: bold;
+			font-size: 26px;
+			font-weight: 700;
 			text-align: center;
-			margin-bottom: 30px;
+			margin-bottom: 35px;
+			color: #2c3e50;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 		}
 
 	.form-label {
 		font-weight: 600;
+		color: #333;
+		margin-bottom: 6px;
+		display: block;
 	}
 
 	.form-control,
-	textarea {
+	textarea,
+	select {
 		font-size: 14px;
-		padding: 6px 10px;
+		padding: 8px 12px;
+		border: 2px solid #87CEEB;
+		border-radius: 6px;
+		transition: all 0.2s ease;
+		background-color: #fefefe;
 	}
+
+		.form-control:focus,
+		textarea:focus,
+		select:focus {
+			border-color: #00BFFF;
+			box-shadow: 0 0 6px rgba(0, 191, 255, 0.3);
+			outline: none;
+		}
+
+		.form-control:hover,
+		textarea:hover,
+		select:hover {
+			border-color: #00BFFF;
+		}
 
 	.text-end {
 		text-align: right;
-		margin-top: 20px;
+		margin-top: 25px;
 	}
 
 	button.btn,
 	a.btn {
-		padding: 6px 20px;
+		padding: 8px 22px;
 		font-size: 14px;
+		border-radius: 6px;
+	}
+
+	.btn-primary {
+		background-color: #00BFFF;
+		border: none;
+	}
+
+		.btn-primary:hover {
+			background-color: #009acd;
+		}
+
+	.btn-secondary {
+		background-color: #ccc;
+		color: #333;
+		border: none;
+	}
+
+		.btn-secondary:hover {
+			background-color: #bbb;
+		}
+
+	.form-check {
+		margin-bottom: 4px;
+	}
+
+	.form-check-label {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: inline-block;
+		max-width: 100%;
+		font-size: 13px;
+		color: #555;
+	}
+
+	textarea {
+		resize: vertical;
+	}
+
+	/* Scrollable box */
+	.scroll-box {
+		max-height: 100px;
+		overflow-y: auto;
+		border: 1px solid #ddd;
+		padding: 10px;
+		border-radius: 6px;
+		background-color: #fafafa;
+	}
+
+	/* Dịch vụ khám box */
+	.service-box {
+		max-height: 200px;
+		overflow-y: auto;
+		border: 1px solid #ccc;
+		padding: 12px;
+		border-radius: 6px;
+		background-color: #f9f9f9;
+	}
+
+		.service-box .form-check-label {
+			font-size: 13.5px;
+		}
+
+	/* Khoảng cách giữa các hàng */
+	.row.mb-3 {
+		margin-bottom: 20px;
+	}
+
+	textarea::placeholder,
+	input::placeholder {
+		color: #aaa;
+		font-style: italic;
 	}
 </style>
 
@@ -61,26 +160,40 @@
 		<input type="hidden" name="period" value="@ViewBag.Period" />
 
 		<div class="row mb-3">
-			<div class="col-md-6">
-				<label asp-for="Height" class="form-label">Chiều cao (cm)</label>
-				<input asp-for="Height" class="form-control" />
-				<span asp-validation-for="Height" class="text-danger"></span>
+			<div class="row mb-3">
+				<div class="col-md-6">
+					<label asp-for="Height" class="form-label">Chiều cao (cm): <span class="text-danger">*</span></label>
+					<input asp-for="Height" class="form-control" style="width: 324px" />
+					<span asp-validation-for="Height" class="text-danger"></span>
+				</div>
+				<div class="col-md-6" style="padding-left:23px">
+					<label asp-for="Weight" class="form-label">Cân nặng (kg): <span class="text-danger">*</span></label>
+					<input asp-for="Weight" class="form-control" style="width: 324px" />
+					<span asp-validation-for="Weight" class="text-danger"></span>
+				</div>
 			</div>
-			<div class="col-md-6">
-				<label asp-for="Weight" class="form-label">Cân nặng (kg)</label>
-				<input asp-for="Weight" class="form-control" />
-				<span asp-validation-for="Weight" class="text-danger"></span>
-			</div>
+
 		</div>
 
 		<div class="row mb-3">
 			<div class="col-md-6">
-				<label asp-for="BloodType" class="form-label">Nhóm máu</label>
-				<input asp-for="BloodType" class="form-control" />
+				<label asp-for="BloodType" class="form-label">Nhóm máu:</label>
+				<select asp-for="BloodType" class="form-control">
+					<option value="">-- Chọn nhóm máu --</option>
+					<option value="A+">A+</option>
+					<option value="A-">A-</option>
+					<option value="B+">B+</option>
+					<option value="B-">B-</option>
+					<option value="AB+">AB+</option>
+					<option value="AB-">AB-</option>
+					<option value="O+">O+</option>
+					<option value="O-">O-</option>
+				</select>
 				<span asp-validation-for="BloodType" class="text-danger"></span>
+
 			</div>
 			<div class="col-md-6">
-				<label asp-for="VitalSigns" class="form-label">Huyết áp</label>
+				<label asp-for="VitalSigns" class="form-label">Huyết áp (mmHg):</label>
 				<input asp-for="VitalSigns" class="form-control" />
 				<span asp-validation-for="VitalSigns" class="text-danger"></span>
 			</div>
@@ -88,67 +201,285 @@
 
 		<div class="row mb-3">
 			<div class="col-md-6">
-				<label asp-for="Allergies" class="form-label">Dị ứng</label>
-				<textarea asp-for="Allergies" class="form-control"></textarea>
+				<label class="form-label">Dị ứng:</label>
+				<div class="form-check" style="max-height: 80px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
+					@foreach (var allergy in new[]
+										{
+					"Thuốc kháng sinh (Penicillin, Sulfa,...)",
+					"Thuốc giảm đau (NSAIDs, Aspirin)",
+					"Hải sản",
+					"Trứng",
+					"Sữa bò",
+					"Đậu phộng",
+					"Hạt cây (hạt điều, hạnh nhân...)",
+					"Phấn hoa",
+					"Lông thú",
+					"Bụi nhà",
+					"Nấm mốc",
+					"Côn trùng (ong, kiến...)"
+					})
+					{
+						var id = "Allergy_" + allergy.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("-", "").Replace(",", "");
+						<div class="form-check">
+							<input type="checkbox" name="SelectedAllergies" value="@allergy" class="form-check-input" id="@id" />
+							<label class="form-check-label" for="@id">@allergy</label>
+						</div>
+					}
+				</div>
+
+				<label class="form-label mt-2">Dị ứng khác:</label>
+				<input type="text" id="allergy-other" class="form-control" placeholder="Nhập các dị ứng khác" />
+
+				<!-- Trường ẩn gửi về server -->
+				<input type="hidden" name="Allergies" id="allergy-final" />
 				<span asp-validation-for="Allergies" class="text-danger"></span>
 			</div>
+
 			<div class="col-md-6">
-				<label asp-for="Chronic" class="form-label">Bệnh mãn tính</label>
-				<textarea asp-for="Chronic" class="form-control"></textarea>
+				<label class="form-label">Bệnh mãn tính:</label>
+				<div class="form-check" style="max-height: 80px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
+					@foreach (var disease in new[]
+										{
+					"Tăng huyết áp",
+					"Đái tháo đường type 1",
+					"Đái tháo đường type 2",
+					"Bệnh tim thiếu máu cục bộ (bệnh mạch vành)",
+					"Suy tim mạn",
+					"Rối loạn nhịp tim",
+					"Đột quỵ/Tai biến mạch máu não",
+					"Bệnh van tim",
+					"Bệnh phổi tắc nghẽn mạn tính (COPD)",
+					"Hen phế quản",
+					"Xơ phổi",
+					"Viêm phế quản mạn",
+					"Bệnh thận mạn (CKD)",
+					"Suy thận mạn",
+					"Viêm gan B mạn tính",
+					"Viêm gan C mạn tính",
+					"Xơ gan",
+					"Loét dạ dày tá tràng mạn",
+					"Viêm đại tràng mạn",
+					"Hội chứng ruột kích thích (IBS)",
+					"Gút (Gout)",
+					"Viêm khớp dạng thấp",
+					"Thoái hóa khớp",
+					"Lupus ban đỏ hệ thống (SLE)",
+					"Vảy nến (Psoriasis)",
+					"Rối loạn lo âu mạn tính",
+					"Trầm cảm",
+					"Parkinson",
+					"Alzheimer",
+					"Động kinh",
+					"Ung thư (đang điều trị hoặc theo dõi)",
+					"Béo phì",
+					"Suy giáp",
+					"Cường giáp",
+					"Thiếu máu mạn",
+					"Loãng xương",
+					"Rối loạn lipid máu (mỡ máu cao)"
+					})
+					{
+						<div class="form-check">
+							<input type="checkbox" name="SelectedChronic" value="@disease" class="form-check-input" id="@disease.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("-", "")" />
+							<label class="form-check-label" for="@disease.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("-", "")">
+								@disease
+							</label>
+						</div>
+					}
+
+				</div>
+
+				<label class="form-label mt-2">Bệnh mãn tính khác:</label>
+				<input type="text" id="chronic-other" class="form-control" placeholder="Nhập các bệnh khác" />
+
+				<!-- Trường ẩn gửi về server -->
+				<input type="hidden" name="Chronic" id="chronic-final" />
 				<span asp-validation-for="Chronic" class="text-danger"></span>
 			</div>
+
+		</div>
+
+		<div class="row mb-3">
+			<div class="col-md-6">
+				<label class="form-label">Tiền sử bệnh:</label>
+				<div class="form-check" style="max-height: 80px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
+					@foreach (var history in new[]
+										{
+					"Phẫu thuật lớn",
+					"Tai nạn giao thông",
+					"Chấn thương sọ não",
+					"Viêm gan B",
+					"Viêm gan C",
+					"Lao phổi",
+					"Thấp tim",
+					"Đột quỵ",
+					"Ung thư",
+					"Thở máy trước đây"
+					})
+					{
+						var id = "History_" + history.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("-", "").Replace(",", "");
+						<div class="form-check">
+							<input type="checkbox" name="SelectedMedicalHistory" value="@history" class="form-check-input" id="@id" />
+							<label class="form-check-label" for="@id">@history</label>
+						</div>
+					}
+				</div>
+
+				<label class="form-label mt-2">Tiền sử bệnh khác:</label>
+				<input type="text" id="medical-history-other" class="form-control" placeholder="Nhập các tiền sử bệnh khác (cách nhau bằng dấu phẩy)" />
+
+				<input type="hidden" name="MedicalHistory" id="medical-history-final" />
+				<span asp-validation-for="MedicalHistory" class="text-danger"></span>
+			</div>
+
+
+			<div class="col-md-6">
+				<label class="form-label">Triệu chứng:</label>
+				<div class="form-check" style="max-height: 80px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
+					@foreach (var symptom in new[]
+										{
+					"Sốt",
+					"Ho",
+					"Khó thở",
+					"Đau đầu",
+					"Buồn nôn",
+					"Đau ngực",
+					"Chóng mặt",
+					"Đau bụng",
+					"Tiêu chảy",
+					"Ngứa da"
+					})
+					{
+						var id = "Symptom_" + symptom.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace("-", "").Replace(",", "");
+						<div class="form-check">
+							<input type="checkbox" name="SelectedSymptoms" value="@symptom" class="form-check-input" id="@id" />
+							<label class="form-check-label" for="@id">@symptom</label>
+						</div>
+					}
+				</div>
+
+				<label class="form-label mt-2">Triệu chứng khác:</label>
+				<input type="text" id="symptom-other" class="form-control" placeholder="Nhập các triệu chứng khác (cách nhau bằng dấu phẩy)" />
+
+				<input type="hidden" name="Symptoms" id="symptom-final" />
+				<span asp-validation-for="Symptoms" class="text-danger"></span>
+			</div>
+
 		</div>
 
 		<div class="mb-3">
-			<label asp-for="MedicalHistory" class="form-label">Tiền sử bệnh</label>
-			<textarea asp-for="MedicalHistory" class="form-control" rows="2"></textarea>
-			<span asp-validation-for="MedicalHistory" class="text-danger"></span>
-		</div>
+			<label class="form-label">Các dịch vụ đã khám:</label>
+			<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 12px; border-radius: 6px;">
+				<div class="row">
+					@{
+						var services = new[]
+						{
+					// Khám chuyên khoa
+					"Khám nội tổng quát",
+					"Khám nội tim mạch",
+					"Khám nội hô hấp",
+					"Khám nội tiêu hóa",
+					"Khám nội tiết",
+					"Khám cơ xương khớp",
+					"Khám thần kinh",
+					"Khám da liễu",
+					"Khám tai mũi họng",
+					"Khám mắt",
+					"Khám răng hàm mặt",
+					"Khám sản phụ khoa",
+					"Khám nam khoa",
+					"Khám nhi",
+					"Khám tâm thần",
+					"Khám ung bướu",
+					"Khám y học cổ truyền",
 
-		<div class="mb-3">
-			<label asp-for="Symptoms" class="form-label">Triệu chứng</label>
-			<textarea asp-for="Symptoms" class="form-control" rows="2"></textarea>
-			<span asp-validation-for="Symptoms" class="text-danger"></span>
-		</div>
+					// Xét nghiệm
+					"Xét nghiệm công thức máu",
+					"Xét nghiệm chức năng gan",
+					"Xét nghiệm chức năng thận",
+					"Xét nghiệm mỡ máu",
+					"Xét nghiệm đường huyết",
+					"Xét nghiệm nước tiểu",
+					"Xét nghiệm viêm gan B, C",
+					"Xét nghiệm HIV",
+					"Xét nghiệm dấu ấn ung thư",
+					"Xét nghiệm nhóm máu",
 
-		<div class="mb-3">
-			<label asp-for="Diagnosis" class="form-label">Chẩn đoán</label>
-			<textarea asp-for="Diagnosis" class="form-control" rows="2"></textarea>
-			<span asp-validation-for="Diagnosis" class="text-danger"></span>
-		</div>
+					// Chẩn đoán hình ảnh
+					"Siêu âm tổng quát",
+					"Siêu âm tuyến giáp",
+					"Chụp X-quang phổi",
+					"Chụp X-quang xương",
+					"Chụp CT-scan",
+					"Chụp MRI",
+					"Nội soi dạ dày",
+					"Nội soi đại tràng",
+					"Điện tim (ECG)",
+					"Đo loãng xương"
+					};
 
-		<div class="mb-3">
-			<label asp-for="MedicalResult" class="form-label">Kết quả khám</label>
-			<textarea asp-for="MedicalResult" class="form-control" rows="2"></textarea>
-			<span asp-validation-for="MedicalResult" class="text-danger"></span>
-		</div>
+						// Chia thành 3 phần bằng nhau
+						var colCount = 3;
+						var colLength = (int)Math.Ceiling((double)services.Length / colCount);
+					}
 
-		<div class="mb-3">
-			<label asp-for="DepartmentVisited" class="form-label">Khoa đã khám</label>
-			<input asp-for="DepartmentVisited" class="form-control" />
+					@for (int col = 0; col < colCount; col++)
+					{
+						<div class="col-md-4">
+							@for (int i = col * colLength; i < Math.Min((col + 1) * colLength, services.Length); i++)
+							{
+								var id = "Service_" + services[i].Replace(" ", "").Replace("(", "").Replace(")", "").Replace("/", "").Replace(",", "").Replace("-", "");
+								<div class="form-check mb-1">
+									<input type="checkbox" name="SelectedServices" value="@services[i]" class="form-check-input" id="@id" />
+									<label class="form-check-label" for="@id">@services[i]</label>
+								</div>
+							}
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- Trường input để lưu chuỗi dịch vụ đã chọn -->
+			<input type="hidden" name="DepartmentVisited" id="department-final" />
 			<span asp-validation-for="DepartmentVisited" class="text-danger"></span>
 		</div>
 
 		<div class="mb-3">
-			<label asp-for="DoctorName" class="form-label">Bác sĩ khám</label>
-			<input asp-for="DoctorName" class="form-control" />
-			<span asp-validation-for="DoctorName" class="text-danger"></span>
+			<label asp-for="MedicalResult" class="form-label">Kết quả khám:</label>
+			<textarea asp-for="MedicalResult" class="form-control" rows="4" placeholder="Ví dụ: Khám nội tổng quát: Bình thường. Khám tim mạch: Có tiếng thổi tâm thu..."></textarea>
+			<span asp-validation-for="MedicalResult" class="text-danger"></span>
 		</div>
 
+
 		<div class="mb-3">
-			<label asp-for="Medications" class="form-label">Đơn thuốc</label>
+			<label asp-for="Diagnosis" class="form-label">Chẩn đoán:</label>
+			<textarea asp-for="Diagnosis" class="form-control" rows="2"></textarea>
+			<span asp-validation-for="Diagnosis" class="text-danger"></span>
+		</div>
+
+
+		
+
+		<div class="mb-3">
+			<label asp-for="Medications" class="form-label">Đơn thuốc:</label>
 			<textarea asp-for="Medications" class="form-control" rows="2"></textarea>
 			<span asp-validation-for="Medications" class="text-danger"></span>
 		</div>
 
 		<div class="mb-3">
-			<label asp-for="TreatmentPlan" class="form-label">Kế hoạch điều trị</label>
+			<label asp-for="TreatmentPlan" class="form-label">Kế hoạch điều trị:</label>
 			<textarea asp-for="TreatmentPlan" class="form-control" rows="2"></textarea>
 			<span asp-validation-for="TreatmentPlan" class="text-danger"></span>
 		</div>
 
 		<div class="mb-3">
-			<label asp-for="NextAppointmentDate" class="form-label">Ngày hẹn tái khám</label>
+			<label asp-for="DoctorName" class="form-label">Khám tại phòng khám - bác sĩ:</label>
+			<input asp-for="DoctorName" class="form-control" value="MediAppointment" />
+			<span asp-validation-for="DoctorName" class="text-danger"></span>
+		</div>
+
+		<div class="mb-3">
+			<label asp-for="NextAppointmentDate" class="form-label">Ngày hẹn tái khám:</label>
 			<input asp-for="NextAppointmentDate" type="date" class="form-control" />
 			<span asp-validation-for="NextAppointmentDate" class="text-danger"></span>
 		</div>
@@ -173,5 +504,72 @@
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
+
+	<script>
+				$('form').on('submit', function () {
+			// Chronic
+			const checkedChronic = Array.from(document.querySelectorAll('input[name="SelectedChronic"]:checked')).map(cb => cb.value);
+			const otherChronic = $('#chronic-other').val();
+			const combinedChronic = [...checkedChronic, ...otherChronic.split(',').map(x => x.trim()).filter(x => x)];
+			$('#chronic-final').val(combinedChronic.join(', '));
+
+			// Allergies
+			const checkedAllergy = Array.from(document.querySelectorAll('input[name="SelectedAllergies"]:checked')).map(cb => cb.value);
+			const otherAllergy = $('#allergy-other').val();
+			const combinedAllergy = [...checkedAllergy, ...otherAllergy.split(',').map(x => x.trim()).filter(x => x)];
+			$('#allergy-final').val(combinedAllergy.join(', '));
+
+			// Medical History
+			const checkedHistory = Array.from(document.querySelectorAll('input[name="SelectedMedicalHistory"]:checked')).map(cb => cb.value);
+			const otherHistory = $('#medical-history-other').val();
+			const combinedHistory = [...checkedHistory, ...otherHistory.split(',').map(x => x.trim()).filter(x => x)];
+			$('#medical-history-final').val(combinedHistory.join(', '));
+
+			// Symptoms
+			const checkedSymptoms = Array.from(document.querySelectorAll('input[name="SelectedSymptoms"]:checked')).map(cb => cb.value);
+			const otherSymptoms = $('#symptom-other').val();
+			const combinedSymptoms = [...checkedSymptoms, ...otherSymptoms.split(',').map(x => x.trim()).filter(x => x)];
+			$('#symptom-final').val(combinedSymptoms.join(', '));
+		});
+	</script>
+
+	<script>
+		$('form').on('submit', function () {
+			const checkedServices = Array.from(document.querySelectorAll('input[name="SelectedServices"]:checked'))
+				.map(cb => cb.value);
+			document.getElementById('department-final').value = checkedServices.join(', ');
+		});
+	</script>
+
+	<script>
+		// Lấy danh sách tất cả checkbox dịch vụ
+		const serviceCheckboxes = document.querySelectorAll('input[name="SelectedServices"]');
+		const resultTextarea = document.querySelector('[name="MedicalResult"]');
+
+		function updateMedicalResult() {
+			const selected = Array.from(serviceCheckboxes)
+				.filter(cb => cb.checked)
+				.map(cb => `- ${cb.value}:`);
+
+			resultTextarea.value = selected.join('\n');
+		}
+
+		// Gắn sự kiện khi tick checkbox
+		serviceCheckboxes.forEach(cb => {
+			cb.addEventListener('change', updateMedicalResult);
+		});
+
+		// Optional: cập nhật input ẩn khi submit form
+		$('form').on('submit', function () {
+			const checked = Array.from(serviceCheckboxes)
+				.filter(cb => cb.checked)
+				.map(cb => cb.value);
+
+			document.getElementById('department-final').value = checked.join(', ');
+		});
+	</script>
+
+
 }
+
 
