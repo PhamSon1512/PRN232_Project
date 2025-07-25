@@ -1,7 +1,9 @@
 ﻿using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 using MediAppointment.Application.DTOs.GeminiDTOs;
 using MediAppointment.Application.Interfaces;
+using MediAppointment.Domain.Entities;
 using MediAppointment.Domain.Entities.Abstractions;
 using MediAppointment.Domain.Enums;
 using MediAppointment.Infrastructure.Data;
@@ -79,7 +81,7 @@ namespace MediAppointment.Infrastructure.Services
                 return await GetDoctorsByDayAsync(date, cancellationToken);
             }
             // 6. Thông tin bác sĩ
-            else if (Regex.IsMatch(message, @"(thông tin bác sĩ|chi tiết bác sĩ|doctor info|about doctor|thuộc khoa nào)"))
+            else if (Regex.IsMatch(message, @"(thông tin bác sĩ|chi tiết bác sĩ|doctor info|about doctor|thuộc khoa nào|thông tin chi tiết)"))
             {
                 var doctorName = ExtractDoctorName(message);
                 if (string.IsNullOrEmpty(doctorName))
@@ -123,37 +125,58 @@ namespace MediAppointment.Infrastructure.Services
         {
             try
             {
-                var dayOfWeek = date.DayOfWeek;
-                var doctors = await (from schedule in _context.Schedules
-                                     join doctor in _context.Doctors on schedule.DoctorId equals doctor.Id
+                var doctors = await (from roomTimeSlot in _context.RoomTimeSlot
+                                     join timeSlot in _context.TimeSlot on roomTimeSlot.TimeSlotId equals timeSlot.Id
+                                     join doctor in _context.Set<User>().OfType<Doctor>() on roomTimeSlot.DoctorId equals doctor.Id
                                      join doctorDept in _context.DoctorDepartments on doctor.Id equals doctorDept.DoctorId into deptJoin
                                      from doctorDept in deptJoin.DefaultIfEmpty()
                                      join dept in _context.Departments on doctorDept.DepartmentId equals dept.Id into departmentJoin
                                      from dept in departmentJoin.DefaultIfEmpty()
-                                     where schedule.DayOfWeek == dayOfWeek
+                                     where roomTimeSlot.Date.Date == date.Date &&
+                                           roomTimeSlot.DoctorId != null
                                      select new
                                      {
+                                         DoctorId = doctor.Id,
                                          FullName = doctor.FullName,
-                                         StartTime = schedule.StartTime,
-                                         EndTime = schedule.EndTime,
-                                         DepartmentName = dept != null ? dept.DepartmentName : "Không xác định"
+                                         DepartmentName = dept != null ? dept.DepartmentName : "Không xác định",
+                                         HasMorningShift = _context.RoomTimeSlot
+                                             .Any(r => r.Date == date &&
+                                                      r.DoctorId == doctor.Id &&
+                                                      r.TimeSlot.TimeStart >= TimeSpan.FromHours(7) &&
+                                                      r.TimeSlot.TimeStart < TimeSpan.FromHours(11)),
+                                         HasAfternoonShift = _context.RoomTimeSlot
+                                             .Any(r => r.Date == date &&
+                                                      r.DoctorId == doctor.Id &&
+                                                      r.TimeSlot.TimeStart >= TimeSpan.FromHours(13) &&
+                                                      r.TimeSlot.TimeStart < TimeSpan.FromHours(17))
                                      })
-                           .Distinct()
-                           .ToListAsync(cancellationToken);
+                             .Distinct()
+                             .ToListAsync(cancellationToken);
 
                 if (!doctors.Any())
                     return $"Không có bác sĩ làm việc vào {date:dd/MM/yyyy}.";
 
-                var response = $"Danh sách bác sĩ làm việc vào {date:dd/MM/yyyy}:\n";
+                var response = new StringBuilder();
+                response.AppendLine($"Danh sách bác sĩ làm việc vào {date:dd/MM/yyyy}:");
+
                 foreach (var doctor in doctors)
                 {
-                    response += $"- BS. {doctor.FullName} (Khoa {doctor.DepartmentName}), từ {doctor.StartTime:HH:mm} đến {doctor.EndTime:HH:mm}\n";
+                    var shifts = new List<string>();
+                    if (doctor.HasMorningShift) shifts.Add("Sáng: 07:00 - 11:00");
+                    if (doctor.HasAfternoonShift) shifts.Add("Chiều: 13:00 - 17:00");
+
+                    response.AppendLine($"- BS. {doctor.FullName} (Khoa {doctor.DepartmentName})");
+                    if (shifts.Any())
+                        response.AppendLine($"  Lịch làm việc: {string.Join(", ", shifts)}");
+                    else
+                        response.AppendLine($"  Không có thông tin lịch làm việc");
                 }
-                return response;
+
+                return response.ToString();
             }
             catch (Exception ex)
             {
-                return $"Lỗi khi truy vấn lịch bác sĩ: {ex.Message}";
+                return $"Đã xảy ra lỗi khi lấy danh sách bác sĩ: {ex.Message}";
             }
         }
 
@@ -438,59 +461,44 @@ Hãy hỏi cụ thể để được hỗ trợ, ví dụ: 'Lịch bác sĩ ngà
             var today = DateTime.Today;
 
             // Check for specific date (e.g., "25/07/2025")
-            var dateMatch = Regex.Match(message, @"\d{1,2}/\d{1,2}/\d{4}");
-            if (dateMatch.Success && DateTime.TryParseExact(dateMatch.Value, "d/M/yyyy", null, System.Globalization.DateTimeStyles.None, out var specificDate))
+            var dateMatch = Regex.Match(message, @"(\d{1,2})[/-](\d{1,2})[/-](\d{4})");
+            if (dateMatch.Success)
             {
-                return specificDate;
+                try
+                {
+                    var day = int.Parse(dateMatch.Groups[1].Value);
+                    var month = int.Parse(dateMatch.Groups[2].Value);
+                    var year = int.Parse(dateMatch.Groups[3].Value);
+                    return new DateTime(year, month, day);
+                }
+                catch
+                {
+                    // Fall through to other checks if parsing fails
+                }
             }
 
             // Check for relative time (today, tomorrow)
-            if (message.Contains("hôm nay"))
-                return today;
-            if (message.Contains("ngày mai"))
-                return today.AddDays(1);
+            if (message.Contains("hôm nay")) return today;
+            if (message.Contains("ngày mai")) return today.AddDays(1);
 
             // Map days of the week
-            var dayMap = new Dictionary<string, int>
-            {
-                { "thứ hai", 1 }, { "thứ 2", 1 }, { "monday", 1 },
-                { "thứ ba", 2 }, { "thứ 3", 2 }, { "tuesday", 2 },
-                { "thứ tư", 3 }, { "thứ 4", 3 }, { "wednesday", 3 },
-                { "thứ năm", 4 }, { "thứ 5", 4 }, { "thursday", 4 },
-                { "thứ sáu", 5 }, { "thứ 6", 5 }, { "friday", 5 },
-                { "thứ bảy", 6 }, { "thứ 7", 6 }, { "saturday", 6 },
-                { "chủ nhật", 0 }, { "sunday", 0 }
-            };
-
-            // Check if asking for next week
-            bool isNextWeek = message.Contains("tuần sau") || message.Contains("tuần tới");
+            var dayMap = new Dictionary<string, DayOfWeek>
+    {
+        { "thứ hai", DayOfWeek.Monday }, { "thứ 2", DayOfWeek.Monday }, { "monday", DayOfWeek.Monday },
+        { "thứ ba", DayOfWeek.Tuesday }, { "thứ 3", DayOfWeek.Tuesday }, { "tuesday", DayOfWeek.Tuesday },
+        { "thứ tư", DayOfWeek.Wednesday }, { "thứ 4", DayOfWeek.Wednesday }, { "wednesday", DayOfWeek.Wednesday },
+        { "thứ năm", DayOfWeek.Thursday }, { "thứ 5", DayOfWeek.Thursday }, { "thursday", DayOfWeek.Thursday },
+        { "thứ sáu", DayOfWeek.Friday }, { "thứ 6", DayOfWeek.Friday }, { "friday", DayOfWeek.Friday },
+        { "thứ bảy", DayOfWeek.Saturday }, { "thứ 7", DayOfWeek.Saturday }, { "saturday", DayOfWeek.Saturday },
+        { "chủ nhật", DayOfWeek.Sunday }, { "sunday", DayOfWeek.Sunday }
+    };
 
             foreach (var day in dayMap)
             {
                 if (message.Contains(day.Key))
                 {
-                    int targetDayOfWeek = day.Value;
-                    int currentDayOfWeek = (int)today.DayOfWeek;
-
-                    if (isNextWeek)
-                    {
-                        // Tính thứ X của tuần tới
-                        // Tìm thứ Hai của tuần tới trước
-                        int daysToNextMonday = (8 - currentDayOfWeek) % 7;
-                        if (daysToNextMonday == 0) daysToNextMonday = 7; // Nếu hôm nay là thứ Hai thì tuần tới là 7 ngày sau
-
-                        var nextMonday = today.AddDays(daysToNextMonday);
-                        // Từ thứ Hai của tuần tới, tính đến thứ cần tìm
-                        int daysFromMonday = (targetDayOfWeek == 0) ? 6 : targetDayOfWeek - 1; // Chủ nhật = 6 ngày từ thứ Hai
-                        return nextMonday.AddDays(daysFromMonday);
-                    }
-                    else
-                    {
-                        // Tính thứ X gần nhất (tuần này hoặc tuần tới nếu đã qua)
-                        int daysToAdd = (targetDayOfWeek - currentDayOfWeek + 7) % 7;
-                        if (daysToAdd == 0) daysToAdd = 7; // Nếu cùng thứ thì lấy tuần sau
-                        return today.AddDays(daysToAdd);
-                    }
+                    int daysUntilNext = ((int)day.Value - (int)today.DayOfWeek + 7) % 7;
+                    return today.AddDays(daysUntilNext == 0 ? 7 : daysUntilNext); // If same day, return next week
                 }
             }
 
