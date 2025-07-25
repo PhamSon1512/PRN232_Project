@@ -4,6 +4,7 @@ using MediAppointment.Client.Models.Doctor;
 using MediAppointment.Client.Models.MedicalRecord;
 using Microsoft.AspNetCore.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace MediAppointment.Client.Services
 {
@@ -15,7 +16,7 @@ namespace MediAppointment.Client.Services
         Task<Doctor_PatientDetailViewModel?> GetPatientDetailAsync(Guid patientId);
         Task<bool> CreateMedicalRecordAsync(CreateMedicalRecordRequest request);
         Task<IEnumerable<BookingDoctorView>> GetBookingsByDoctorAsync();
-        Task<bool> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request);
+        Task<ApiResult> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request);
 
     }
 
@@ -121,13 +122,39 @@ namespace MediAppointment.Client.Services
         }
 
 
-        // 4. Từ chối lịch hẹn kèm lý do
-        public async Task<bool> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request)
+        // 4. Chấp nhận và Từ chối lịch hẹn kèm lý do
+        public async Task<ApiResult> UpdateBookingStatusAsync(Guid appointmentId, BookingDoctorStatusUpdate request)
         {
             SetAuthHeader();
             var content = JsonContent.Create(request);
             var response = await _httpClient.PostAsync($"{_baseUrl}/update-booking-status/{appointmentId}", content);
-            return response.IsSuccessStatusCode;
+
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            if (response.IsSuccessStatusCode)
+            {
+                var successResult = JsonSerializer.Deserialize<ApiResult>(responseBody, options);
+                return successResult ?? new ApiResult { IsSuccess = true, Message = "Thành công." };
+            }
+            else
+            {
+                var errorResult = JsonSerializer.Deserialize<ApiResult>(responseBody, options);
+
+                // Ghép message và details nếu có
+                string fullMessage = errorResult?.Message ?? "Có lỗi xảy ra.";
+                if (!string.IsNullOrWhiteSpace(errorResult?.Details))
+                {
+                    fullMessage += " - Chi tiết: " + errorResult.Details;
+                }
+
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    Message = fullMessage
+                };
+            }
         }
 
     }

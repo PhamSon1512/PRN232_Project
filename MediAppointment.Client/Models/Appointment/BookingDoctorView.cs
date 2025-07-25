@@ -17,5 +17,6 @@
         public string? DoctorName { get; set; }
         public string? DepartmentName { get; set; }
         public string? PatientName { get; set; }
+        public string TimeRange { get; set; } = string.Empty;
     }
 }

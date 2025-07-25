@@ -6,104 +6,125 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container py-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-gradient-primary text-white">
-            <h3><i class="bi bi-calendar-heart me-2"></i> Đặt lịch với bác sĩ</h3>
-        </div>
-        <div class="card-body">
-
-            <form asp-action="Index" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <!-- Chọn bác sĩ -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-user-md me-1"></i> Bác sĩ <span class="text-danger">*</span>
-                    </label>
-                    <select class="form-select" asp-for="DoctorId" id="doctorSelect">
-                        <option value="">-- Chọn bác sĩ --</option>
-                        @foreach (var doctor in Model.Doctors)
-                        {
-                            <option value="@doctor.Id">BS. @doctor.FullName</option>
-                        }
-                    </select>
-                    <span class="text-danger" asp-validation-for="DoctorId"></span>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-custom text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-calendar-heart me-2"></i> Đặt lịch với bác sĩ
+                    </h3>
                 </div>
+                <div class="card-body p-4">
+                    <form asp-action="Index" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <!-- Chọn phòng khám -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-hospital me-1"></i> Khoa khám <span class="text-danger">*</span>
-                    </label>
-                    <select class="form-select" asp-for="RoomId" id="departmentSelect" disabled>
-                        <option value="">-- Chọn khoa --</option>
-                        @foreach (var dept in Model.Departments)
-                        {
-                            <option value="@dept.Id">@dept.Name</option>
-                        }
-                    </select>
-                    <span class="text-danger" asp-validation-for="RoomId"></span>
-                </div>
+                        <!-- Dòng: Bác sĩ + Khoa khám -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-user-md me-1"></i> Bác sĩ <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" asp-for="DoctorId" id="doctorSelect">
+                                    <option value="">-- Chọn bác sĩ --</option>
+                                    @foreach (var doctor in Model.Doctors)
+                                    {
+                                        <option value="@doctor.Id">BS. @doctor.FullName</option>
+                                    }
+                                </select>
+                                <span class="text-danger" asp-validation-for="DoctorId"></span>
+                            </div>
 
-                <!-- Ngày khám -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-calendar me-1"></i> Ngày khám <span class="text-danger">*</span>
-                    </label>
-                    <input type="date"
-                           class="form-control"
-                           asp-for="AppointmentDate"
-                           min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
-                           max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")" />
-                    <span class="text-danger" asp-validation-for="AppointmentDate"></span>
-                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-hospital me-1"></i> Khoa khám <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" asp-for="RoomId" id="departmentSelect" disabled>
+                                    <option value="">-- Chọn khoa --</option>
+                                    @foreach (var dept in Model.Departments)
+                                    {
+                                        <option value="@dept.Id">@dept.Name</option>
+                                    }
+                                </select>
+                                <span class="text-danger" asp-validation-for="RoomId"></span>
+                            </div>
+                        </div>
 
-                <!-- Giờ khám -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-clock me-1"></i> Giờ khám <span class="text-danger">*</span>
-                    </label>
-                    <select class="form-select" asp-for="TimeSlotId">
-                        <option value="">-- Chọn giờ khám --</option>
-                        @foreach (var slot in Model.TimeSlots)
-                        {
-                            <option value="@slot.Id">@slot.TimeRange</option>
-                        }
-                    </select>
-                    <span class="text-danger" asp-validation-for="TimeSlotId"></span>
-                </div>
+                        <!-- Dòng: Ngày khám + Giờ khám -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar me-1"></i> Ngày khám <span class="text-danger">*</span>
+                                </label>
+                                <input type="date"
+                                       class="form-control"
+                                       asp-for="AppointmentDate"
+                                       min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                       max="@DateTime.Today.AddDays(30).ToString("yyyy-MM-dd")" />
+                                <span class="text-danger" asp-validation-for="AppointmentDate"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Chỉ có thể đặt lịch từ ngày mai đến 30 ngày tới
+                                </div>
+                            </div>
 
-                <!-- Ghi chú -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-chat-text me-1"></i> Ghi chú (tuỳ chọn)
-                    </label>
-                    <textarea class="form-control" asp-for="Note" rows="3" placeholder="Nhập yêu cầu hoặc triệu chứng..."></textarea>
-                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-clock me-1"></i> Giờ khám <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" asp-for="TimeSlotId">
+                                    <option value="">-- Chọn giờ khám --</option>
+                                    @foreach (var slot in Model.TimeSlots)
+                                    {
+                                        <option value="@slot.Id">@slot.TimeRange</option>
+                                    }
+                                </select>
+                                <span class="text-danger" asp-validation-for="TimeSlotId"></span>
+                            </div>
+                        </div>
 
-                <!-- Nút submit -->
-                <div>
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-check2-circle me-1"></i> Đặt lịch
-                    </button>
-                    <a href="/" class="btn btn-secondary btn-lg ms-2">
-                        <i class="bi bi-arrow-left me-1"></i> Quay lại
-                    </a>
+                        <!-- Dòng: Ghi chú -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-chat-text me-1"></i> Ghi chú (tuỳ chọn)
+                            </label>
+                            <textarea class="form-control" asp-for="Note" rows="3" placeholder="Nhập yêu cầu hoặc triệu chứng..."></textarea>
+                        </div>
+
+                        <!-- Nút submit -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check2-circle me-1"></i> Đặt lịch
+                            </button>
+                            <a href="/" class="btn btn-secondary btn-lg ms-2">
+                                <i class="bi bi-arrow-left me-1"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Styles {
     <style>
-        .bg-gradient-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3);
+        .bg-gradient-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+        }
+
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
         }
 
         .btn:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
     </style>
@@ -118,7 +139,7 @@
         const departmentSelect = document.querySelector('#departmentSelect');
 
         function populateDepartmentOptions(filteredDepartments) {
-            departmentSelect.innerHTML = `<option value="">-- Chọn phòng khám --</option>`;
+            departmentSelect.innerHTML = '<option value="">-- Chọn phòng khám --</option>';
             filteredDepartments.forEach(dep => {
                 const option = document.createElement("option");
                 option.value = dep.Id;
@@ -131,7 +152,7 @@
             const selectedDoctorId = this.value;
             if (!selectedDoctorId) {
                 departmentSelect.disabled = true;
-                departmentSelect.innerHTML = `<option value="">-- Chọn phòng khám --</option>`;
+                departmentSelect.innerHTML = '<option value="">-- Chọn phòng khám --</option>';
                 return;
             }
 

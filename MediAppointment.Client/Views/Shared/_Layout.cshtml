@@ -277,7 +277,7 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="BookingDoctor" asp-action="Index">
-                                    <i class="bi bi-clipboard2-pulse-fill"></i> Đặt lịch với bác sĩ
+                                     Đặt lịch với bác sĩ
                                 </a>
                             </li>
                         }
@@ -297,7 +297,7 @@
                                     Tài khoản
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
-                                    <li><span class="dropdown-item-text">Role: @Context.Session.GetString("UserRole")</span></li>
+                                    <li><span class="dropdown-item-text">Tài khoản: @Context.Session.GetString("UserRole")</span></li>
                                     @if (Context.Session.GetString("UserRole") == "Patient")
                                     {
                                         <li>
@@ -307,7 +307,7 @@
                                         </li>
                                         <li>
                                             <a class="dropdown-item" asp-controller="PatientBookingDoctor" asp-action="Index">
-                                                <i class="fas fa-calendar me-1"></i>Lịch hẹn riêng với bác sĩ
+                                                <i class="bi bi-clipboard2-pulse-fill"></i>Lịch hẹn riêng với bác sĩ
                                             </a>
                                         </li>
                                         <li>

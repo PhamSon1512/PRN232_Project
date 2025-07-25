@@ -12,81 +12,158 @@
         "Canceled" => "Đã hủy",
         _ => "Không rõ"
     };
+
+    var years = ViewBag.AvailableYears as IEnumerable<int> ?? new List<int>();
+    var weeks = ViewBag.AvailableWeeks as IEnumerable<string> ?? new List<string>();
+    var selectedYear = ViewBag.SelectedYear as int? ?? DateTime.Now.Year;
+    var selectedWeek = ViewBag.SelectedWeek as string ?? "";
 }
 
-<h2 class="text-center my-4">Danh sách lịch hẹn với bệnh nhân</h2>
+<style>
+    .bg-gradient-custom {
+        background: linear-gradient(to right, #007bff, #0056d2); /* Màu xanh gradient */
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+    }
+</style>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info text-center">Không có lịch hẹn nào.</div>
-}
-else
-{
-    <table class="table table-bordered text-center align-middle">
-        <thead class="table-primary">
-            <tr>
-                <th>Ngày hẹn</th>
-                <th>Bệnh nhân</th>
-                <th>Khoa</th>
-                <th>Ghi chú</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.OrderByDescending(b => b.AppointmentDate))
+<div class="container-fluid px-0 mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <!-- ✅ CARD HEADER -->
+        <div class="card-header bg-gradient-custom text-white d-flex align-items-center">
+            <i class="bi bi-calendar-check-fill me-2 fs-5"></i>
+            <h5 class="mb-0 fw-bold">Lịch hẹn với bệnh nhân</h5>
+        </div>
+
+        <!-- ✅ CARD BODY -->
+        <div class="card-body p-4">
+            @if (TempData["SuccessMessage"] != null)
             {
-                var formId = $"form-reject-{item.Id}";
-                <tr>
-                    <td>@item.AppointmentDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</td>
-                    <td>@item.PatientName</td>
-                    <td>@item.DepartmentName</td>
-                    <td>@item.Note</td>
-                    <td>
-                        @{
-                            var badgeClass = item.Status switch
-                            {
-                                "Approved" => "badge bg-success",
-                                "Pending" => "badge bg-warning text-dark",
-                                "Rejected" => "badge bg-danger",
-                                "Canceled" => "badge bg-secondary",
-                                _ => "badge bg-info"
-                            };
-                        }
-                        <span class="@badgeClass">@TranslateStatus(item.Status)</span>
-                    </td>
-                    <td>
-                        @if (item.Status == "Pending")
-                        {
-                            <form asp-action="Approve" asp-controller="DoctorMyBookingHome" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i> Chấp nhận
-                                </button>
-                            </form>
-
-                            <button type="button" class="btn btn-danger btn-sm ms-1" onclick="toggleRejectForm('@formId')">
-                                <i class="fas fa-times"></i> Từ chối
-                            </button>
-
-                            <form asp-action="Reject" asp-controller="DoctorMyBookingHome" method="post" class="mt-2 d-none" id="@formId">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <div class="input-group mt-2">
-                                    <input type="text" name="note" class="form-control" placeholder="Lý do từ chối..." required />
-                                    <button type="submit" class="btn btn-outline-danger">Gửi</button>
-                                </div>
-                            </form>
-                        }
-                        else
-                        {
-                            <span class="text-muted">-</span>
-                        }
-                    </td>
-                </tr>
+                <div class="alert alert-success alert-dismissible fade show fw-bold" id="tempAlert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                </div>
             }
-        </tbody>
-    </table>
-}
+            else if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show fw-bold" id="tempAlert">
+                    <i class="bi bi-x-circle-fill me-2"></i> @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="Index" method="get" class="row row-cols-lg-auto g-3 align-items-end mb-4">
+                <div class="col">
+                    <label for="yearSelect" class="form-label fw-semibold">Năm:</label>
+                    <select id="yearSelect" name="year" class="form-select">
+                        @foreach (var y in years)
+                        {
+                            <option value="@y" selected="@(y == selectedYear ? "selected" : null)">@y</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col">
+                    <label for="weekSelect" class="form-label fw-semibold">Tuần:</label>
+                    <select id="weekSelect" name="week" class="form-select">
+                        <option value="">-- Tất cả --</option>
+                        @foreach (var w in weeks)
+                        {
+                            <option value="@w" selected="@(w == selectedWeek ? "selected" : null)">@w</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter"></i> Lọc
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-list-ul"></i> Hiện tất cả
+                    </a>
+                </div>
+            </form>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center">Không có lịch hẹn nào.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle text-center">
+                        <thead class="table-light">
+                            <tr class="align-middle">
+                                <th>Ngày hẹn</th>
+                                <th>Ca khám</th>
+                                <th>Bệnh nhân</th>
+                                <th>Khoa</th>
+                                <th>Ghi chú</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderByDescending(b => b.AppointmentDate))
+                            {
+                                var formId = $"form-reject-{item.Id}";
+                                var badgeClass = item.Status switch
+                                {
+                                    "Approved" => "badge bg-success",
+                                    "Pending" => "badge bg-warning text-dark",
+                                    "Rejected" => "badge bg-danger",
+                                    "Canceled" => "badge bg-secondary",
+                                    _ => "badge bg-info"
+                                };
+                                <tr>
+                                    <td>@item.AppointmentDate.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</td>
+                                    <td>@item.TimeRange</td>
+                                    <td>@item.PatientName</td>
+                                    <td>@item.DepartmentName</td>
+                                    <td>@item.Note</td>
+                                    <td><span class="@badgeClass px-3 py-2 rounded-pill">@TranslateStatus(item.Status)</span></td>
+                                    <td>
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <div class="d-flex flex-column gap-2">
+                                                <form asp-action="Approve" asp-controller="DoctorMyBookingHome" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="patientId" value="@item.PatientId" />
+                                                    <input type="hidden" name="timeSlotID" value="@item.TimeSlotId" />
+                                                    <input type="hidden" name="departmentId" value="@item.DepartmentId" />
+                                                    <input type="hidden" name="appointmentDate" value="@item.AppointmentDate.ToString("yyyy-MM-dd")" />
+                                                    <button type="submit" class="btn btn-sm btn-success w-100">
+                                                        <i class="fas fa-check"></i> Chấp nhận
+                                                    </button>
+                                                </form>
+
+                                                <button type="button" class="btn btn-sm btn-danger w-100" onclick="toggleRejectForm('@formId')">
+                                                    <i class="fas fa-times"></i> Từ chối
+                                                </button>
+
+                                                <form asp-action="Reject" asp-controller="DoctorMyBookingHome" method="post" class="d-none" id="@formId">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <div class="input-group mt-1">
+                                                        <input type="text" name="note" class="form-control form-control-sm" placeholder="Lý do từ chối..." required />
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">Gửi</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div> <!-- end card-body -->
+    </div> <!-- end card -->
+</div>
 
 @section Scripts {
     <script>
@@ -96,5 +173,21 @@ else
                 form.classList.toggle("d-none");
             }
         }
+
+        window.onload = function () {
+            const alert = document.getElementById("tempAlert");
+            if (alert) {
+                setTimeout(() => {
+                    // Ẩn alert
+                    alert.classList.remove("show");
+                    alert.classList.add("fade");
+
+                    // Xoá khỏi DOM sau 500ms (sau hiệu ứng)
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500);
+                }, 5000);
+            }
+        };
     </script>
 }
